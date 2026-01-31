@@ -1,0 +1,10 @@
+/**
+ * Adwaita (GTK4) Design System
+ * Main entry point forwarding all component modules.
+ */
+
+@forward "components/variables";
+@forward "components/buttons";
+@forward "components/inputs";
+@forward "components/cards";
+@forward "components/status";

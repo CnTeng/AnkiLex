@@ -1,0 +1,35 @@
+{
+  "name": "ankilex",
+  "version": "0.0.1",
+  "private": true,
+  "scripts": {
+    "dev": "vite",
+    "build": "BROWSER=chrome vite build && BROWSER=firefox vite build",
+    "build:chrome": "BROWSER=chrome vite build",
+    "build:firefox": "BROWSER=firefox vite build",
+    "build:zotero": "vite build --config vite.config.zotero.ts",
+    "package:zotero": "npm run build:zotero && node scripts/package-zotero.js",
+    "test": "vitest run",
+    "format": "biome format --write && prettier --write ."
+  },
+  "devDependencies": {
+    "@types/chrome": "^0.1.36",
+    "@types/jsdom": "^27.0.0",
+    "@types/node": "^25.1.0",
+    "@vitest/browser": "^4.0.18",
+    "adm-zip": "^0.5.16",
+    "jsdom": "^27.4.0",
+    "sass": "^1.97.3",
+    "typescript": "^5.9.3",
+    "vite": "^7.3.1",
+    "vite-plugin-static-copy": "^3.2.0",
+    "vitest": "^4.0.18",
+    "zotero-types": "^4.1.0-beta.4"
+  },
+  "dependencies": {
+    "tiny-markdown-editor": "^0.2.18"
+  },
+  "prettier": {
+    "printWidth": 100
+  }
+}

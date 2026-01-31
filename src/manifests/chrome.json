@@ -1,0 +1,50 @@
+{
+  "manifest_version": 3,
+  "name": "AnkiLex",
+  "version": "2.0.0",
+  "description": "Look up words in online dictionaries and add to Anki",
+  "author": "CnTeng",
+  "default_locale": "en",
+  "icons": {
+    "16": "assets/icons/icon16.png",
+    "48": "assets/icons/icon48.png",
+    "128": "assets/icons/icon128.png"
+  },
+  "action": {
+    "default_popup": "src/app/popup/popup.html",
+    "default_icon": {
+      "16": "assets/icons/icon16.png",
+      "19": "assets/icons/icon19.png",
+      "38": "assets/icons/icon38.png",
+      "48": "assets/icons/icon48.png"
+    }
+  },
+  "background": {
+    "service_worker": "app/background/main.js",
+    "type": "module"
+  },
+  "permissions": ["storage", "contextMenus", "notifications", "activeTab", "offscreen"],
+  "host_permissions": ["http://127.0.0.1:8765/*", "http://localhost:8765/*", "https://*/*"],
+  "content_scripts": [
+    {
+      "matches": ["<all_urls>"],
+      "js": ["app/content/content.js"],
+      "css": ["content/css/client.css"],
+      "run_at": "document_end"
+    }
+  ],
+  "web_accessible_resources": [
+    {
+      "resources": [
+        "content/css/frame.css",
+        "assets/images/*",
+        "src/app/content/frame.html",
+        "app/frame/frame.js",
+        "assets/*.js"
+      ],
+      "matches": ["<all_urls>"]
+    }
+  ],
+  "options_page": "src/app/options/options.html",
+  "minimum_chrome_version": "110.0.0.0"
+}

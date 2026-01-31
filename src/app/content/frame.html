@@ -1,0 +1,25 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="stylesheet" href="./css/frame.scss" />
+  </head>
+  <body>
+    <div id="app">
+      <!-- Results List -->
+      <div id="results-container" class="ankilex-notes">
+        <div class="loading">Waiting for selection...</div>
+      </div>
+
+      <!-- Context Editor Section (Hidden by default until data arrives) -->
+      <div id="context-section" class="context-section" style="display: none">
+        <textarea
+          id="context-note"
+          rows="2"
+          placeholder="Captured sentence or notes (Markdown supported)..."
+        ></textarea>
+      </div>
+    </div>
+    <script src="./frame.ts" type="module"></script>
+  </body>
+</html>

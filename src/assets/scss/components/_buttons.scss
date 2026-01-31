@@ -1,0 +1,72 @@
+@use "variables" as *;
+
+@mixin adw-button-base {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 10px 20px;
+  border-radius: var(--radius-button);
+  font-weight: 700;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  border: 1px solid transparent;
+  outline: none;
+  user-select: none;
+}
+
+@mixin adw-button-raised {
+  @include adw-button-base;
+  background: var(--card-bg);
+  border-color: var(--border-strong);
+  color: var(--text-main);
+  box-shadow: var(--shadow-sm);
+
+  &:hover {
+    background: var(--window-bg);
+    box-shadow: var(--shadow-md);
+  }
+  &:active {
+    background: var(--border-color);
+    box-shadow: none;
+    transform: translateY(1px);
+  }
+}
+
+@mixin adw-button-accent {
+  @include adw-button-base;
+  background: var(--adw-accent);
+  color: white;
+
+  &:hover {
+    // $blue-4 hardcoded in original _theme.scss, let's use the variable if we can or keep hex for now.
+    // Since variables are local in _variables.scss unless forwarded, and _buttons.scss uses _variables.
+    // In _variables.scss: $blue-4: #1c71d8;
+    background: #1c71d8;
+    // $blue-3: #3584e4
+    box-shadow: 0 4px 12px rgba(53, 132, 228, 0.3);
+    transform: translateY(-1px);
+  }
+  &:active {
+    // $blue-5: #1a5fb4
+    background: #1a5fb4;
+    transform: translateY(0);
+  }
+}
+
+@mixin adw-button-flat {
+  @include adw-button-base;
+  background: transparent;
+  color: var(--text-secondary);
+
+  &:hover {
+    background: rgba(0, 0, 0, 0.05);
+    color: var(--text-main);
+  }
+  @media (prefers-color-scheme: dark) {
+    &:hover {
+      background: rgba(255, 255, 255, 0.08);
+    }
+  }
+}
