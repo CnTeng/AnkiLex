@@ -83,5 +83,3 @@ jobs:
             - For testing and early access only
 
             Date: ${{ github.run_id }}
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
