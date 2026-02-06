@@ -1,5 +1,5 @@
 import "tiny-markdown-editor/dist/tiny-mde.min.css";
-import { attachAudioListeners } from "../../lib/ui/card-renderer";
+import { attachAudioListeners } from "../../lib/ui/dictionary-card";
 import {
   getEditorContent,
   initEditor,
@@ -69,7 +69,7 @@ window.addEventListener("message", (event) => {
 
       setTimeout(() => {
         button.disabled = false;
-        button.innerHTML = `<svg viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg" fill="currentColor"><path d="M8 0a1 1 0 0 1 1 1v6h6a1 1 0 1 1 0 2H9v6a1 1 0 1 1-2 0V9H1a1 1 0 0 1 0-2h6V1a1 1 0 0 1 1-1z"/></svg>`;
+        button.innerHTML = `<span class="icon plus"></span>`;
         button.style.color = "";
         button.style.borderColor = "";
         button.classList.remove("success");
@@ -91,7 +91,7 @@ window.addEventListener("message", (event) => {
 
       setTimeout(() => {
         button.disabled = false;
-        button.innerHTML = `<svg viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg" fill="currentColor"><path d="M8 0a1 1 0 0 1 1 1v6h6a1 1 0 1 1 0 2H9v6a1 1 0 1 1-2 0V9H1a1 1 0 0 1 0-2h6V1a1 1 0 0 1 1-1z"/></svg>`;
+        button.innerHTML = `<span class="icon plus"></span>`;
         button.style.color = "";
         button.style.borderColor = "";
         button.classList.remove("error");

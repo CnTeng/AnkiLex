@@ -39,6 +39,49 @@
   }
 }
 
+/* Metadata (Tags & Frequency) */
+.metadata {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 16px;
+  flex-wrap: wrap;
+
+  .frequency-stars {
+    display: flex;
+    align-items: center;
+    gap: 2px;
+    color: var(--adw-warning);
+
+    .icon {
+      width: 14px;
+      height: 14px;
+      opacity: 0.3; // Default for inactive stars
+
+      &.active {
+        opacity: 1;
+      }
+    }
+  }
+
+  .tags-list {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+  }
+
+  .meta-tag {
+    font-size: 10px;
+    font-weight: 600;
+    color: var(--adw-accent);
+    background: var(--adw-accent-bg);
+    padding: 2px 8px;
+    border-radius: var(--radius-pill);
+    text-transform: uppercase;
+    letter-spacing: 0.02em;
+  }
+}
+
 /* Pronunciations */
 .pronunciations {
   display: flex;
@@ -87,7 +130,7 @@
     opacity: 1;
   }
 
-  svg {
+  .icon {
     width: 14px;
     height: 14px;
   }
@@ -170,7 +213,7 @@
       color: var(--text-main);
     }
 
-    svg {
+    .icon {
       width: 16px;
       height: 16px;
     }

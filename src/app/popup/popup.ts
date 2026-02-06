@@ -4,7 +4,7 @@
  * Simple DOM manipulation like backend templating
  */
 
-import type { DictionaryResult } from "../../lib/models";
+import type { DictionaryEntry } from "../../lib/dictionary.ts";
 import "tiny-markdown-editor/dist/tiny-mde.min.css";
 import {
   getEditorContent,
@@ -41,9 +41,7 @@ const ui: UIContext = {
 };
 
 // State
-let currentResults: DictionaryResult[] = [];
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-let currentWord: string = "";
+let currentResults: DictionaryEntry[] = [];
 
 /**
  * Initialize popup
@@ -56,7 +54,7 @@ async function init() {
   const urlParams = new URLSearchParams(window.location.search);
   const word = urlParams.get("word");
 
-  if (word && word.trim()) {
+  if (word?.trim()) {
     searchInput.value = word;
     expandPopup(); // Immediately expand if pre-filled
     await performSearch(word);
@@ -117,7 +115,6 @@ async function handleSearch() {
  */
 async function performSearch(word: string) {
   showLoading(ui);
-  currentWord = word;
 
   try {
     const response = (await chrome.runtime.sendMessage({
@@ -125,7 +122,7 @@ async function performSearch(word: string) {
       data: {
         word: word,
       },
-    })) as { error?: string; results?: DictionaryResult[] };
+    })) as { error?: string; results?: DictionaryEntry[] };
 
     if (response.error) {
       showError(response.error, ui);

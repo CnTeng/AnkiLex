@@ -1,19 +1,14 @@
-import type { DictionaryResult, IDictionaryProvider, LookupOptions } from "../models";
+import type { DictionaryEntry, IDictionaryProvider, LookupOptions } from "../dictionary";
 
 export abstract class DictionaryProvider implements IDictionaryProvider {
   abstract get id(): string;
   abstract get name(): string;
-  get supportedLanguages() {
-    return ["en"];
-  }
+  abstract get supportedLanguages(): string[];
 
-  abstract lookup(word: string, options?: LookupOptions): Promise<DictionaryResult>;
+  abstract lookup(word: string, options?: LookupOptions): Promise<DictionaryEntry | null>;
+  abstract parseDocument(doc: Document): DictionaryEntry | null;
 
-  async isAvailable(): Promise<boolean> {
-    return true;
-  }
-
-  protected async parseHtml(html: string): Promise<unknown> {
+  protected async parseHtml(html: string): Promise<DictionaryEntry | null> {
     if (this.isFirefoxBg()) {
       const parser = new DOMParser();
       const doc = parser.parseFromString(html, "text/html");
@@ -79,9 +74,5 @@ export abstract class DictionaryProvider implements IDictionaryProvider {
       reasons: ["DOM_PARSER"],
       justification: "Parse dictionary HTML content",
     });
-  }
-
-  parseDocument(_doc: Document): unknown {
-    return [];
   }
 }

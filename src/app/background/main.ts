@@ -2,23 +2,18 @@
  * Background Service Worker
  */
 
-import { anki } from "../../lib/anki";
-import { dictionary } from "../../lib/dictionary";
-import type { AnkiLexSettings, AnkiNote, DictionaryResult, LookupOptions } from "../../lib/models";
-import { YoudaoDictionary } from "../../lib/providers/index";
-import { settings } from "../../lib/settings";
+import { type AnkiNote, anki } from "../../lib/anki";
+import { type DictionaryEntry, dictionary, type LookupOptions } from "../../lib/dictionary";
+import { type AnkiLexSettings, settings } from "../../lib/settings";
 
 // Register dictionary providers
-function registerDictionaries() {
-  dictionary.register(new YoudaoDictionary());
-}
 
 chrome.runtime.onInstalled.addListener(async () => {
-  registerDictionaries();
+  dictionary.registerDictionaries();
   await setupContextMenu();
 });
 
-registerDictionaries();
+dictionary.registerDictionaries();
 
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   handleMessage(message, sender)
@@ -74,7 +69,7 @@ async function handleMessage(
     case "anki-create-note-from-result":
       return {
         noteId: await anki.createNoteFromResult(
-          data.result as DictionaryResult,
+          data.result as DictionaryEntry,
           {
             ...(data.options as object),
             context: data.context as string,

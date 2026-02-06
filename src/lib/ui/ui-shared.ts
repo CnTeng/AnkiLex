@@ -1,6 +1,6 @@
 import { CommandBar, Editor } from "tiny-markdown-editor";
-import type { DictionaryResult } from "../models";
-import { attachAudioListeners, generateResultCardHtml } from "./card-renderer";
+import type { DictionaryEntry } from "../dictionary";
+import { attachAudioListeners, renderDictionaryEntry } from "./dictionary-card";
 
 export interface UIContext {
   resultsContainer: HTMLElement;
@@ -14,7 +14,7 @@ export interface UIContext {
 }
 
 let tinyMDE: Editor | null = null;
-let commandBar: CommandBar | null = null;
+const commandBar: CommandBar | null = null;
 
 /**
  * Initialize the EasyMDE editor in a compact mode
@@ -30,6 +30,7 @@ export function initEditor(
   if (!toolbarContainer) {
     toolbarContainer = document.createElement("div");
     toolbarContainer.className = "tinymde-toolbar";
+
     textarea.parentElement?.insertBefore(toolbarContainer, textarea);
   }
 
@@ -38,7 +39,7 @@ export function initEditor(
     placeholder: placeholder,
   });
 
-  commandBar = new CommandBar({
+  const commandBar = new CommandBar({
     element: toolbarContainer,
     editor: tinyMDE,
     commands: [
@@ -81,34 +82,25 @@ export function getEditorContent(fallbackTextarea?: HTMLTextAreaElement): string
 /**
  * Render the entire results list
  */
-export function renderResults(results: DictionaryResult[], ui: UIContext) {
+export function renderResults(results: DictionaryEntry[], ui: UIContext) {
   const { resultsContainer, emptyState, errorState, loadingState, addToAnkiBtn } = ui;
 
-  // 1. Reset States
   if (emptyState) emptyState.classList.add("hidden");
   if (errorState) errorState.classList.add("hidden");
   if (loadingState) loadingState.classList.add("hidden");
 
-  // Show Add to Anki button (Popup only)
   if (addToAnkiBtn) {
     addToAnkiBtn.classList.remove("hidden");
   }
 
-  // 2. Clear & Render
   resultsContainer.innerHTML = "";
   results.forEach((result, index) => {
     const card = document.createElement("div");
-    card.className = "ankilex-note"; // Use shared class name
-    // For Popup, we might need a wrapper, but let's try to unify styles.
-    // Frame uses .ankilex-note, Popup used .result-card.
-    // We should migrate Popup SCSS to use .ankilex-note too.
+    card.className = "ankilex-note";
 
-    // Check if we are in Frame or Popup to decide if we show mini-buttons
-    // Frame always shows mini-buttons. Popup shows them too now?
-    // The previous popup logic had a global "Add to Anki" button, but frame had per-definition buttons.
-    // Let's stick to the per-definition buttons for consistency if possible, OR keep them separate.
-    // For now, we use the shared renderer which adds buttons by default.
-    card.innerHTML = generateResultCardHtml(result, index, true);
+    const cardContent = renderDictionaryEntry(result, index, true);
+    card.appendChild(cardContent);
+
     attachAudioListeners(card);
     resultsContainer.appendChild(card);
   });

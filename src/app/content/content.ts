@@ -1,4 +1,4 @@
-import type { DictionaryResult } from "../../lib/models";
+import type { DictionaryEntry } from "../../lib/dictionary.ts";
 
 function detectLocale(): string | undefined {
   return document.documentElement.lang?.split("-")[0] || navigator.language?.split("-")[0];
@@ -131,11 +131,7 @@ class AnkiLexContent {
     this.lookupIcon.id = "ankilex-lookup-icon";
 
     // AnkiLex Logo (Minimal version)
-    this.lookupIcon.innerHTML = `
-      <svg viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg">
-        <path fill="currentColor" d="M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001c.03.04.062.078.098.115l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85a1.007 1.007 0 0 0-.115-.1zM12 6.5a5.5 5.5 0 1 1-11 0 5.5 5.5 0 0 1 11 0z"/>
-      </svg>
-    `;
+    this.lookupIcon.innerHTML = `<span class="icon search"></span>`;
 
     // Inject styles for the icon
     const style = document.createElement("style");
@@ -165,9 +161,17 @@ class AnkiLexContent {
         background: #1b66c9;
         transform: scale(1.1);
       }
-      #ankilex-lookup-icon svg {
+      #ankilex-lookup-icon .icon {
         width: 16px;
         height: 16px;
+        display: inline-block;
+        mask-size: contain;
+        mask-repeat: no-repeat;
+        mask-position: center;
+        background-color: currentColor;
+      }
+      #ankilex-lookup-icon .icon.search {
+        mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath d='M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001c.03.04.062.078.098.115l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85a1.007 1.007 0 0 0-.115-.1zM12 6.5a5.5 5.5 0 1 1-11 0 5.5 5.5 0 0 1 11 0z'/%3E%3C/svg%3E");
       }
     `;
     document.head.appendChild(style);
@@ -305,9 +309,9 @@ class AnkiLexContent {
     sendResponse({ success: true });
   }
 
-  private currentResults: DictionaryResult[] = [];
+  private currentResults: DictionaryEntry[] = [];
 
-  private updatePopupContent(word: string, context: string, results: DictionaryResult[]) {
+  private updatePopupContent(word: string, context: string, results: DictionaryEntry[]) {
     this.currentResults = results;
     if (!this.popup) return;
 

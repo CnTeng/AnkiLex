@@ -1,4 +1,4 @@
-import type { Definition, DictionaryResult, Example, Pronunciation } from "../models";
+import type { Definition, DictionaryEntry, Example, Pronunciation } from "../dictionary";
 import { DictionaryProvider } from "./base";
 
 export class YoudaoDictionary extends DictionaryProvider {
@@ -8,8 +8,11 @@ export class YoudaoDictionary extends DictionaryProvider {
   get name() {
     return "Collins (via Youdao)";
   }
+  get supportedLanguages() {
+    return ["en"];
+  }
 
-  async lookup(word: string): Promise<DictionaryResult> {
+  async lookup(word: string): Promise<DictionaryEntry | null> {
     const url = `https://dict.youdao.com/w/${encodeURIComponent(word)}`;
 
     try {
@@ -19,63 +22,32 @@ export class YoudaoDictionary extends DictionaryProvider {
       }
 
       const html = await response.text();
-      const data = (await this.parseHtml(html)) as {
-        definitions?: Definition[];
-        pronunciations?: Pronunciation[];
-        tags?: string[];
-        stars?: number;
-      };
+      const entry = await this.parseHtml(html);
 
-      const result: DictionaryResult = {
-        word,
-        provider: this.name,
-        definitions: data?.definitions || [],
-        pronunciations: data?.pronunciations || [],
-        metadata: {},
-      };
-
-      if (data?.tags && data.tags.length > 0) {
-        result.metadata = { ...result.metadata, tags: data.tags };
-      }
-
-      if (data?.stars !== undefined && data.stars > 0) {
-        result.metadata = { ...result.metadata, frequency: data.stars };
-      }
-
-      return result;
+      return entry ? { ...entry, word } : null;
     } catch (e) {
-      console.error("Youdao lookup failed:", e);
-      return { word, provider: this.name, definitions: [], pronunciations: [] };
+      throw new Error(
+        `Failed to fetch definition from Youdao: ${e instanceof Error ? e.message : String(e)}`,
+      );
     }
   }
 
-  public parseDocument(doc: Document): {
-    definitions?: Definition[];
-    pronunciations?: Pronunciation[];
-    tags?: string[];
-    stars?: number;
-  } {
-    const collinsContainer = doc.querySelector("#collinsResult");
-
-    const definitions =
-      this.parseCollinsDefinitions(collinsContainer) ?? this.parsePhraseDefinitions(doc);
-    const { stars, tags } = this.parseStarsAndTags(collinsContainer);
-    const pronunciations = this.parsePronunciations(doc);
+  public parseDocument(doc: Document): DictionaryEntry | null {
+    const container = doc.querySelector("#collinsResult");
+    if (!container) return null;
 
     return {
-      definitions,
-      pronunciations,
-      tags,
-      stars,
+      word: "",
+      provider: this.name,
+      definitions: this.parseCollinsDefinitions(container) ?? this.parsePhraseDefinitions(doc),
+      pronunciations: this.parsePronunciations(doc),
+      metadata: this.parseMetadata(container),
     };
   }
 
-  private parseCollinsDefinitions(container: Element | null): Definition[] {
+  private parseCollinsDefinitions(container: Element): Definition[] {
     const definitions: Definition[] = [];
-
-    if (!container) return definitions;
     const defNodes = container.querySelectorAll(".ol li");
-    if (defNodes.length === 0) return definitions;
 
     defNodes.forEach((defNode) => {
       const transNode = defNode.querySelector(".collinsMajorTrans p");
@@ -89,8 +61,9 @@ export class YoudaoDictionary extends DictionaryProvider {
         fullText = fullText.substring(pos.length).trim();
       }
 
-      const exampleLis = defNode.querySelectorAll(".exampleLists");
       const examples: Example[] = [];
+      const exampleLis = defNode.querySelectorAll(".exampleLists");
+
       exampleLis.forEach((ex) => {
         const pTags = ex.querySelectorAll("p");
         if (pTags.length >= 2) {
@@ -133,27 +106,6 @@ export class YoudaoDictionary extends DictionaryProvider {
     return definitions;
   }
 
-  private parseStarsAndTags(container: Element | null): {
-    stars: number;
-    tags: string[];
-  } {
-    let stars = 0;
-    const tags: string[] = [];
-
-    if (!container) return { stars, tags };
-
-    const starNode = container.querySelector("h4 .star");
-    const match = starNode?.className.match(/star(\d+)/);
-    if (match) stars = parseInt(match[1], 10);
-
-    const rankNode = container.querySelector("h4 .rank");
-    if (rankNode?.textContent) {
-      tags.push(...rankNode.textContent.split(" ").filter(Boolean));
-    }
-
-    return { stars, tags };
-  }
-
   private parsePronunciations(doc: Document): Pronunciation[] {
     const pronunciations: Pronunciation[] = [];
 
@@ -178,5 +130,22 @@ export class YoudaoDictionary extends DictionaryProvider {
     }
 
     return pronunciations;
+  }
+
+  private parseMetadata(container: Element): Record<string, unknown> {
+    const metadata: Record<string, unknown> = {};
+
+    const starNode = container.querySelector("h4 .star");
+    const match = starNode?.className.match(/star(\d+)/);
+    if (match) {
+      metadata.frequency = parseInt(match[1], 10);
+    }
+
+    const rankNode = container.querySelector("h4 .rank");
+    if (rankNode?.textContent) {
+      metadata.tags = rankNode.textContent.split(" ").filter(Boolean);
+    }
+
+    return metadata;
   }
 }
