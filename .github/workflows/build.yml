@@ -1,0 +1,87 @@
+name: Nightly Build
+
+on:
+  schedule:
+    - cron: 0 2 * * *
+  workflow_dispatch:
+
+concurrency:
+  group: nightly
+  cancel-in-progress: true
+
+env:
+  NODE_VERSION: "20"
+  APP_NAME: ankilex
+
+jobs:
+  build:
+    name: Build (${{ matrix.browser }})
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        browser: [chrome, firefox]
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci --prefer-offline --no-audit
+
+      - name: Build extension
+        run: npm run build:${{ matrix.browser }}
+
+      - name: Package extension
+        shell: bash
+        run: |
+          set -e
+          DATE=$(date -u +%Y%m%d)
+          DIST="dist/${{ matrix.browser }}"
+          OUT="${{ env.APP_NAME }}-${{ matrix.browser }}-nightly-${DATE}.zip"
+
+          cd "$DIST"
+          zip -qr "../../$OUT" .
+          echo "OUT_FILE=$OUT" >> "$GITHUB_ENV"
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: nightly-${{ matrix.browser }}
+          path: ${{ env.OUT_FILE }}
+          retention-days: 14
+
+  release:
+    name: Publish Nightly Release
+    needs: build
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Download artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          name: Nightly Build
+          tag_name: nightly
+          prerelease: true
+          files: artifacts/**/*
+          body: |
+            ⚠️ This is an automated nightly build.
+
+            - Built from latest main branch
+            - May be unstable
+            - For testing and early access only
+
+            Date: ${{ github.run_id }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
