@@ -2,7 +2,7 @@
  * Storage Wrapper supporting both Chrome Extension and Zotero Plugin environments.
  */
 
-declare const Zotero: { debug: (msg: string) => void; [key: string]: unknown };
+declare const Zotero: { debug: (msg: string) => void;[key: string]: unknown };
 declare const chrome: {
   storage: {
     local: {

@@ -4,7 +4,7 @@
 
 import { anki } from "../../lib/anki";
 import { dictionary } from "../../lib/dictionary";
-import type { AnkiLexSettings, AnkiNote, DictionaryEntry, LookupOptions } from "../../lib/model";
+import type { AnkiLexSettings, AnkiNote, DictionaryEntry } from "../../lib/model";
 import { settings } from "../../lib/settings";
 
 // Register dictionary providers
@@ -33,19 +33,13 @@ async function handleMessage(
   const { action, data } = message;
 
   switch (action) {
-    case "lookup":
-      return {
-        results: await dictionary.lookupEnabled(data.word as string, data.options as LookupOptions),
-      };
-
-    case "lookup-with":
-      return {
-        result: await dictionary.lookup(
-          data.word as string,
-          data.dictionaryId as string,
-          data.options as LookupOptions,
-        ),
-      };
+    case "lookup": {
+      const { languageDictionaries } = await settings.get();
+      const lang = "en";
+      const providerId = languageDictionaries[lang];
+      const result = await dictionary.lookup(data.word as string, providerId);
+      return result ? [result] : [];
+    }
 
     case "get-available-dictionaries":
       return {

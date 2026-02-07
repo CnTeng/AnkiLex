@@ -3,7 +3,7 @@ export interface IDictionaryProvider {
   readonly name: string;
   readonly supportedLanguages: string[];
 
-  lookup(word: string, options?: LookupOptions): Promise<DictionaryEntry | null>;
+  lookup(word: string): Promise<DictionaryEntry | null>;
 }
 
 export interface DictionaryEntry {
@@ -29,9 +29,4 @@ export interface Pronunciation {
   text?: string;
   audioUrl?: string;
   type?: string; // 'uk', 'us', 'jp', etc.
-}
-
-export interface LookupOptions {
-  sourceLanguage?: string;
-  targetLanguage?: string;
 }

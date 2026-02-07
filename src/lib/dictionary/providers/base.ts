@@ -1,11 +1,11 @@
-import type { DictionaryEntry, IDictionaryProvider, LookupOptions } from "../../model";
+import type { DictionaryEntry, IDictionaryProvider } from "../../model";
 
 export abstract class DictionaryProvider implements IDictionaryProvider {
   abstract get id(): string;
   abstract get name(): string;
   abstract get supportedLanguages(): string[];
 
-  abstract lookup(word: string, options?: LookupOptions): Promise<DictionaryEntry | null>;
+  abstract lookup(word: string): Promise<DictionaryEntry | null>;
   abstract parseDocument(doc: Document): DictionaryEntry | null;
 
   protected async parseHtml(html: string): Promise<DictionaryEntry | null> {

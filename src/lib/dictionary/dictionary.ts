@@ -1,5 +1,4 @@
-import type { DictionaryEntry, IDictionaryProvider, LookupOptions } from "../model";
-import { settings } from "../settings";
+import type { DictionaryEntry, IDictionaryProvider } from "../model";
 import { YoudaoDictionary } from "./providers";
 
 const providers: Map<string, IDictionaryProvider> = new Map();
@@ -24,24 +23,9 @@ export const dictionary = {
     }));
   },
 
-  async lookup(
-    word: string,
-    dictionaryId: string,
-    options?: LookupOptions,
-  ): Promise<DictionaryEntry | null> {
+  async lookup(word: string, dictionaryId: string): Promise<DictionaryEntry | null> {
     const provider = providers.get(dictionaryId);
     if (!provider) return null;
-    return provider.lookup(word, options);
-  },
-
-  async lookupEnabled(word: string, options?: LookupOptions): Promise<DictionaryEntry[]> {
-    const { languageDictionaries } = await settings.get();
-    const lang = options?.sourceLanguage ?? "en";
-    const providerId = languageDictionaries[lang];
-
-    if (!providerId) return [];
-
-    const result = await this.lookup(word, providerId, options);
-    return result ? [result] : [];
+    return provider.lookup(word);
   },
 };
