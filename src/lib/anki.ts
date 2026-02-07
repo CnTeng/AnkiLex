@@ -1,28 +1,10 @@
-import type { DictionaryEntry } from "./dictionary";
+import {
+  type AnkiConnectResponse,
+  type AnkiNote,
+  DEFAULT_ANKI_URL,
+  type DictionaryEntry,
+} from "./model";
 import { settings } from "./settings";
-
-const DEFAULT_ANKI_URL = "http://127.0.0.1:8765";
-
-export interface AnkiNote {
-  deckName: string;
-  modelName: string;
-  fields: Record<string, string>;
-  tags?: string[];
-  audio?: AnkiMedia[];
-  picture?: AnkiMedia[];
-}
-
-export interface AnkiMedia {
-  url?: string;
-  filename?: string;
-  data?: string;
-  fields?: string[];
-}
-
-export interface AnkiConnectResponse<T = unknown> {
-  result: T;
-  error: string | null;
-}
 
 async function invoke<T>(action: string, params: Record<string, unknown> = {}): Promise<T> {
   const currentSettings = await settings.get();

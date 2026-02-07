@@ -1,4 +1,4 @@
-import type { DictionaryEntry } from "../../lib/dictionary.ts";
+import type { DictionaryEntry } from "../../lib/model";
 
 function detectLocale(): string | undefined {
   return document.documentElement.lang?.split("-")[0] || navigator.language?.split("-")[0];

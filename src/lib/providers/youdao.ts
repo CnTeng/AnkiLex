@@ -1,4 +1,4 @@
-import type { Definition, DictionaryEntry, Example, Pronunciation } from "../dictionary";
+import type { Definition, DictionaryEntry, Example, Pronunciation } from "../model";
 import { DictionaryProvider } from "./base";
 
 export class YoudaoDictionary extends DictionaryProvider {

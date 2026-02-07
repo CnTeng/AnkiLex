@@ -1,45 +1,8 @@
+import type { DictionaryEntry, IDictionaryProvider, LookupOptions } from "./model";
 import { YoudaoDictionary } from "./providers";
 import { settings } from "./settings";
 
 const providers: Map<string, IDictionaryProvider> = new Map();
-
-export interface DictionaryEntry {
-  word: string;
-  provider: string;
-  definitions: Definition[];
-  pronunciations: Pronunciation[];
-  metadata?: Record<string, unknown>;
-}
-
-export interface Definition {
-  partOfSpeech?: string;
-  text: string;
-  examples?: Example[];
-}
-
-export interface Example {
-  text: string;
-  translation?: string;
-}
-
-export interface Pronunciation {
-  text?: string;
-  audioUrl?: string;
-  type?: string; // 'uk', 'us', 'jp', etc.
-}
-
-export interface LookupOptions {
-  sourceLanguage?: string;
-  targetLanguage?: string;
-}
-
-export interface IDictionaryProvider {
-  readonly id: string;
-  readonly name: string;
-  readonly supportedLanguages: string[];
-
-  lookup(word: string, options?: LookupOptions): Promise<DictionaryEntry | null>;
-}
 
 export const dictionary = {
   register(provider: IDictionaryProvider) {

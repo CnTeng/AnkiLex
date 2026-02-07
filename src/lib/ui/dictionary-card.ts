@@ -1,11 +1,11 @@
-import type { Definition, DictionaryEntry, Pronunciation } from "../dictionary";
+import type { Definition, DictionaryEntry, Pronunciation } from "../model";
 
 export class DictionaryEntryRenderer {
   constructor(
     private entry: DictionaryEntry,
     private index: number,
     private showAddButton: boolean = true,
-  ) {}
+  ) { }
 
   render(): DocumentFragment {
     const fragment = document.createDocumentFragment();

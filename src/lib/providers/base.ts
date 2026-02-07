@@ -1,4 +1,4 @@
-import type { DictionaryEntry, IDictionaryProvider, LookupOptions } from "../dictionary";
+import type { DictionaryEntry, IDictionaryProvider, LookupOptions } from "../model";
 
 export abstract class DictionaryProvider implements IDictionaryProvider {
   abstract get id(): string;

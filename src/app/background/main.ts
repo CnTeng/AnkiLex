@@ -2,9 +2,10 @@
  * Background Service Worker
  */
 
-import { type AnkiNote, anki } from "../../lib/anki";
-import { type DictionaryEntry, dictionary, type LookupOptions } from "../../lib/dictionary";
-import { type AnkiLexSettings, settings } from "../../lib/settings";
+import { anki } from "../../lib/anki";
+import { dictionary } from "../../lib/dictionary";
+import type { AnkiLexSettings, AnkiNote, DictionaryEntry, LookupOptions } from "../../lib/model";
+import { settings } from "../../lib/settings";
 
 // Register dictionary providers
 

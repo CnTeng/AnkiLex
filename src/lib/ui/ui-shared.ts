@@ -1,5 +1,5 @@
 import { CommandBar, Editor } from "tiny-markdown-editor";
-import type { DictionaryEntry } from "../dictionary";
+import type { DictionaryEntry } from "../model";
 import { attachAudioListeners, renderDictionaryEntry } from "./dictionary-card";
 
 export interface UIContext {

@@ -4,7 +4,7 @@
  * Simple DOM manipulation like backend templating
  */
 
-import type { DictionaryEntry } from "../../lib/dictionary.ts";
+import type { DictionaryEntry } from "../../lib/model";
 import "tiny-markdown-editor/dist/tiny-mde.min.css";
 import {
   getEditorContent,
