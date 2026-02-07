@@ -3,7 +3,7 @@ import { attachAudioListeners } from "../../lib/ui/dictionary-card";
 import {
   getEditorContent,
   initEditor,
-  renderResults,
+  renderResult,
   setEditorContent,
   type UIContext,
 } from "../../lib/ui/ui-shared";
@@ -43,10 +43,10 @@ window.addEventListener("message", (event) => {
       setEditorContent(newContext);
     }
 
-    // 2. Update Results
-    // We now expect raw results from content.ts
-    if (data.results) {
-      renderResults(data.results, ui);
+    // 2. Update Result
+    // We now expect raw result from content.ts
+    if (data.result) {
+      renderResult(data.result, ui);
     } else if (data.html) {
       // Legacy fallback (should not be reached if content.ts is updated)
       resultsContainer.innerHTML = data.html;
@@ -55,7 +55,7 @@ window.addEventListener("message", (event) => {
   } else if (action === "anki-added") {
     // Success State
     const button = resultsContainer.querySelector(
-      `.add-anki-mini-btn[data-result-index="${event.data.index}"][data-def-index="${event.data.defIndex}"]`,
+      `.add-anki-mini-btn[data-def-index="${event.data.defIndex}"]`,
     ) as HTMLButtonElement;
 
     if (button) {
@@ -108,7 +108,6 @@ if (resultsContainer) {
 
     if (btn) {
       e.stopPropagation();
-      const resultIndex = parseInt(btn.dataset.resultIndex || "0", 10);
       const defIndex = parseInt(btn.dataset.defIndex || "0", 10);
 
       // Show loading state
@@ -123,7 +122,6 @@ if (resultsContainer) {
       parent.postMessage(
         {
           action: "add-to-anki",
-          index: resultIndex,
           defIndex: defIndex,
           context: currentContext,
         },

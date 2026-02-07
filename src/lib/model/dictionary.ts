@@ -4,6 +4,7 @@ export interface IDictionaryProvider {
   readonly supportedLanguages: string[];
 
   lookup(word: string): Promise<DictionaryEntry | null>;
+  parseDocument(doc: Document): DictionaryEntry | null;
 }
 
 export interface DictionaryEntry {

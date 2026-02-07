@@ -140,7 +140,7 @@ class AnkiLexOptions {
 
   async loadDictionaries(languageDictionaries: Record<string, string>) {
     return new Promise<void>((resolve) => {
-      chrome.runtime.sendMessage({ action: "get-available-dictionaries" }, (response) => {
+      chrome.runtime.sendMessage({ action: "get-dictionaries" }, (response) => {
         const list = document.getElementById("dictionary-list");
         if (list && response.dictionaries) {
           list.innerHTML = "";

@@ -3,20 +3,20 @@ import { YoudaoDictionary } from "./providers";
 
 const providers: Map<string, IDictionaryProvider> = new Map();
 
+function register(provider: IDictionaryProvider) {
+  providers.set(provider.id, provider);
+}
+
 export const dictionary = {
-  register(provider: IDictionaryProvider) {
-    providers.set(provider.id, provider);
+  registerAll() {
+    register(new YoudaoDictionary());
   },
 
-  registerDictionaries() {
-    dictionary.register(new YoudaoDictionary());
-  },
-
-  getProvider(id: string) {
+  getProvider(id: string): IDictionaryProvider | undefined {
     return providers.get(id);
   },
 
-  getAllProviders() {
+  getProviders() {
     return Array.from(providers.values()).map((p) => ({
       id: p.id,
       name: p.name,
@@ -29,3 +29,5 @@ export const dictionary = {
     return provider.lookup(word);
   },
 };
+
+dictionary.registerAll();

@@ -80,9 +80,9 @@ export function getEditorContent(fallbackTextarea?: HTMLTextAreaElement): string
 }
 
 /**
- * Render the entire results list
+ * Render a single result
  */
-export function renderResults(results: DictionaryEntry[], ui: UIContext) {
+export function renderResult(result: DictionaryEntry, ui: UIContext) {
   const { resultsContainer, emptyState, errorState, loadingState, addToAnkiBtn } = ui;
 
   if (emptyState) emptyState.classList.add("hidden");
@@ -94,16 +94,16 @@ export function renderResults(results: DictionaryEntry[], ui: UIContext) {
   }
 
   resultsContainer.innerHTML = "";
-  results.forEach((result, index) => {
-    const card = document.createElement("div");
-    card.className = "ankilex-note";
 
-    const cardContent = renderDictionaryEntry(result, index, true);
-    card.appendChild(cardContent);
+  const card = document.createElement("div");
+  card.className = "ankilex-note";
 
-    attachAudioListeners(card);
-    resultsContainer.appendChild(card);
-  });
+  // Always pass index 0 for single result mode
+  const cardContent = renderDictionaryEntry(result, true);
+  card.appendChild(cardContent);
+
+  attachAudioListeners(card);
+  resultsContainer.appendChild(card);
 
   resultsContainer.scrollTop = 0;
 }

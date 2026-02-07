@@ -13,18 +13,28 @@ export class YoudaoDictionary extends DictionaryProvider {
   }
 
   async lookup(word: string): Promise<DictionaryEntry | null> {
-    const url = `https://dict.youdao.com/w/${encodeURIComponent(word)}`;
+    let url = `https://dict.youdao.com/w/${encodeURIComponent(word)}`;
 
     try {
-      const response = await fetch(url);
+      let response = await fetch(url);
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
 
       const html = await response.text();
-      const entry = await this.parseHtml(html);
+      let entry = await this.parseHtml(html);
 
-      return entry ? { ...entry, word } : null;
+      if (!entry && word !== word.toLowerCase()) {
+        url = `https://dict.youdao.com/w/${encodeURIComponent(word.toLowerCase())}`;
+        response = await fetch(url);
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        const lowerHtml = await response.text();
+        entry = await this.parseHtml(lowerHtml);
+      }
+
+      return entry;
     } catch (e) {
       throw new Error(
         `Failed to fetch definition from Youdao: ${e instanceof Error ? e.message : String(e)}`,
@@ -37,12 +47,17 @@ export class YoudaoDictionary extends DictionaryProvider {
     if (!container) return null;
 
     return {
-      word: "",
+      word: this.parseWord(container),
       provider: this.name,
       definitions: this.parseCollinsDefinitions(container) ?? this.parsePhraseDefinitions(doc),
       pronunciations: this.parsePronunciations(doc),
       metadata: this.parseMetadata(container),
     };
+  }
+
+  private parseWord(container: Element): string {
+    const keyword = container.querySelector("h4 .title");
+    return keyword?.textContent?.trim() || "";
   }
 
   private parseCollinsDefinitions(container: Element): Definition[] {

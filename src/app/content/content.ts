@@ -26,7 +26,7 @@ class AnkiLexContent {
       if (event.data.action === "hide") {
         this.hidePopup();
       } else if (event.data.action === "add-to-anki") {
-        this.handleAddToAnki(event.data.index, event.data.defIndex, event.data.context);
+        this.handleAddToAnki(event.data.defIndex, event.data.context);
       }
     });
   }
@@ -262,8 +262,8 @@ class AnkiLexContent {
 
     // Request lookup from background
     chrome.runtime.sendMessage({ action: "lookup", data: { word } }, (response) => {
-      if (!chrome.runtime.lastError && response?.results) {
-        this.updatePopupContent(word, context, response.results);
+      if (!chrome.runtime.lastError && response) {
+        this.updatePopupContent(word, context, response);
       }
     });
   }
@@ -309,10 +309,10 @@ class AnkiLexContent {
     sendResponse({ success: true });
   }
 
-  private currentResults: DictionaryEntry[] = [];
+  private currentResult: DictionaryEntry | null = null;
 
-  private updatePopupContent(word: string, context: string, results: DictionaryEntry[]) {
-    this.currentResults = results;
+  private updatePopupContent(word: string, context: string, result: DictionaryEntry) {
+    this.currentResult = result;
     if (!this.popup) return;
 
     // Send data to iframe
@@ -320,7 +320,7 @@ class AnkiLexContent {
       {
         action: "update",
         data: {
-          results: results,
+          result: result,
           context: context,
         },
       },
@@ -328,8 +328,9 @@ class AnkiLexContent {
     );
   }
 
-  private async handleAddToAnki(index: number, defIndex: number, contextNote?: string) {
-    const result = this.currentResults[index];
+  private async handleAddToAnki(defIndex: number, contextNote?: string) {
+    // Ignore index as we only have one result now
+    const result = this.currentResult;
     if (!result) return;
 
     try {
@@ -354,7 +355,7 @@ class AnkiLexContent {
       });
 
       // Success feedback to iframe
-      this.popup?.contentWindow?.postMessage({ action: "anki-added", index, defIndex }, "*");
+      this.popup?.contentWindow?.postMessage({ action: "anki-added", defIndex }, "*");
     } catch (error: unknown) {
       console.error("AnkiLex: Failed to add to Anki", error);
       // Error feedback to iframe
@@ -362,7 +363,6 @@ class AnkiLexContent {
       this.popup?.contentWindow?.postMessage(
         {
           action: "anki-error",
-          index,
           defIndex,
           error: errorMessage,
         },

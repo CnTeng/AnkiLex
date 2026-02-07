@@ -1,9 +1,4 @@
-import type { DictionaryProvider } from "../../lib/dictionary";
-import { YoudaoDictionary } from "../../lib/dictionary";
-
-const providers: Record<string, DictionaryProvider> = {
-  youdao: new YoudaoDictionary(),
-};
+import { dictionary } from "../../lib/dictionary";
 
 chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
   if (message.action === "parse-html") {
@@ -20,13 +15,11 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
 });
 
 async function handleParseHtml(html: string, providerId: string) {
-  const parser = new DOMParser();
-  const doc = parser.parseFromString(html, "text/html");
-
-  const provider = providers[providerId];
-  if (provider) {
-    return provider.parseDocument(doc);
-  } else {
+  const provider = dictionary.getProvider(providerId);
+  if (!provider) {
     return [];
   }
+
+  const doc = new DOMParser().parseFromString(html, "text/html");
+  return provider.parseDocument(doc);
 }

@@ -9,7 +9,7 @@ import "tiny-markdown-editor/dist/tiny-mde.min.css";
 import {
   getEditorContent,
   initEditor,
-  renderResults,
+  renderResult,
   setEditorContent,
   showError,
   showLoading,
@@ -41,7 +41,7 @@ const ui: UIContext = {
 };
 
 // State
-let currentResults: DictionaryEntry[] = [];
+let currentResult: DictionaryEntry | null = null;
 
 /**
  * Initialize popup
@@ -117,27 +117,22 @@ async function performSearch(word: string) {
   showLoading(ui);
 
   try {
-    const response = (await chrome.runtime.sendMessage({
+    const result = (await chrome.runtime.sendMessage({
       action: "lookup",
       data: {
         word: word,
       },
-    })) as { error?: string; results?: DictionaryEntry[] };
+    })) as DictionaryEntry | null;
 
-    if (response.error) {
-      showError(response.error, ui);
-      return;
-    }
-
-    currentResults = response.results || [];
-
-    if (currentResults.length === 0) {
+    if (!result) {
       showError("No results found", ui);
       return;
     }
 
+    currentResult = result;
+
     // Render results
-    renderResults(currentResults, ui);
+    renderResult(currentResult, ui);
 
     // Show context editor when results are found
     if (contextSection) {
@@ -154,11 +149,14 @@ async function performSearch(word: string) {
  * Handle add to Anki button click
  */
 async function handleAddToAnki(resultIndex: number, defIndex: number, btn: HTMLButtonElement) {
-  if (currentResults.length === 0 || !currentResults[resultIndex]) {
+  // Ignore resultIndex as we only have one result now
+  const result = currentResult;
+  if (!result) {
     return;
   }
 
   // Visual feedback on button
+
   const originalContent = btn.innerHTML;
   btn.disabled = true;
   // Spinner icon
@@ -166,8 +164,6 @@ async function handleAddToAnki(resultIndex: number, defIndex: number, btn: HTMLB
   btn.classList.add("spinning");
 
   try {
-    const result = currentResults[resultIndex];
-
     // Capture context note
     const contextNote = getEditorContent(contextNoteArea);
 

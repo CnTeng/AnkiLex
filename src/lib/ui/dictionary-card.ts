@@ -3,7 +3,6 @@ import type { Definition, DictionaryEntry, Pronunciation } from "../model";
 export class DictionaryEntryRenderer {
   constructor(
     private entry: DictionaryEntry,
-    private index: number,
     private showAddButton: boolean = true,
   ) { }
 
@@ -215,7 +214,6 @@ export class DictionaryEntryRenderer {
   private renderAddAnkiButton(defIndex: number): HTMLButtonElement {
     const button = document.createElement("button");
     button.className = "add-anki-mini-btn";
-    button.setAttribute("data-result-index", this.index.toString());
     button.setAttribute("data-def-index", defIndex.toString());
     button.setAttribute("title", "Add to Anki");
 
@@ -269,10 +267,9 @@ export class DictionaryEntryRenderer {
 
 export function renderDictionaryEntry(
   result: DictionaryEntry,
-  index: number,
   showAddButton: boolean = true,
 ): DocumentFragment {
-  const renderer = new DictionaryEntryRenderer(result, index, showAddButton);
+  const renderer = new DictionaryEntryRenderer(result, showAddButton);
   return renderer.render();
 }
 

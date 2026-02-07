@@ -8,13 +8,12 @@ import type { AnkiLexSettings, AnkiNote, DictionaryEntry } from "../../lib/model
 import { settings } from "../../lib/settings";
 
 // Register dictionary providers
-
 chrome.runtime.onInstalled.addListener(async () => {
-  dictionary.registerDictionaries();
+  dictionary.registerAll();
   await setupContextMenu();
 });
 
-dictionary.registerDictionaries();
+dictionary.registerAll();
 
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   handleMessage(message, sender)
@@ -38,12 +37,12 @@ async function handleMessage(
       const lang = "en";
       const providerId = languageDictionaries[lang];
       const result = await dictionary.lookup(data.word as string, providerId);
-      return result ? [result] : [];
+      return result;
     }
 
-    case "get-available-dictionaries":
+    case "get-dictionaries":
       return {
-        dictionaries: dictionary.getAllProviders(),
+        dictionaries: dictionary.getProviders(),
       };
 
     case "anki-check":
