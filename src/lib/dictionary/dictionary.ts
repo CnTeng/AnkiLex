@@ -1,6 +1,6 @@
-import type { DictionaryEntry, IDictionaryProvider, LookupOptions } from "./model";
+import type { DictionaryEntry, IDictionaryProvider, LookupOptions } from "../model";
+import { settings } from "../settings";
 import { YoudaoDictionary } from "./providers";
-import { settings } from "./settings";
 
 const providers: Map<string, IDictionaryProvider> = new Map();
 

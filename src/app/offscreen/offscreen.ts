@@ -1,5 +1,5 @@
-import type { DictionaryProvider } from "../../lib/providers/base";
-import { YoudaoDictionary } from "../../lib/providers/youdao";
+import type { DictionaryProvider } from "../../lib/dictionary";
+import { YoudaoDictionary } from "../../lib/dictionary";
 
 const providers: Record<string, DictionaryProvider> = {
   youdao: new YoudaoDictionary(),
