@@ -2,7 +2,7 @@
  * Options Page Logic
  */
 
-import type { AnkiLexSettings } from "../../lib/model";
+import type { AnkiLexSettings } from "@lib/model";
 
 class AnkiLexOptions {
   constructor() {

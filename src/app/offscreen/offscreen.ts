@@ -1,4 +1,4 @@
-import { dictionary } from "../../lib/dictionary";
+import { dictionary } from "@lib/dictionary";
 
 chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
   if (message.action === "parse-html") {

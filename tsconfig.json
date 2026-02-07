@@ -15,7 +15,10 @@
     "skipLibCheck": true,
     "moduleResolution": "node",
     "resolveJsonModule": true,
-    "downlevelIteration": true
+    "downlevelIteration": true,
+    "paths": {
+      "@lib/*": ["./src/lib/*"]
+    }
   },
   "include": ["src/app/**/*", "src/lib/**/*"],
   "exclude": ["node_modules", "dist"]

@@ -1,12 +1,12 @@
 import "tiny-markdown-editor/dist/tiny-mde.min.css";
-import { attachAudioListeners } from "../../lib/ui/dictionary-card";
+import { attachAudioListeners } from "@lib/ui/dictionary-card";
 import {
   getEditorContent,
   initEditor,
   renderResult,
   setEditorContent,
   type UIContext,
-} from "../../lib/ui/ui-shared";
+} from "@lib/ui/ui-shared";
 
 // DOM Elements
 const contextSection = document.getElementById("context-section") as HTMLDivElement;

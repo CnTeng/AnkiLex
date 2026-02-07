@@ -2,10 +2,10 @@
  * Background Service Worker
  */
 
-import { anki } from "../../lib/anki";
-import { dictionary } from "../../lib/dictionary";
-import type { AnkiLexSettings, AnkiNote, DictionaryEntry } from "../../lib/model";
-import { settings } from "../../lib/settings";
+import { anki } from "@lib/anki";
+import { dictionary } from "@lib/dictionary";
+import type { AnkiLexSettings, AnkiNote, DictionaryEntry } from "@lib/model";
+import { settings } from "@lib/settings";
 
 // Register dictionary providers
 chrome.runtime.onInstalled.addListener(async () => {

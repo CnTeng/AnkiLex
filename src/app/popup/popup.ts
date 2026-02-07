@@ -4,7 +4,7 @@
  * Simple DOM manipulation like backend templating
  */
 
-import type { DictionaryEntry } from "../../lib/model";
+import type { DictionaryEntry } from "@lib/model";
 import "tiny-markdown-editor/dist/tiny-mde.min.css";
 import {
   getEditorContent,
@@ -14,7 +14,7 @@ import {
   showError,
   showLoading,
   type UIContext,
-} from "../../lib/ui/ui-shared";
+} from "@lib/ui/ui-shared";
 
 // DOM elements
 const searchInput = document.getElementById("search-input") as HTMLInputElement;
@@ -84,9 +84,8 @@ function handleResultsContainerClick(e: MouseEvent) {
 
   if (btn) {
     e.stopPropagation();
-    const resultIndex = parseInt(btn.dataset.resultIndex || "0", 10);
     const defIndex = parseInt(btn.dataset.defIndex || "0", 10);
-    handleAddToAnki(resultIndex, defIndex, btn as HTMLButtonElement);
+    handleAddToAnki(defIndex, btn as HTMLButtonElement);
   }
 }
 
@@ -148,7 +147,7 @@ async function performSearch(word: string) {
 /**
  * Handle add to Anki button click
  */
-async function handleAddToAnki(resultIndex: number, defIndex: number, btn: HTMLButtonElement) {
+async function handleAddToAnki(defIndex: number, btn: HTMLButtonElement) {
   // Ignore resultIndex as we only have one result now
   const result = currentResult;
   if (!result) {
