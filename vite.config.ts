@@ -17,18 +17,17 @@ export default defineConfig({
         offscreen: resolve(__dirname, "src/app/offscreen/offscreen.html"),
         frame: resolve(__dirname, "src/app/content/frame.html"),
         background: resolve(__dirname, "src/app/background/main.ts"),
-        content: resolve(__dirname, "src/app/content/content.ts"),
+        // content 将在后续脚本中单独构建
         client: resolve(__dirname, "src/app/content/css/client.scss"),
       },
 
       output: {
         entryFileNames: (chunkInfo) => {
           if (chunkInfo.name === "background") return "app/background/main.js";
-          if (chunkInfo.name === "content") return "app/content/content.js";
           return "app/[name]/[name].js";
         },
         chunkFileNames: "assets/[name].js",
-        format: "es", // Explicitly set format to ES modules
+        format: "es",
 
         assetFileNames: (assetInfo) => {
           const name = assetInfo.names?.[0];

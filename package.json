@@ -4,9 +4,9 @@
   "private": true,
   "scripts": {
     "dev": "vite",
-    "build": "BROWSER=chrome vite build && BROWSER=firefox vite build",
-    "build:chrome": "BROWSER=chrome vite build",
-    "build:firefox": "BROWSER=firefox vite build",
+    "build": "npm run build:chrome && npm run build:firefox",
+    "build:chrome": "BROWSER=chrome vite build && BROWSER=chrome vite build --config vite.config.content.ts",
+    "build:firefox": "BROWSER=firefox vite build && BROWSER=firefox vite build --config vite.config.content.ts",
     "build:zotero": "vite build --config vite.config.zotero.ts",
     "package:zotero": "npm run build:zotero && node scripts/package-zotero.js",
     "test": "vitest run",

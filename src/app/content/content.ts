@@ -1,3 +1,4 @@
+import { api } from "@lib/api";
 import type { DictionaryEntry } from "@lib/model";
 
 function detectLocale(): string | undefined {
@@ -80,8 +81,9 @@ class AnkiLexContent {
       this.selectedWord = word;
       this.currentContext = boldSelectedWordInSentence(sentence, word);
 
-      const settings = await this.getSettings();
-      if (!settings?.autoLookup) return;
+      api.settings.get().then((settings) => {
+        if (!settings?.autoLookup) return;
+      });
 
       const { right, bottom } = range.getBoundingClientRect();
       this.showIcon(right + window.scrollX, bottom + window.scrollY);
@@ -192,14 +194,6 @@ class AnkiLexContent {
     document.body.appendChild(this.lookupIcon);
   }
 
-  private async getSettings() {
-    return new Promise<any>((resolve) => {
-      chrome.runtime.sendMessage({ action: "settings-get" }, (response) => {
-        resolve(response.settings);
-      });
-    });
-  }
-
   private async showPopup(word: string, context: string, x?: number, y?: number) {
     if (!this.popup) {
       this.createPopup();
@@ -260,12 +254,14 @@ class AnkiLexContent {
     this.popup.style.visibility = "visible";
     this.popupVisible = true;
 
-    // Request lookup from background
-    chrome.runtime.sendMessage({ action: "lookup", data: { word } }, (response) => {
-      if (!chrome.runtime.lastError && response) {
-        this.updatePopupContent(word, context, response);
+    try {
+      const response = await api.dictionary.lookup(word);
+      if (response) {
+        this.updatePopupContent(context, response);
       }
-    });
+    } catch (error) {
+      console.error("Lookup failed", error);
+    }
   }
 
   private hidePopup() {
@@ -311,7 +307,7 @@ class AnkiLexContent {
 
   private currentResult: DictionaryEntry | null = null;
 
-  private updatePopupContent(word: string, context: string, result: DictionaryEntry) {
+  private updatePopupContent(context: string, result: DictionaryEntry) {
     this.currentResult = result;
     if (!this.popup) return;
 
@@ -334,24 +330,10 @@ class AnkiLexContent {
     if (!result) return;
 
     try {
-      await new Promise((resolve, reject) => {
-        chrome.runtime.sendMessage(
-          {
-            action: "anki-create-note-from-result",
-            data: {
-              result,
-              defIndex,
-              context: contextNote,
-            },
-          },
-          (response) => {
-            if (response?.error) {
-              reject(response.error);
-            } else {
-              resolve(response);
-            }
-          },
-        );
+      await api.anki.createNoteFromResult({
+        result,
+        defIndex,
+        context: contextNote,
       });
 
       // Success feedback to iframe

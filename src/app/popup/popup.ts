@@ -4,6 +4,7 @@
  * Simple DOM manipulation like backend templating
  */
 
+import { api } from "@lib/api";
 import type { DictionaryEntry } from "@lib/model";
 import "tiny-markdown-editor/dist/tiny-mde.min.css";
 import {
@@ -116,12 +117,7 @@ async function performSearch(word: string) {
   showLoading(ui);
 
   try {
-    const result = (await chrome.runtime.sendMessage({
-      action: "lookup",
-      data: {
-        word: word,
-      },
-    })) as DictionaryEntry | null;
+    const result = await api.dictionary.lookup(word);
 
     if (!result) {
       showError("No results found", ui);
@@ -167,14 +163,11 @@ async function handleAddToAnki(defIndex: number, btn: HTMLButtonElement) {
     const contextNote = getEditorContent(contextNoteArea);
 
     // We need to send the specific definition to add
-    const response = (await chrome.runtime.sendMessage({
-      action: "anki-create-note-from-result",
-      data: {
-        result: result,
-        defIndex: defIndex,
-        context: contextNote, // Pass context here
-      },
-    })) as { noteId?: number; error?: string };
+    const response = await api.anki.createNoteFromResult({
+      result,
+      defIndex,
+      context: contextNote,
+    });
 
     if (response.noteId) {
       // Success checkmark

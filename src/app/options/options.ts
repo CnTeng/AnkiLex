@@ -2,6 +2,7 @@
  * Options Page Logic
  */
 
+import { api } from "@lib/api";
 import type { AnkiLexSettings } from "@lib/model";
 
 class AnkiLexOptions {
@@ -13,7 +14,7 @@ class AnkiLexOptions {
     console.log("AnkiLex Options initializing");
 
     // Load current settings
-    const settings = await this.getSettings();
+    const settings = await api.settings.get();
     this.populateForm(settings);
 
     // Load available dictionaries
@@ -34,14 +35,6 @@ class AnkiLexOptions {
     });
   }
 
-  async getSettings(): Promise<AnkiLexSettings> {
-    return new Promise((resolve) => {
-      chrome.runtime.sendMessage({ action: "settings-get" }, (response) => {
-        resolve(response.settings);
-      });
-    });
-  }
-
   populateForm(settings: AnkiLexSettings) {
     (document.getElementById("auto-lookup") as HTMLInputElement).checked = settings.autoLookup;
     (document.getElementById("anki-url") as HTMLInputElement).value = settings.ankiConnectUrl;
@@ -59,165 +52,145 @@ class AnkiLexOptions {
     noteTypeSelect.innerHTML = `<option value="${settings.defaultNoteType}">${settings.defaultNoteType}</option>`;
 
     if (settings.defaultNoteType) {
-      // Use existing mappings if available, otherwise just note type triggers refresh
       this.loadFieldMappings(settings.defaultNoteType, settings.fieldMappings);
     } else {
-      // If no note type is set (e.g. first run), try to get Anki data to populate list
-      // but don't force a specific mapping load yet.
-      this.refreshAnki().then(() => {
-        // After refreshing, if we have a note type now, load mappings
-        const noteTypeSelect = document.getElementById("default-note-type") as HTMLSelectElement;
-        if (noteTypeSelect && noteTypeSelect.value) {
-          // If we found a note type from Anki, use saved mappings or empty
-          this.loadFieldMappings(noteTypeSelect.value, settings.fieldMappings);
-        }
-      });
+      this.refreshAnki();
     }
   }
 
   async loadFieldMappings(noteType: string, currentMappings: Record<string, string> = {}) {
     if (!noteType) return;
 
-    chrome.runtime.sendMessage(
-      { action: "anki-get-fields", data: { modelName: noteType } },
-      (response) => {
-        const container = document.getElementById("field-mapping-container");
-        const list = document.getElementById("field-mapping-list");
-        if (!container || !list) return;
+    try {
+      const response = await api.anki.getFields(noteType);
+      const container = document.getElementById("field-mapping-container");
+      const list = document.getElementById("field-mapping-list");
+      if (!container || !list) return;
 
-        if (response.error || !response.fields) {
-          container.style.display = "none";
-          return;
-        }
+      if (!response.fields?.length) {
+        container.style.display = "none";
+        return;
+      }
 
-        container.style.display = "block";
-        list.innerHTML = "";
+      container.style.display = "block";
+      list.innerHTML = "";
 
-        const lexFields = [
-          { id: "", name: "(None)" },
-          { id: "word", name: "Word/Expression" },
-          { id: "definition", name: "Definition" },
-          { id: "pronunciation", name: "Pronunciation" },
-          { id: "audio", name: "Audio" },
-          { id: "example", name: "Sentence Example" },
-          { id: "context", name: "Original Context" },
-        ];
+      const lexFields = [
+        { id: "", name: "(None)" },
+        { id: "word", name: "Word/Expression" },
+        { id: "definition", name: "Definition" },
+        { id: "pronunciation", name: "Pronunciation" },
+        { id: "audio", name: "Audio" },
+        { id: "example", name: "Sentence Example" },
+        { id: "context", name: "Original Context" },
+      ];
 
-        response.fields.forEach((field: string) => {
-          const fieldRow = document.createElement("div");
-          fieldRow.className = "field-mapping-row";
-          fieldRow.style.display = "flex";
-          fieldRow.style.alignItems = "center";
-          fieldRow.style.marginBottom = "8px";
-          fieldRow.style.gap = "12px";
+      response.fields.forEach((field: string) => {
+        const fieldRow = document.createElement("div");
+        fieldRow.className = "field-mapping-row";
+        fieldRow.style.display = "flex";
+        fieldRow.style.alignItems = "center";
+        fieldRow.style.marginBottom = "8px";
+        fieldRow.style.gap = "12px";
 
-          const label = document.createElement("label");
-          label.textContent = field;
-          label.style.width = "120px";
-          label.style.marginBottom = "0";
+        const label = document.createElement("label");
+        label.textContent = field;
+        label.style.width = "120px";
+        label.style.marginBottom = "0";
 
-          const select = document.createElement("select");
-          select.dataset.field = field;
-          select.className = "field-mapping-select";
+        const select = document.createElement("select");
+        select.dataset.field = field;
+        select.className = "field-mapping-select";
 
-          lexFields.forEach((lexField) => {
-            const option = document.createElement("option");
-            option.value = lexField.id;
-            option.textContent = lexField.name;
-            if (currentMappings[field] === lexField.id) {
-              option.selected = true;
-            }
-            select.appendChild(option);
-          });
-
-          fieldRow.appendChild(label);
-          fieldRow.appendChild(select);
-          list.appendChild(fieldRow);
+        lexFields.forEach((lexField) => {
+          const option = document.createElement("option");
+          option.value = lexField.id;
+          option.textContent = lexField.name;
+          if (currentMappings[field] === lexField.id) {
+            option.selected = true;
+          }
+          select.appendChild(option);
         });
-      },
-    );
+
+        fieldRow.appendChild(label);
+        fieldRow.appendChild(select);
+        list.appendChild(fieldRow);
+      });
+    } catch (error) {
+      console.warn("Failed to load fields", error);
+    }
   }
 
   async loadDictionaries(languageDictionaries: Record<string, string>) {
-    return new Promise<void>((resolve) => {
-      chrome.runtime.sendMessage({ action: "get-dictionaries" }, (response) => {
-        const list = document.getElementById("dictionary-list");
-        if (list && response.dictionaries) {
-          list.innerHTML = "";
+    const response = await api.dictionary.getProviders();
+    const list = document.getElementById("dictionary-list");
+    if (!list || !response.providers) return;
 
-          // Define supported languages (expand this list as needed)
-          const languages = [
-            { code: "en", name: "English" },
-            { code: "zh", name: "Chinese" },
-            { code: "jp", name: "Japanese" },
-            // Add more languages here
-          ];
+    list.innerHTML = "";
 
-          languages.forEach((lang) => {
-            const langRow = document.createElement("div");
-            langRow.className = "language-row";
-            langRow.style.marginBottom = "10px";
-            langRow.style.display = "flex";
-            langRow.style.alignItems = "center";
-            langRow.style.gap = "10px";
+    // Define supported languages (expand this list as needed)
+    const languages = [
+      { code: "en", name: "English" },
+      { code: "zh", name: "Chinese" },
+      { code: "jp", name: "Japanese" },
+      // Add more languages here
+    ];
 
-            const label = document.createElement("label");
-            label.textContent = lang.name;
-            label.style.width = "100px";
+    languages.forEach((lang) => {
+      const langRow = document.createElement("div");
+      langRow.className = "language-row";
+      langRow.style.marginBottom = "10px";
+      langRow.style.display = "flex";
+      langRow.style.alignItems = "center";
+      langRow.style.gap = "10px";
 
-            const select = document.createElement("select");
-            select.className = "dictionary-select";
-            select.dataset.lang = lang.code;
+      const label = document.createElement("label");
+      label.textContent = lang.name;
+      label.style.width = "100px";
 
-            // Add "None" option
-            const noneOption = document.createElement("option");
-            noneOption.value = "";
-            noneOption.textContent = "(None)";
-            select.appendChild(noneOption);
+      const select = document.createElement("select");
+      select.className = "dictionary-select";
+      select.dataset.lang = lang.code;
 
-            // Populate available dictionaries
-            response.dictionaries.forEach((dict: { id: string; name: string }) => {
-              const option = document.createElement("option");
-              option.value = dict.id;
-              option.textContent = dict.name;
+      // Add "None" option
+      const noneOption = document.createElement("option");
+      noneOption.value = "";
+      noneOption.textContent = "(None)";
+      select.appendChild(noneOption);
 
-              // Currently simple logic: if a dictionary is available, show it for all langs
-              // In future, dictionaries should declare supported languages
-              select.appendChild(option);
-            });
+      // Populate available dictionaries
+      response.providers.forEach((dict: { id: string; name: string }) => {
+        const option = document.createElement("option");
+        option.value = dict.id;
+        option.textContent = dict.name;
 
-            // Set selected value
-            if (languageDictionaries[lang.code]) {
-              select.value = languageDictionaries[lang.code];
-            }
-
-            langRow.appendChild(label);
-            langRow.appendChild(select);
-            list.appendChild(langRow);
-          });
-        }
-        resolve();
+        // Currently simple logic: if a dictionary is available, show it for all langs
+        // In future, dictionaries should declare supported languages
+        select.appendChild(option);
       });
+
+      // Set selected value
+      if (languageDictionaries[lang.code]) {
+        select.value = languageDictionaries[lang.code];
+      }
+
+      langRow.appendChild(label);
+      langRow.appendChild(select);
+      list.appendChild(langRow);
     });
   }
 
   async refreshAnki() {
     this.showStatus("Connecting to Anki...", "info");
 
-    chrome.runtime.sendMessage({ action: "anki-get-decks" }, (deckResponse) => {
-      if (deckResponse.error) {
-        this.showStatus("Failed to connect to Anki: " + deckResponse.error, "error");
-        return;
-      }
-
+    try {
+      const decksResponse = await api.anki.getDecks();
       const deckSelect = document.getElementById("default-deck") as HTMLSelectElement;
-      // Filter duplicate 'Default' entry if it exists in response but was also hardcoded
-      // Actually better to just clear it all
       const currentDeck = deckSelect.value;
       deckSelect.innerHTML = "";
 
-      const decks = deckResponse.decks as string[];
-      if (decks && decks.length > 0) {
+      const decks = Array.isArray(decksResponse) ? decksResponse : decksResponse?.decks;
+      if (Array.isArray(decks) && decks.length > 0) {
         decks.forEach((deck) => {
           const option = document.createElement("option");
           option.value = deck;
@@ -226,55 +199,45 @@ class AnkiLexOptions {
           deckSelect.appendChild(option);
         });
       } else {
-        // Fallback if empty array returned (unlikely)
         const option = document.createElement("option");
         option.value = "Default";
         option.textContent = "Default";
         deckSelect.appendChild(option);
       }
 
-      chrome.runtime.sendMessage({ action: "anki-get-note-types" }, (noteTypeResponse) => {
-        if (noteTypeResponse.error) {
-          this.showStatus(
-            "Connected to Anki but failed to get Note Types: " + noteTypeResponse.error,
-            "error",
-          );
-          return;
-        }
+      const noteTypeResponse = await api.anki.getNoteTypes();
+      const noteTypeSelect = document.getElementById("default-note-type") as HTMLSelectElement;
+      const currentNoteType = noteTypeSelect.value;
+      noteTypeSelect.innerHTML = "";
 
-        const noteTypeSelect = document.getElementById("default-note-type") as HTMLSelectElement;
-        const currentNoteType = noteTypeSelect.value;
-        noteTypeSelect.innerHTML = "";
-
-        const noteTypes = noteTypeResponse.noteTypes as string[];
-        if (noteTypes && noteTypes.length > 0) {
-          noteTypes.forEach((type) => {
-            const option = document.createElement("option");
-            option.value = type;
-            option.textContent = type;
-            if (type === currentNoteType) option.selected = true;
-            noteTypeSelect.appendChild(option);
-          });
-        } else {
+      const noteTypes = Array.isArray(noteTypeResponse)
+        ? noteTypeResponse
+        : noteTypeResponse.noteTypes;
+      if (Array.isArray(noteTypes) && noteTypes.length > 0) {
+        noteTypes.forEach((type) => {
           const option = document.createElement("option");
-          option.value = "Basic";
-          option.textContent = "Basic";
+          option.value = type;
+          option.textContent = type;
+          if (type === currentNoteType) option.selected = true;
           noteTypeSelect.appendChild(option);
-        }
+        });
+      } else {
+        const option = document.createElement("option");
+        option.value = "Basic";
+        option.textContent = "Basic";
+        noteTypeSelect.appendChild(option);
+      }
 
-        // If we have a note type from settings, select it, otherwise default to first available
-        if (noteTypes.includes(currentNoteType) && currentNoteType !== "Basic") {
-          // The currently selected (or saved) note type is valid
-        } else if (noteTypes.length > 0) {
-          // Select the first one if current is invalid
-          noteTypeSelect.value = noteTypes[0];
-        }
+      if (!noteTypes.includes(currentNoteType) && noteTypes.length > 0) {
+        noteTypeSelect.value = noteTypes[0];
+      }
 
-        this.showStatus("Anki connection successful!", "success");
-        // Reload mappings for the potentially updated note type
-        this.loadFieldMappings(noteTypeSelect.value);
-      });
-    });
+      this.showStatus("Anki connection successful!", "success");
+      this.loadFieldMappings(noteTypeSelect.value);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      this.showStatus(`Failed to connect to Anki: ${message}`, "error");
+    }
   }
 
   async saveSettings() {
@@ -308,26 +271,24 @@ class AnkiLexOptions {
       }
     });
 
-    chrome.runtime.sendMessage(
-      { action: "settings-update", data: { partial: settings } },
-      (response) => {
-        if (response.settings) {
-          this.showStatus("Settings saved successfully!", "success");
-        } else {
-          this.showStatus("Error saving settings.", "error");
-        }
-      },
-    );
+    try {
+      await api.settings.update(settings);
+      this.showStatus("Settings saved successfully!", "success");
+    } catch (error) {
+      console.error("Failed to save settings", error);
+      this.showStatus("Error saving settings.", "error");
+    }
   }
 
   async resetSettings() {
-    if (confirm("Are you sure you want to reset all settings to defaults?")) {
-      chrome.runtime.sendMessage({ action: "settings-reset" }, (response) => {
-        this.populateForm(response.settings);
-        this.loadDictionaries(response.settings.languageDictionaries);
-        this.showStatus("Settings reset to defaults.", "success");
-      });
+    if (!confirm("Are you sure you want to reset all settings to defaults?")) {
+      return;
     }
+
+    const settings = await api.settings.reset();
+    this.populateForm(settings);
+    this.loadDictionaries(settings.languageDictionaries);
+    this.showStatus("Settings reset to defaults.", "success");
   }
 
   showStatus(message: string, type: "success" | "error" | "info") {

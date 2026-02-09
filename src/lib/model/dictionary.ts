@@ -7,6 +7,11 @@ export interface IDictionaryProvider {
   parseDocument(doc: Document): DictionaryEntry | null;
 }
 
+export interface DictionaryLookupRequest {
+  word: string;
+  providerId: string;
+}
+
 export interface DictionaryEntry {
   word: string;
   provider: string;
