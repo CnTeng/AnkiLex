@@ -1,90 +1,85 @@
 @use "../../assets/scss/theme" as *;
-@use "../../assets/scss/app-layout"; // Import the unified layout
+@use "../../assets/scss/app-layout";
 
-// Popup specific overrides
 body {
   width: 400px;
-  // Compact height for search bar initially
-  height: 52px;
+  margin: 0;
+  padding: 0;
+}
+
+#app {
+  display: flex;
+  flex-direction: column;
+  height: 48px;
+  overflow: hidden;
+  background: var(--view-bg);
   transition: height 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-// When expanded (has results or loading)
-body.expanded {
+body.expanded #app {
   height: 600px;
 }
 
-/* Search Container (Popup only) */
 .search-container {
+  flex: 0 0 48px;
   display: flex;
-  gap: 12px;
+  align-items: center;
   padding: 8px 16px;
-  background: var(--view-bg);
-  align-items: center;
-  flex-shrink: 0;
-  height: 52px;
   box-sizing: border-box;
-  transition: border-bottom-color 0.2s;
-  border-bottom: 1px solid transparent;
+  border-bottom: 1px solid var(--border-subtle);
+  background: var(--view-bg);
 }
 
-// Show distinct border when expanded
-body.expanded .search-container {
-  border-bottom-color: var(--border-strong);
-  box-shadow: var(--shadow-sm);
-  z-index: 10;
-}
-
+/* Grid layout instead of absolute */
 .search-input-wrapper {
-  position: relative;
-  flex: 1;
-  display: flex;
+  display: grid;
+  grid-template-columns: 40px 1fr 40px;
   align-items: center;
+  width: 100%;
+  background: var(--card-bg);
+  border-radius: var(--radius-pill);
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+  padding: 0px;
+  transition: box-shadow 0.2s ease;
+}
+
+.search-input-wrapper:focus-within {
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
 }
 
 .search-icon {
-  position: absolute;
-  left: 14px;
-  top: 50%;
-  transform: translateY(-50%);
-  color: var(--text-muted);
   display: flex;
+  justify-content: center;
   align-items: center;
-  pointer-events: none;
-  z-index: 5;
+  color: var(--text-muted);
 
-  svg {
-    width: 20px;
-    height: 20px;
+  .icon {
+    width: 1rem;
+    height: 1rem;
   }
 }
 
 #search-input {
   @include adw-pill-search;
-  padding-left: 48px;
-  padding-right: 48px;
-  padding-top: 10px;
-  padding-bottom: 10px;
+  padding: 0px 16px;
+  border: none;
+  background: transparent;
+  outline: none;
   width: 100%;
-  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  font: inherit;
+  padding: 6px 0;
+  color: var(--text-main);
 
-  // Base State: Google-style pill
-  background: var(--card-bg);
-  border: 1px solid transparent;
-  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
-
-  // Focus: Elevation only, NO blue border
   &:focus {
     outline: none;
     border-color: transparent;
     background: var(--card-bg);
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+    box-shadow: none;
   }
 
-  // Hover: Subtle contrast increase
   &:hover:not(:focus) {
     background: var(--card-bg);
-    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.12);
+    box-shadow: none;
   }
 }
 
@@ -98,31 +93,15 @@ body.expanded .search-container {
   display: flex;
   align-items: center;
   justify-content: center;
+  align-items: center;
+  color: var(--text-secondary);
+  border-radius: 50%;
+  transition:
+    background-color 0.15s ease,
+    color 0.15s ease;
 
-  position: absolute;
-  right: 8px;
-  top: 50%;
-  transform: translateY(-50%);
-  z-index: 5;
-
-  &:hover {
+  &hover {
     background: rgba(0, 0, 0, 0.05);
     color: var(--text-main);
-  }
-}
-
-/* Actions Container (Popup specific positioning if needed) */
-.actions-container {
-  display: flex;
-  gap: 12px;
-  padding: 12px 16px;
-  background: var(--view-bg);
-  border-top: 1px solid var(--border-color);
-  justify-content: flex-end;
-  flex-shrink: 0;
-
-  button {
-    font-size: 13px;
-    padding: 8px 16px;
   }
 }

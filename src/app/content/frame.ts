@@ -10,15 +10,10 @@ import {
   type UIContext,
 } from "@lib/ui";
 
-// DOM Elements
+const resultsContainer = document.getElementById("results-container") as HTMLDivElement;
 const contextSection = document.getElementById("context-section") as HTMLDivElement;
 const contextNoteArea = document.getElementById("context-note") as HTMLTextAreaElement;
-const resultsContainer = document.getElementById("results-container") as HTMLDivElement;
-// Remove manual toolbar as EasyMDE handles it
-const markdownToolbar = document.querySelector(".markdown-toolbar") as HTMLDivElement;
-if (markdownToolbar) markdownToolbar.style.display = "none";
 
-// UI Context for shared functions
 const ui: UIContext = {
   resultsContainer,
   contextSection,
