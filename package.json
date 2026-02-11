@@ -27,6 +27,7 @@
     "zotero-types": "^4.1.0-beta.4"
   },
   "dependencies": {
+    "@floating-ui/dom": "^1.7.5",
     "tiny-markdown-editor": "^0.2.18"
   },
   "prettier": {
