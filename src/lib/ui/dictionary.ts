@@ -1,4 +1,4 @@
-import type { Definition, DictionaryEntry, Pronunciation } from "../model";
+import type { Definition, DictionaryEntry, Pronunciation } from "@lib/model";
 
 export class DictionaryEntryRenderer {
   constructor(

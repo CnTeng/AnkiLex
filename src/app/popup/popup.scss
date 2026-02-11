@@ -1,45 +1,20 @@
 @use "../../assets/scss/theme" as *;
-@use "../../assets/scss/card"; // Import shared card styles
+@use "../../assets/scss/app-layout"; // Import the unified layout
 
-// Import EasyMDE styles - moved to popup.ts to avoid Sass deprecation warnings
-@use "../../assets/scss/components/editor"; // Use shared editor styles
-
-* {
-  margin: 0;
-  padding: 0;
-  box-sizing: border-box;
-}
-
+// Popup specific overrides
 body {
-  font-family:
-    "Inter",
-    system-ui,
-    -apple-system,
-    sans-serif;
-  font-size: 14px;
-  line-height: 1.5;
-  color: var(--text-main);
-  background: var(--window-bg);
   width: 400px;
-  // Compact height for search bar
+  // Compact height for search bar initially
   height: 52px;
-  overflow: hidden;
-  margin: 0;
   transition: height 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 // When expanded (has results or loading)
 body.expanded {
-  height: 600px; // Increased height to accommodate editor
+  height: 600px;
 }
 
-#app {
-  display: flex;
-  flex-direction: column;
-  height: 100%;
-}
-
-/* Search Container */
+/* Search Container (Popup only) */
 .search-container {
   display: flex;
   gap: 12px;
@@ -50,14 +25,14 @@ body.expanded {
   height: 52px;
   box-sizing: border-box;
   transition: border-bottom-color 0.2s;
-  border-bottom: 1px solid transparent; // Reserve space for border transition
+  border-bottom: 1px solid transparent;
 }
 
 // Show distinct border when expanded
 body.expanded .search-container {
   border-bottom-color: var(--border-strong);
-  box-shadow: var(--shadow-sm); // Add subtle shadow for "lifted" effect
-  z-index: 10; // Ensure shadow sits on top of results
+  box-shadow: var(--shadow-sm);
+  z-index: 10;
 }
 
 .search-input-wrapper {
@@ -69,26 +44,26 @@ body.expanded .search-container {
 
 .search-icon {
   position: absolute;
-  left: 14px; // Slightly more padding from left edge
+  left: 14px;
   top: 50%;
   transform: translateY(-50%);
   color: var(--text-muted);
   display: flex;
   align-items: center;
-  pointer-events: none; // Let clicks pass through to input
-  z-index: 5; // Ensure it sits ON TOP of the input background
+  pointer-events: none;
+  z-index: 5;
 
   svg {
-    width: 20px; // Slightly larger icon for modern look
+    width: 20px;
     height: 20px;
   }
 }
 
 #search-input {
   @include adw-pill-search;
-  padding-left: 48px; // Adjusted for icon position and size
-  padding-right: 48px; // Space for settings button
-  padding-top: 10px; // Taller touch target
+  padding-left: 48px;
+  padding-right: 48px;
+  padding-top: 10px;
   padding-bottom: 10px;
   width: 100%;
   transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
@@ -96,14 +71,14 @@ body.expanded .search-container {
   // Base State: Google-style pill
   background: var(--card-bg);
   border: 1px solid transparent;
-  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1); // Slightly clearer shadow
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
 
   // Focus: Elevation only, NO blue border
   &:focus {
     outline: none;
     border-color: transparent;
     background: var(--card-bg);
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15); // Higher elevation
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
   }
 
   // Hover: Subtle contrast increase
@@ -124,7 +99,6 @@ body.expanded .search-container {
   align-items: center;
   justify-content: center;
 
-  // Position absolutely inside the input wrapper
   position: absolute;
   right: 8px;
   top: 50%;
@@ -137,81 +111,7 @@ body.expanded .search-container {
   }
 }
 
-/* Buttons */
-button {
-  &.btn-primary {
-    @include adw-button-accent;
-  }
-  &.btn-success {
-    @include adw-button-accent;
-    background: var(--adw-success);
-    &:hover {
-      background: #26a269;
-    }
-  }
-  &.btn-secondary {
-    @include adw-button-flat;
-    background: rgba(0, 0, 0, 0.05);
-  }
-
-  &:disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
-    transform: none !important;
-    box-shadow: none !important;
-  }
-}
-
-@media (prefers-color-scheme: dark) {
-  button.btn-secondary {
-    background: rgba(255, 255, 255, 0.08);
-  }
-}
-
-/* Status States */
-.loading,
-.empty-state,
-.error-state {
-  @include adw-status-container;
-}
-
-.error-state {
-  color: var(--adw-error);
-  span,
-  p {
-    color: var(--adw-error);
-  }
-}
-
-/* Results Container */
-.results-container {
-  flex: 1;
-  overflow-y: auto;
-  padding: 12px;
-  background: var(--window-bg);
-
-  // Scrollbar adjustments
-  scrollbar-gutter: stable; // Reserve space for scrollbar to avoid layout shifts
-
-  &::-webkit-scrollbar {
-    width: 6px;
-  }
-  &::-webkit-scrollbar-thumb {
-    background: transparent; // Hidden by default
-    border-radius: 10px;
-  }
-
-  &::-webkit-scrollbar-track {
-    background: transparent;
-  }
-
-  &:hover::-webkit-scrollbar-thumb {
-    background: var(--border-strong);
-  }
-}
-
-/* Context Section - Using shared styles from _editor.scss */
-/* Actions Container */
+/* Actions Container (Popup specific positioning if needed) */
 .actions-container {
   display: flex;
   gap: 12px;
@@ -225,8 +125,4 @@ button {
     font-size: 13px;
     padding: 8px 16px;
   }
-}
-
-.hidden {
-  display: none !important;
 }

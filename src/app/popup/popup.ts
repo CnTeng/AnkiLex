@@ -11,11 +11,14 @@ import {
   getEditorContent,
   initEditor,
   renderResult,
+  setButtonError,
+  setButtonLoading,
+  setButtonSuccess,
   setEditorContent,
   showError,
   showLoading,
   type UIContext,
-} from "@lib/ui/ui-shared";
+} from "@lib/ui";
 
 // DOM elements
 const searchInput = document.getElementById("search-input") as HTMLInputElement;
@@ -26,7 +29,6 @@ const contextNoteArea = document.getElementById("context-note") as HTMLTextAreaE
 const emptyState = document.getElementById("empty-state") as HTMLDivElement;
 const errorState = document.getElementById("error-state") as HTMLDivElement;
 const errorMessage = document.getElementById("error-message") as HTMLParagraphElement;
-const addToAnkiBtn = document.getElementById("add-to-anki-btn") as HTMLButtonElement;
 const settingsBtn = document.getElementById("settings-btn") as HTMLButtonElement;
 
 // UI Context for shared functions
@@ -38,7 +40,6 @@ const ui: UIContext = {
   errorState,
   errorMessage,
   loadingState: loading,
-  addToAnkiBtn,
 };
 
 // State
@@ -144,19 +145,13 @@ async function performSearch(word: string) {
  * Handle add to Anki button click
  */
 async function handleAddToAnki(defIndex: number, btn: HTMLButtonElement) {
-  // Ignore resultIndex as we only have one result now
   const result = currentResult;
   if (!result) {
     return;
   }
 
   // Visual feedback on button
-
-  const originalContent = btn.innerHTML;
-  btn.disabled = true;
-  // Spinner icon
-  btn.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v4m0 12v4M4.93 4.93l2.83 2.83m8.48 8.48l2.83 2.83M2 12h4m12 0h4M4.93 19.07l2.83-2.83m8.48-8.48l2.83-2.83"></path></svg>`;
-  btn.classList.add("spinning");
+  setButtonLoading(btn);
 
   try {
     // Capture context note
@@ -170,36 +165,13 @@ async function handleAddToAnki(defIndex: number, btn: HTMLButtonElement) {
     });
 
     if (response.noteId) {
-      // Success checkmark
-      btn.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>`;
-      btn.style.color = "var(--adw-success)";
-      btn.style.borderColor = "var(--adw-success)";
-
-      // Reset after delay
-      setTimeout(() => {
-        btn.innerHTML = originalContent;
-        btn.disabled = false;
-        btn.classList.remove("spinning");
-        btn.style.color = "";
-        btn.style.borderColor = "";
-      }, 2000);
+      setButtonSuccess(btn);
     } else {
       throw new Error("No noteId returned");
     }
   } catch (error) {
     console.error("Add to Anki error:", error);
-    // Error X icon
-    btn.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>`;
-    btn.style.color = "var(--adw-error)";
-    btn.style.borderColor = "var(--adw-error)";
-
-    setTimeout(() => {
-      btn.innerHTML = originalContent;
-      btn.disabled = false;
-      btn.classList.remove("spinning");
-      btn.style.color = "";
-      btn.style.borderColor = "";
-    }, 2000);
+    setButtonError(btn);
   }
 }
 

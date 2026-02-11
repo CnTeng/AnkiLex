@@ -1,0 +1,122 @@
+@use "../../assets/scss/theme" as *;
+@use "../../assets/scss/card";
+@use "../../assets/scss/components/editor";
+
+#app {
+  display: flex;
+  flex-direction: column;
+  height: 100vh; // Occupy full iframe/popup height
+  background-color: var(--window-bg);
+  overflow: hidden;
+}
+
+// Common resets and font settings
+body {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  font-family:
+    "Inter",
+    system-ui,
+    -apple-system,
+    sans-serif;
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--text-main);
+  background: var(--window-bg);
+  overflow: hidden; // Main scrollbar hidden, scroll internal containers instead
+}
+
+// Results Container (Common for both)
+.results-container,
+.ankilex-notes {
+  flex: 1;
+  overflow-y: auto;
+  padding: 12px;
+  background: var(--window-bg);
+  box-sizing: border-box;
+  text-align: left;
+
+  // Scrollbar adjustments
+  scrollbar-gutter: stable;
+
+  &::-webkit-scrollbar {
+    width: 6px;
+  }
+  &::-webkit-scrollbar-thumb {
+    background: transparent;
+    border-radius: 10px;
+  }
+  &::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  &:hover::-webkit-scrollbar-thumb {
+    background: var(--border-strong);
+  }
+}
+
+// Status States
+.loading,
+.empty-state,
+.error-state {
+  @include adw-status-container;
+}
+
+.error-state {
+  color: var(--adw-error);
+  span,
+  p {
+    color: var(--adw-error);
+  }
+}
+
+// Context Section
+.context-section {
+  padding: 8px 16px 8px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  flex-shrink: 0;
+  background: var(--view-bg);
+  border-top: 1px solid var(--border-color);
+
+  textarea {
+    display: none; // Hidden when EasyMDE is active
+  }
+}
+
+// Buttons
+button {
+  &.btn-primary {
+    @include adw-button-accent;
+  }
+  &.btn-success {
+    @include adw-button-accent;
+    background: var(--adw-success);
+    &:hover {
+      background: #26a269;
+    }
+  }
+  &.btn-secondary {
+    @include adw-button-flat;
+    background: rgba(0, 0, 0, 0.05);
+  }
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    transform: none !important;
+    box-shadow: none !important;
+  }
+}
+
+@media (prefers-color-scheme: dark) {
+  button.btn-secondary {
+    background: rgba(255, 255, 255, 0.08);
+  }
+}
+
+.hidden {
+  display: none !important;
+}
