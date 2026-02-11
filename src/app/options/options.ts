@@ -19,7 +19,7 @@ class AnkiLexOptions {
 
     // Load available dictionaries
     try {
-      await this.loadDictionaries(settings.languageDictionaries);
+      await this.loadDictionaries(settings.dictionaryProviders);
     } catch (e) {
       console.warn("Failed to load dictionaries", e);
     }
@@ -46,13 +46,13 @@ class AnkiLexOptions {
 
     // Default Deck and Note Type will be populated after refreshing Anki
     const deckSelect = document.getElementById("default-deck") as HTMLSelectElement;
-    deckSelect.innerHTML = `<option value="${settings.defaultDeck}">${settings.defaultDeck}</option>`;
+    deckSelect.innerHTML = `<option value="${settings.ankiDefaultDeck}">${settings.ankiDefaultDeck}</option>`;
 
     const noteTypeSelect = document.getElementById("default-note-type") as HTMLSelectElement;
-    noteTypeSelect.innerHTML = `<option value="${settings.defaultNoteType}">${settings.defaultNoteType}</option>`;
+    noteTypeSelect.innerHTML = `<option value="${settings.ankiDefaultNoteType}">${settings.ankiDefaultNoteType}</option>`;
 
-    if (settings.defaultNoteType) {
-      this.loadFieldMappings(settings.defaultNoteType, settings.fieldMappings);
+    if (settings.ankiDefaultNoteType) {
+      this.loadFieldMappings(settings.ankiDefaultNoteType, settings.ankiFieldMap);
     } else {
       this.refreshAnki();
     }
@@ -252,22 +252,23 @@ class AnkiLexOptions {
     const settings: Partial<AnkiLexSettings> = {
       autoLookup: (document.getElementById("auto-lookup") as HTMLInputElement).checked,
       ankiConnectUrl: (document.getElementById("anki-url") as HTMLInputElement).value,
-      defaultDeck: (document.getElementById("default-deck") as HTMLSelectElement).value,
-      defaultNoteType: (document.getElementById("default-note-type") as HTMLSelectElement).value,
+      ankiDefaultDeck: (document.getElementById("default-deck") as HTMLSelectElement).value,
+      ankiDefaultNoteType: (document.getElementById("default-note-type") as HTMLSelectElement)
+        .value,
       popupWidth: parseInt((document.getElementById("popup-width") as HTMLInputElement).value, 10),
       popupHeight: parseInt(
         (document.getElementById("popup-height") as HTMLInputElement).value,
         10,
       ),
       theme: (document.getElementById("theme") as HTMLSelectElement).value as any,
-      languageDictionaries,
-      fieldMappings: {},
+      dictionaryProviders: languageDictionaries,
+      ankiFieldMap: {},
     };
 
     document.querySelectorAll(".field-mapping-select").forEach((el) => {
       const select = el as HTMLSelectElement;
       if (select.value && select.dataset.field) {
-        settings.fieldMappings![select.dataset.field] = select.value;
+        settings.ankiFieldMap![select.dataset.field] = select.value;
       }
     });
 
@@ -287,7 +288,7 @@ class AnkiLexOptions {
 
     const settings = await api.settings.reset();
     this.populateForm(settings);
-    this.loadDictionaries(settings.languageDictionaries);
+    this.loadDictionaries(settings.dictionaryProviders);
     this.showStatus("Settings reset to defaults.", "success");
   }
 

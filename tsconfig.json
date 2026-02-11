@@ -10,7 +10,7 @@
     "noEmitOnError": false,
     "sourceMap": true,
     "strict": true,
-    "types": ["chrome", "node"],
+    "types": ["chrome", "node", "zotero-types"],
     "esModuleInterop": true,
     "skipLibCheck": true,
     "moduleResolution": "node",

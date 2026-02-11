@@ -16,7 +16,7 @@ dictionary.registerAll();
 
 async function setupContextMenu() {
   const s = await settings.get();
-  if (!s.contextMenuEnabled) return;
+  if (!s.showContextMenu) return;
 
   chrome.contextMenus.removeAll(() => {
     chrome.contextMenus.create({

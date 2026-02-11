@@ -17,7 +17,6 @@ export default defineConfig({
         offscreen: resolve(__dirname, "src/app/offscreen/offscreen.html"),
         frame: resolve(__dirname, "src/app/content/frame.html"),
         background: resolve(__dirname, "src/app/background/main.ts"),
-        // content 将在后续脚本中单独构建
         client: resolve(__dirname, "src/app/content/css/client.scss"),
       },
 

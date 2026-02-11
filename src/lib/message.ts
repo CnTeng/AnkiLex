@@ -50,7 +50,7 @@ const handlers: { [K in Action]?: Handler<K> } = {
   },
 
   [ACTION.DICTIONARY_LOOKUP]: async (data) => {
-    const { languageDictionaries } = await settings.get();
+    const { dictionaryProviders: languageDictionaries } = await settings.get();
     const lang = "en";
     const providerId = languageDictionaries[lang];
     return await dictionary.lookup(data.word as string, providerId);

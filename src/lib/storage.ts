@@ -1,85 +1,43 @@
-/**
- * Storage Wrapper supporting both Chrome Extension and Zotero Plugin environments.
- */
+export type Value = string | number | boolean | object | Array<unknown> | null;
 
-declare const Zotero: { debug: (msg: string) => void;[key: string]: unknown };
-declare const chrome: {
-  storage: {
-    local: {
-      get: (keys: string[], callback: (result: Record<string, unknown>) => void) => void;
-      set: (items: Record<string, unknown>, callback: () => void) => void;
-      remove: (key: string, callback: () => void) => void;
-      clear: (callback: () => void) => void;
-    };
-  };
-  runtime: {
-    lastError?: unknown;
-  };
-};
-
-const memoryStorage: Record<string, unknown> = {};
+const isZotero = typeof Zotero !== "undefined" && typeof Zotero.Prefs !== "undefined";
 
 export const storage = {
-  async get<T>(key: string): Promise<T | null> {
-    if (typeof Zotero !== "undefined") {
-      return (memoryStorage[key] as T) || null;
-    } else if (chrome?.storage?.local) {
-      return new Promise((resolve) => {
-        chrome.storage.local.get([key], (result: Record<string, unknown>) => {
-          resolve((result[key] as T) || null);
-        });
-      });
+  async get<T = Value>(key: string): Promise<T | null> {
+    if (isZotero) {
+      const raw = Zotero.Prefs.get(key);
+      if (raw == null) return null;
+      if (typeof raw !== "string") return raw as T;
+      try {
+        return JSON.parse(raw) as T;
+      } catch {
+        return raw as T;
+      }
     }
 
-    console.warn("Storage: No supported storage backend found (Zotero or Chrome). Returning null.");
-    return null;
+    const result = await chrome.storage.sync.get(key);
+    return (result[key] as T) ?? null;
   },
 
-  async set<T>(key: string, value: T): Promise<void> {
-    if (typeof Zotero !== "undefined") {
-      // Zotero Environment
-      memoryStorage[key] = value;
-      return Promise.resolve();
-    } else if (chrome?.storage?.local) {
-      return new Promise((resolve) => {
-        chrome.storage.local.set({ [key]: value }, () => {
-          resolve();
-        });
-      });
+  async set(key: string, value: Value): Promise<void> {
+    if (isZotero) {
+      if (typeof value === "string" || typeof value === "number" || typeof value === "boolean") {
+        Zotero.Prefs.set(key, value);
+      } else {
+        Zotero.Prefs.set(key, JSON.stringify(value));
+      }
+      return;
     }
-    console.warn("Storage: No supported storage backend found. Value not saved.");
-    return Promise.resolve();
+
+    await chrome.storage.sync.set({ [key]: value });
   },
 
   async remove(key: string): Promise<void> {
-    if (typeof Zotero !== "undefined") {
-      delete memoryStorage[key];
-      return Promise.resolve();
-    } else if (chrome?.storage?.local) {
-      return new Promise((resolve) => {
-        chrome.storage.local.remove(key, () => {
-          resolve();
-        });
-      });
+    if (isZotero) {
+      Zotero.Prefs.clear(key);
+      return;
     }
-    return Promise.resolve();
-  },
 
-  async clear(): Promise<void> {
-    if (typeof Zotero !== "undefined") {
-      for (const k in memoryStorage) {
-        if (Object.hasOwn(memoryStorage, k)) {
-          delete memoryStorage[k];
-        }
-      }
-      return Promise.resolve();
-    } else if (chrome?.storage?.local) {
-      return new Promise((resolve) => {
-        chrome.storage.local.clear(() => {
-          resolve();
-        });
-      });
-    }
-    return Promise.resolve();
+    await chrome.storage.sync.remove(key);
   },
 };

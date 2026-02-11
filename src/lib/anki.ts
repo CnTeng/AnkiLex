@@ -71,8 +71,8 @@ export const anki = {
     const currentSettings = await settings.get();
 
     const note: AnkiNote = {
-      deckName: options?.deck || currentSettings.defaultDeck,
-      modelName: options?.noteType || currentSettings.defaultNoteType,
+      deckName: options?.deck || currentSettings.ankiDefaultDeck,
+      modelName: options?.noteType || currentSettiankiDefaultNoteTypeType,
       fields: {},
       tags: ["ankilex"],
     };
@@ -86,7 +86,7 @@ export const anki = {
         : result.definitions;
 
     // Simple mapping logic
-    Object.entries(currentSettings.fieldMappings).forEach(([ankiField, lexField]) => {
+    Object.entries(currentSettings.ankiFieldMap).forEach(([ankiField, lexField]) => {
       if (lexField === "word") note.fields[ankiField] = result.word;
       if (lexField === "context") note.fields[ankiField] = options?.context || "";
       if (lexField === "definition") {
