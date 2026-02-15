@@ -1,65 +1,68 @@
 import { resolve } from "node:path";
+import tailwindcss from "@tailwindcss/vite";
 import { defineConfig } from "vite";
 import { viteStaticCopy } from "vite-plugin-static-copy";
+import { getManifest } from "./src/manifests";
 
-const browser = process.env.BROWSER || "chrome";
+const browser = (process.env.BROWSER ?? "chrome") as "chrome" | "firefox";
 
 export default defineConfig({
-  build: {
-    outDir: `dist/${browser}`,
-    emptyOutDir: true,
-    target: "esnext",
-    minify: false, // Easy for debugging, can be changed to true for release
-    rollupOptions: {
-      input: {
-        popup: resolve(__dirname, "src/app/popup/popup.html"),
-        options: resolve(__dirname, "src/app/options/options.html"),
-        offscreen: resolve(__dirname, "src/app/offscreen/offscreen.html"),
-        frame: resolve(__dirname, "src/app/content/frame.html"),
-        background: resolve(__dirname, "src/app/background/main.ts"),
-        client: resolve(__dirname, "src/app/content/css/client.scss"),
-      },
+  root: "src",
 
-      output: {
-        entryFileNames: (chunkInfo) => {
-          if (chunkInfo.name === "background") return "app/background/main.js";
-          return "app/[name]/[name].js";
-        },
-        chunkFileNames: "assets/[name].js",
-        format: "es",
-
-        assetFileNames: (assetInfo) => {
-          const name = assetInfo.names?.[0];
-          if (name?.endsWith(".css")) {
-            // Keep CSS paths consistent with previous structure
-            if (name.includes("client")) return "content/css/client.css";
-            if (name.includes("frame")) return "content/css/frame.css";
-            return "assets/[name].[ext]";
-          }
-          return "assets/[name].[ext]";
-        },
+  plugins: [
+    tailwindcss(),
+    {
+      name: "generate-manifest",
+      generateBundle() {
+        this.emitFile({
+          type: "asset",
+          fileName: "manifest.json",
+          source: JSON.stringify(getManifest(browser), null, 2),
+        });
       },
     },
-  },
-  plugins: [
     viteStaticCopy({
       targets: [
         {
-          src: `src/manifests/${browser}.json`,
-          dest: ".",
-          rename: "manifest.json",
+          src: "assets/icons/*",
+          dest: "assets/icons",
         },
         {
-          src: "src/assets/**/*",
-          dest: "assets",
-        },
-        {
-          src: "src/_locales/**/*",
+          src: "_locales/**/*",
           dest: "_locales",
         },
       ],
     }),
   ],
+
+  build: {
+    target: "esnext",
+    outDir: `../dist/${browser}`,
+    minify: false,
+    emptyOutDir: true,
+
+    rollupOptions: {
+      input: {
+        background: "src/app/background/background.ts",
+        frame: "src/app/content/frame.html",
+        offscreen: "src/app/offscreen/offscreen.html",
+        options: "src/app/options/options.html",
+        popup: "src/app/popup/popup.html",
+      },
+
+      output: {
+        assetFileNames: "assets/[name].[ext]",
+        chunkFileNames: "assets/chunks/[name].js",
+        entryFileNames: (chunkInfo) => {
+          if (chunkInfo.name === "frame") {
+            return "app/content/frame.js";
+          }
+          return "app/[name]/[name].js";
+        },
+      },
+    },
+  },
+
   resolve: {
     alias: {
       "@lib": resolve(__dirname, "src/lib"),

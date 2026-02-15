@@ -23,11 +23,15 @@ const handlers: { [K in Action]?: Handler<K> } = {
   },
 
   [ACTION.ANKI_GET_FIELDS]: async (data) => {
-    return { fields: await anki.getFields((data as { modelName: string }).modelName) };
+    return {
+      fields: await anki.getFields((data as { modelName: string }).modelName),
+    };
   },
 
   [ACTION.ANKI_ADD_NOTE]: async (data) => {
-    return { noteId: await anki.addNote((data as { note: import("@lib/model").AnkiNote }).note) };
+    return {
+      noteId: await anki.addNote((data as { note: import("@lib/model").AnkiNote }).note),
+    };
   },
 
   [ACTION.ANKI_CREATE_NOTE_FROM_RESULT]: async (data) => {
@@ -76,7 +80,6 @@ const handlers: { [K in Action]?: Handler<K> } = {
 };
 
 export async function dispatchAction(action: Action, data: unknown) {
-  console.log(`Dispatching action: ${handlers} with data:`);
   const handler = handlers[action] as Handler<typeof action> | undefined;
   if (!handler) {
     throw new Error(`No handler for action: ${action}`);

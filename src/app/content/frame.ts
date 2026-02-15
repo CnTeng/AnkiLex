@@ -1,95 +1,44 @@
-import "tiny-markdown-editor/dist/tiny-mde.min.css";
-import {
-  getEditorContent,
-  initEditor,
-  renderResult,
-  setButtonError,
-  setButtonLoading,
-  setButtonSuccess,
-  setEditorContent,
-  type UIContext,
-} from "@lib/ui";
+import { DictionaryPanel, EmptyView, ErrorView, LoadingView, ViewSwitch } from "@lib/view";
+import { cx } from "tailwind-variants";
 
-const resultsContainer = document.getElementById("results-container") as HTMLDivElement;
-const contextSection = document.getElementById("context-section") as HTMLDivElement;
-const contextNoteArea = document.getElementById("context-note") as HTMLTextAreaElement;
+async function init() {
+  const app = document.createElement("div");
+  app.className =
+    cx("bg-background text-foreground flex h-full min-h-0 flex-col overflow-hidden") ?? "";
 
-const ui: UIContext = {
-  resultsContainer,
-  contextSection,
-  contextNoteArea,
-};
+  document.body.append(app);
 
-// Stop propagation of mousedown to prevent host page from seeing it
-document.addEventListener("mousedown", (e) => {
-  e.stopPropagation();
-});
+  const stateView = ViewSwitch({
+    className: cx("flex min-h-0 flex-1 flex-col"),
+    states: new Map([
+      ["loading", LoadingView({})],
+      ["empty", EmptyView({})],
+      ["error", ErrorView({})],
+    ]),
+    initial: "loading",
+  });
+  app.append(stateView.element);
 
-// We need to initialize the editor early
-initEditor(contextNoteArea, "Captured sentence or notes (Markdown supported)...");
+  window.addEventListener("message", (event) => {
+    const { action, data } = event.data;
 
-window.addEventListener("message", (event) => {
-  const { action, data } = event.data;
+    if (action !== "update") return;
 
-  if (action === "update") {
-    // 1. Update Context Editor
-    if (contextSection && contextNoteArea) {
-      contextSection.style.display = "flex";
+    stateView.setState("loading");
 
-      const newContext = data?.context ? data.context : "";
-      setEditorContent(newContext);
+    if (!data.result) {
+      stateView.setState("empty");
+      return;
     }
 
-    // 2. Update Result
-    if (data.result) {
-      renderResult(data.result, ui);
-    }
-  } else if (action === "anki-added") {
-    // Success State
-    const button = resultsContainer.querySelector(
-      `.add-anki-mini-btn[data-def-index="${event.data.defIndex}"]`,
-    ) as HTMLButtonElement;
+    const panel = DictionaryPanel({
+      entry: data.result,
+      showAddButton: true,
+      context: data?.context ?? "",
+    });
 
-    if (button) {
-      setButtonSuccess(button);
-    }
-  } else if (action === "anki-error") {
-    // Error State
-    const button = resultsContainer.querySelector(
-      `.add-anki-mini-btn[data-def-index="${event.data.defIndex}"]`,
-    ) as HTMLButtonElement;
-
-    if (button) {
-      setButtonError(button, event.data.error);
-    }
-  }
-});
-
-// Event Delegation for "Add to Anki" buttons
-if (resultsContainer) {
-  resultsContainer.addEventListener("click", (e) => {
-    const target = e.target as HTMLElement;
-    const btn = target.closest(".add-anki-mini-btn") as HTMLElement;
-
-    if (btn) {
-      e.stopPropagation();
-      const defIndex = parseInt(btn.dataset.defIndex || "0", 10);
-
-      // Show loading state
-      setButtonLoading(btn as HTMLButtonElement);
-
-      // Capture CURRENT context note value
-      const currentContext = getEditorContent(contextNoteArea);
-
-      // Send message to parent
-      parent.postMessage(
-        {
-          action: "add-to-anki",
-          defIndex: defIndex,
-          context: currentContext,
-        },
-        "*",
-      );
-    }
+    stateView.setState("content", panel.element);
   });
 }
+
+void init();

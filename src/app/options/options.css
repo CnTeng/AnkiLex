@@ -1,0 +1,7 @@
+@import "../../assets/theme.css";
+@import "../../assets/scrollbar.css";
+@import "tailwindcss";
+
+body {
+  @apply bg-background text-foreground min-h-screen font-sans antialiased;
+}
