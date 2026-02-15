@@ -20,6 +20,6 @@
       "@lib/*": ["./src/lib/*"]
     }
   },
-  "include": ["src/app/**/*", "src/lib/**/*"],
+  "include": ["src/app/**/*", "src/lib/**/*", "src/zotero/**/*"],
   "exclude": ["node_modules", "dist"]
 }

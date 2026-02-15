@@ -30,7 +30,7 @@ export function renderResult(result: DictionaryEntry, ui: UIContext) {
 
   // Remove wrapper div, append directly to results container (which is now flex column)
   // This unifies the structure with how popup/frame expect to layout items
-  const cardContent = renderDictionaryEntry(result, true);
+  const cardContent = renderDictionaryEntry(document, result, true);
   resultsContainer.appendChild(cardContent);
 
   attachAudioListeners(resultsContainer);

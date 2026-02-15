@@ -7,8 +7,9 @@ export default defineConfig({
     viteStaticCopy({
       targets: [
         {
-          src: "src/zotero/manifest.json",
+          src: "src/manifests/zotero.json",
           dest: ".",
+          rename: "manifest.json",
         },
         {
           src: "src/assets/icons/*",
@@ -19,7 +20,7 @@ export default defineConfig({
   ],
   resolve: {
     alias: {
-      "@": resolve(__dirname, "src"),
+      "@lib": resolve(__dirname, "src/lib"),
     },
   },
   build: {

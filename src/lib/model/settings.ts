@@ -1,4 +1,4 @@
-export const STORAGE_KEY = "ankilex_settings";
+export const STORAGE_KEY = "extensions.ankilex.settings";
 
 export interface AnkiLexSettings {
   // Dictionary settings

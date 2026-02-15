@@ -9,7 +9,7 @@ export abstract class DictionaryProvider implements IDictionaryProvider {
   abstract parseDocument(doc: Document): DictionaryEntry | null;
 
   protected async parseHtml(html: string): Promise<DictionaryEntry | null> {
-    if (this.isFirefoxBg()) {
+    if (this.isZotero() || this.isFirefoxBg()) {
       const parser = new DOMParser();
       const doc = parser.parseFromString(html, "text/html");
       return this.parseDocument(doc);
@@ -48,6 +48,10 @@ export abstract class DictionaryProvider implements IDictionaryProvider {
 
   protected isNodeEnv(): boolean {
     return typeof process !== "undefined" && !!process.versions?.node;
+  }
+
+  protected isZotero(): boolean {
+    return typeof Zotero !== "undefined";
   }
 
   protected isFirefoxBg(): boolean {
