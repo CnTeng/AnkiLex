@@ -10,16 +10,19 @@
     "build:zotero": "vite build --config vite.config.zotero.ts",
     "package:zotero": "npm run build:zotero && node scripts/package-zotero.js",
     "test": "vitest run",
-    "format": "biome format --write && prettier --write ."
+    "format": "prettier --write ."
   },
   "devDependencies": {
+    "@tailwindcss/vite": "^4.2.0",
     "@types/chrome": "^0.1.36",
     "@types/jsdom": "^27.0.0",
     "@types/node": "^25.1.0",
     "@vitest/browser": "^4.0.18",
     "adm-zip": "^0.5.16",
     "jsdom": "^27.4.0",
-    "sass": "^1.97.3",
+    "prettier": "^3.8.1",
+    "prettier-plugin-tailwindcss": "^0.7.2",
+    "tailwindcss": "^4.2.0",
     "typescript": "^5.9.3",
     "vite": "^7.3.1",
     "vite-plugin-static-copy": "^3.2.0",
@@ -28,9 +31,20 @@
   },
   "dependencies": {
     "@floating-ui/dom": "^1.7.5",
+    "lucide": "^0.575.0",
+    "tailwind-merge": "^3.4.1",
+    "tailwind-variants": "^3.2.2",
     "tiny-markdown-editor": "^0.2.18"
   },
   "prettier": {
-    "printWidth": 100
+    "printWidth": 100,
+    "plugins": [
+      "prettier-plugin-tailwindcss"
+    ],
+    "tailwindFunctions": [
+      "tv",
+      "cn",
+      "cx"
+    ]
   }
 }

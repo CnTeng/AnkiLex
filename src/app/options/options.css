@@ -1,0 +1,20 @@
+@import "../../assets/theme.css";
+@import "../../assets/scrollbar.css";
+@import "tailwindcss";
+
+body {
+  @apply bg-adwaita-light-2 text-adwaita-dark-4 min-h-screen font-sans antialiased;
+  @apply dark:bg-adwaita-dark-4 dark:text-adwaita-light-1;
+}
+
+.select-wrapper {
+  @apply relative w-full;
+}
+
+.select-icon {
+  @apply pointer-events-none absolute top-1/2 right-3 -translate-y-1/2 text-gray-500;
+}
+
+.dark .select-icon {
+  @apply text-gray-400;
+}

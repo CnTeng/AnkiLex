@@ -1,0 +1,9 @@
+@import "../../assets/theme.css";
+@import "../../assets/editor.css";
+@import "../../assets/scrollbar.css";
+@import "tailwindcss";
+
+html,
+body {
+  @apply m-0 w-[400px] p-0;
+}

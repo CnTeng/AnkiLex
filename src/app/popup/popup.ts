@@ -1,125 +1,106 @@
 import { api } from "@lib/api";
-import type { DictionaryEntry } from "@lib/model";
+import { Editor, type EditorInstance } from "@lib/components";
+import { theme } from "@lib/theme";
 import "tiny-markdown-editor/dist/tiny-mde.min.css";
 import {
-  getEditorContent,
-  initEditor,
-  renderResult,
-  setButtonError,
-  setButtonLoading,
-  setButtonSuccess,
-  setEditorContent,
-  showError,
-  showLoading,
-  type UIContext,
+  createEmpty,
+  createError,
+  createLoading,
+  DictionaryEntryUI,
+  SearchBar,
+  StateView,
+  type StateViewInstance,
 } from "@lib/ui";
+import { cx } from "tailwind-variants";
 
-const searchInput = document.getElementById("search-input") as HTMLInputElement;
-const settingsBtn = document.getElementById("settings-btn") as HTMLButtonElement;
-
-const loading = document.getElementById("loading") as HTMLDivElement;
-const resultsContainer = document.getElementById("results-container") as HTMLDivElement;
-
-const contextSection = document.getElementById("context-section") as HTMLDivElement;
-const contextNoteArea = document.getElementById("context-note") as HTMLTextAreaElement;
-
-const emptyState = document.getElementById("empty-state") as HTMLDivElement;
-const errorState = document.getElementById("error-state") as HTMLDivElement;
-const errorMessage = document.getElementById("error-message") as HTMLParagraphElement;
-
-const ui: UIContext = {
-  resultsContainer,
-  contextSection,
-  contextNoteArea,
-  emptyState,
-  errorState,
-  errorMessage,
-  loadingState: loading,
-};
-
-let currentResult: DictionaryEntry | null = null;
-let isSearching = false;
+let app: HTMLDivElement;
+let stateView: StateViewInstance;
+let resultsContainer: HTMLDivElement;
+let editor: EditorInstance;
 
 async function init() {
-  initEditor(contextNoteArea);
+  await theme.init();
 
-  searchInput.addEventListener("keydown", handleSearchWord);
-  settingsBtn.addEventListener("click", handleOpenSettings);
-  resultsContainer.addEventListener("click", handleResultsClick);
+  app = document.createElement("div");
+  app.className =
+    cx(
+      "bg-background text-foreground flex h-12 min-h-0 flex-col overflow-hidden transition-[height] duration-300 ease-out data-[state=expanded]:h-[600px]",
+    ) ?? "";
+  app.dataset.state = "collapsed";
 
-  searchInput.focus();
-}
+  document.body.append(app);
 
-function handleSearchWord(e: KeyboardEvent) {
-  if (e.key !== "Enter") return;
+  const searchBar = SearchBar({
+    onSettingsClick: () => chrome.runtime.openOptionsPage(),
+    onSearch: async (word) => {
+      // let CSS handle expanded height via #app.expanded
+      if (app) {
+        app.classList.add("expanded");
+      }
+      await performSearch(word);
+    },
+  });
 
-  const word = searchInput.value.trim();
-  if (!word || isSearching) return;
+  app.append(searchBar.container);
 
-  document.body.classList.add("expanded");
-  performSearch(word);
-}
+  searchBar.input.addEventListener("input", (e) => {
+    const val = (e.currentTarget as HTMLInputElement).value.trim();
+    if (!val && app) app.classList.remove("expanded");
+  });
 
-function handleOpenSettings() {
-  chrome.runtime.openOptionsPage();
-}
+  resultsContainer = document.createElement("div");
+  resultsContainer.className = cx("flex min-h-0 flex-1 flex-col overflow-hidden p-0") ?? "";
 
-function handleResultsClick(e: MouseEvent) {
-  const btn = (e.target as HTMLElement).closest(".add-anki-mini-btn") as HTMLButtonElement | null;
+  editor = Editor({
+    placeholder: "Context / Note (Markdown supported)...",
+    className: cx("h-[120px] flex-none") ?? "",
+  });
 
-  if (!btn) return;
+  stateView = StateView({
+    empty: createEmpty(),
+    loading: createLoading(),
+    error: createError(),
+    content: resultsContainer,
+  });
 
-  e.stopPropagation();
+  app.append(stateView.element);
 
-  const defIndex = Number(btn.dataset.defIndex ?? 0);
-  handleAddToAnki(defIndex, btn);
+  searchBar.input.focus();
 }
 
 async function performSearch(word: string) {
-  isSearching = true;
-  showLoading(ui);
+  stateView?.setState("loading");
 
   try {
     const result = await api.dictionary.lookup(word);
+
     if (!result) {
-      showError("No results found", ui);
+      stateView?.setState("error", "No results found");
       return;
     }
-    currentResult = result;
 
-    renderResult(result, ui);
-    contextSection.style.display = "flex";
-    setEditorContent("");
+    resultsContainer.innerHTML = "";
+
+    const cardWrapper = document.createElement("div");
+    cardWrapper.className = cx("min-h-0 flex-1 overflow-y-auto p-4") ?? "";
+    cardWrapper.append(
+      DictionaryEntryUI({
+        entry: result,
+        showAddButton: true,
+      }),
+    );
+
+    resultsContainer.append(cardWrapper);
+    resultsContainer.append(editor.element);
+    resultsContainer.scrollTop = 0;
+
+    stateView?.setState("content");
+
+    app.dataset.state = "expanded";
+    editor?.setContent("");
   } catch (error) {
     console.error("Search error:", error);
-    showError("Failed to perform search", ui);
-  } finally {
-    isSearching = false;
-  }
-}
-
-async function handleAddToAnki(defIndex: number, btn: HTMLButtonElement) {
-  if (!currentResult) return;
-
-  setButtonLoading(btn);
-
-  try {
-    const contextNote = getEditorContent(contextNoteArea);
-
-    const response = await api.anki.createNoteFromResult({
-      result: currentResult,
-      defIndex,
-      context: contextNote,
-    });
-
-    if (!response?.noteId) {
-      throw new Error("Invalid response");
-    }
-
-    setButtonSuccess(btn);
-  } catch (error) {
-    console.error("Add to Anki error:", error);
-    setButtonError(btn);
+    stateView?.setState("error", "Failed to perform search");
   }
 }
 

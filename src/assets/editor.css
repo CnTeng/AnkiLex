@@ -1,0 +1,46 @@
+.tinymde-editor .TMCommandBar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  background: transparent;
+  border: none;
+  padding: 0;
+  margin: 0;
+}
+
+.tinymde-editor .TMCommandButton {
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 6px;
+  color: var(--text-secondary);
+  background: transparent;
+  cursor: pointer;
+  transition: background-color 0.15s ease;
+}
+
+.tinymde-editor .TMCommandButton:hover {
+  background-color: rgba(0, 0, 0, 0.05);
+  color: var(--text-main);
+  fill: var(--text-main);
+}
+
+.tinymde-editor .TMCommandButton_Active {
+  background-color: rgba(0, 0, 0, 0.1);
+  color: var(--text-main);
+  fill: var(--text-main);
+}
+
+.tinymde-editor .TMCommandButton_Disabled {
+  opacity: 0.3;
+  pointer-events: none;
+}
+
+.tinymde-editor .TMCommandDivider {
+  width: 1px;
+  height: 16px;
+  margin: 0 4px;
+  background-color: var(--border-color);
+}

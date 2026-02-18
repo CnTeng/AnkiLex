@@ -1,4 +1,5 @@
 import { resolve } from "node:path";
+import tailwindcss from "@tailwindcss/vite";
 import { defineConfig } from "vite";
 import { viteStaticCopy } from "vite-plugin-static-copy";
 
@@ -17,7 +18,7 @@ export default defineConfig({
         offscreen: resolve(__dirname, "src/app/offscreen/offscreen.html"),
         frame: resolve(__dirname, "src/app/content/frame.html"),
         background: resolve(__dirname, "src/app/background/main.ts"),
-        client: resolve(__dirname, "src/app/content/css/client.scss"),
+        client: resolve(__dirname, "src/app/content/css/client.css"),
       },
 
       output: {
@@ -42,6 +43,7 @@ export default defineConfig({
     },
   },
   plugins: [
+    tailwindcss(),
     viteStaticCopy({
       targets: [
         {

@@ -1,95 +1,89 @@
+import { Editor, type EditorInstance } from "@lib/components";
+import { theme } from "@lib/theme";
 import "tiny-markdown-editor/dist/tiny-mde.min.css";
-import {
-  getEditorContent,
-  initEditor,
-  renderResult,
-  setButtonError,
-  setButtonLoading,
-  setButtonSuccess,
-  setEditorContent,
-  type UIContext,
-} from "@lib/ui";
+import { DictionaryEntryUI } from "@lib/ui";
+import { cx } from "tailwind-variants";
 
-const resultsContainer = document.getElementById("results-container") as HTMLDivElement;
-const contextSection = document.getElementById("context-section") as HTMLDivElement;
-const contextNoteArea = document.getElementById("context-note") as HTMLTextAreaElement;
+let app: HTMLDivElement;
+let resultsContainer: HTMLDivElement;
+let editor: EditorInstance;
 
-const ui: UIContext = {
-  resultsContainer,
-  contextSection,
-  contextNoteArea,
-};
-
-// Stop propagation of mousedown to prevent host page from seeing it
 document.addEventListener("mousedown", (e) => {
   e.stopPropagation();
 });
 
-// We need to initialize the editor early
-initEditor(contextNoteArea, "Captured sentence or notes (Markdown supported)...");
+async function init() {
+  await theme.init();
 
-window.addEventListener("message", (event) => {
-  const { action, data } = event.data;
+  app = document.createElement("div");
+  app.className =
+    cx(
+      "bg-background text-foreground flex h-[600px] min-h-0 flex-col overflow-hidden duration-300 ease-out",
+    ) ?? "";
 
-  if (action === "update") {
-    // 1. Update Context Editor
-    if (contextSection && contextNoteArea) {
-      contextSection.style.display = "flex";
+  document.body.append(app);
 
+  resultsContainer = document.createElement("div");
+  resultsContainer.className = cx("flex min-h-0 flex-1 flex-col overflow-hidden p-0") ?? "";
+
+  editor = Editor({
+    placeholder: "Captured sentence or notes (Markdown supported)...",
+    className: cx("h-[120px] flex-none") ?? "",
+  });
+
+  app.append(resultsContainer);
+
+  window.addEventListener("message", (event) => {
+    const { action, data } = event.data;
+
+    if (action === "update") {
       const newContext = data?.context ? data.context : "";
-      setEditorContent(newContext);
-    }
+      if (editor) editor.setContent(newContext);
 
-    // 2. Update Result
-    if (data.result) {
-      renderResult(data.result, ui);
-    }
-  } else if (action === "anki-added") {
-    // Success State
-    const button = resultsContainer.querySelector(
-      `.add-anki-mini-btn[data-def-index="${event.data.defIndex}"]`,
-    ) as HTMLButtonElement;
+      if (data.result) {
+        resultsContainer.innerHTML = "";
+        const cardWrapper = document.createElement("div");
+        cardWrapper.className = cx("min-h-0 flex-1 overflow-y-auto p-4") ?? "";
+        cardWrapper.append(
+          DictionaryEntryUI({
+            entry: data.result,
+            showAddButton: true,
+          }),
+        );
 
-    if (button) {
-      setButtonSuccess(button);
-    }
-  } else if (action === "anki-error") {
-    // Error State
-    const button = resultsContainer.querySelector(
-      `.add-anki-mini-btn[data-def-index="${event.data.defIndex}"]`,
-    ) as HTMLButtonElement;
+        resultsContainer.append(cardWrapper);
+        resultsContainer.append(editor.element);
+        resultsContainer.scrollTop = 0;
 
-    if (button) {
-      setButtonError(button, event.data.error);
-    }
-  }
-});
-
-// Event Delegation for "Add to Anki" buttons
-if (resultsContainer) {
-  resultsContainer.addEventListener("click", (e) => {
-    const target = e.target as HTMLElement;
-    const btn = target.closest(".add-anki-mini-btn") as HTMLElement;
-
-    if (btn) {
-      e.stopPropagation();
-      const defIndex = parseInt(btn.dataset.defIndex || "0", 10);
-
-      // Show loading state
-      setButtonLoading(btn as HTMLButtonElement);
-
-      // Capture CURRENT context note value
-      const currentContext = getEditorContent(contextNoteArea);
-
-      // Send message to parent
-      parent.postMessage(
-        {
-          action: "add-to-anki",
-          defIndex: defIndex,
-          context: currentContext,
-        },
-        "*",
-      );
+        app.classList.add("expanded");
+      }
     }
   });
+
+  if (resultsContainer) {
+    resultsContainer.addEventListener("click", (e) => {
+      const target = e.target as HTMLElement;
+      const btn = target.closest(".add-anki-mini-btn") as HTMLElement;
+
+      if (btn) {
+        e.stopPropagation();
+        const defIndex = parseInt(btn.dataset.defIndex || "0", 10);
+
+        // Capture CURRENT context note value
+        const currentContext = editor ? editor.getContent() : "";
+
+        // Send message to parent
+        parent.postMessage(
+          {
+            action: "add-to-anki",
+            defIndex: defIndex,
+            context: currentContext,
+          },
+          "*",
+        );
+      }
+    });
+  }
 }
+
+void init();

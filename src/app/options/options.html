@@ -4,81 +4,195 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>AnkiLex Options</title>
-    <link rel="stylesheet" href="options.scss" />
+    <link rel="stylesheet" href="options.css" />
   </head>
   <body>
-    <div class="container">
-      <header>
-        <h1>AnkiLex Settings</h1>
+    <div
+      class="mx-auto my-10 max-w-4xl overflow-hidden rounded-xl border border-gray-100 bg-white shadow-xl dark:border-gray-800 dark:bg-gray-900"
+    >
+      <header
+        class="border-b border-gray-100 bg-white px-8 py-6 dark:border-gray-800 dark:bg-gray-900"
+      >
+        <h1 class="text-2xl font-bold tracking-tight text-gray-900 dark:text-gray-100">
+          AnkiLex Settings
+        </h1>
       </header>
 
-      <div class="content">
+      <div class="space-y-10 p-8">
         <section>
-          <h2><span class="icon book"></span> Dictionary</h2>
-          <div class="field">
-            <label>Enabled Dictionaries</label>
-            <div id="dictionary-list">
+          <h2
+            class="mb-6 flex items-center gap-3 border-b-2 border-blue-50 pb-2 text-lg font-semibold text-blue-600 dark:border-blue-900/30 dark:text-blue-400"
+          >
+            <span
+              class="flex h-6 w-6 items-center justify-center"
+              data-icon="book"
+              data-icon-size="20"
+            ></span>
+            Dictionary
+          </h2>
+          <div class="mb-6">
+            <label class="mb-2 block text-sm font-medium text-gray-900 dark:text-gray-200"
+              >Enabled Dictionaries</label
+            >
+            <div
+              id="dictionary-list"
+              class="max-h-60 space-y-2 overflow-y-auto rounded-lg border border-gray-200 bg-gray-50 p-3 dark:border-gray-700 dark:bg-gray-800/50"
+            >
               <!-- Dictionaries will be populated here -->
             </div>
-            <small class="input-desc">Select which dictionaries to use for lookups.</small>
+            <p class="mt-1.5 text-xs text-gray-500 dark:text-gray-400">
+              Select which dictionaries to use for lookups.
+            </p>
           </div>
-          <div class="field">
-            <label for="auto-lookup" class="checkbox-label">
-              <input type="checkbox" id="auto-lookup" /> Auto-lookup on selection
+          <div class="mb-6">
+            <label for="auto-lookup" class="group flex cursor-pointer items-center gap-3">
+              <div class="relative flex items-center">
+                <input
+                  type="checkbox"
+                  id="auto-lookup"
+                  class="peer h-5 w-5 cursor-pointer appearance-none rounded-md border border-gray-300 transition-all checked:border-blue-600 checked:bg-blue-600 hover:border-blue-400 dark:border-gray-600 dark:hover:border-blue-500"
+                />
+                <span
+                  class="pointer-events-none absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-white opacity-0 peer-checked:opacity-100"
+                  data-icon="check"
+                  data-icon-size="14"
+                ></span>
+              </div>
+              <span
+                class="text-sm font-medium text-gray-700 group-hover:text-gray-900 dark:text-gray-300 dark:group-hover:text-gray-100"
+                >Auto-lookup on selection</span
+              >
             </label>
-            <small class="input-desc"
-              >Automatically show the lookup popup when text is selected.</small
-            >
+            <p class="mt-1.5 ml-8 text-xs text-gray-500 dark:text-gray-400">
+              Automatically show the lookup popup when text is selected.
+            </p>
           </div>
         </section>
 
         <section>
-          <h2><span class="icon anki"></span> Anki</h2>
-          <div class="field">
-            <label for="anki-url">AnkiConnect URL</label>
-            <input type="text" id="anki-url" placeholder="http://127.0.0.1:8765" />
-            <small class="input-desc"
-              >Requires AnkiConnect add-on to be installed and running in Anki.</small
+          <h2
+            class="mb-6 flex items-center gap-3 border-b-2 border-blue-50 pb-2 text-lg font-semibold text-blue-600 dark:border-blue-900/30 dark:text-blue-400"
+          >
+            <span
+              class="flex h-6 w-6 items-center justify-center"
+              data-icon="shield"
+              data-icon-size="20"
+            ></span>
+            Anki
+          </h2>
+          <div class="mb-6">
+            <label
+              for="anki-url"
+              class="mb-2 block text-sm font-medium text-gray-900 dark:text-gray-200"
+              >AnkiConnect URL</label
             >
+            <input
+              type="text"
+              id="anki-url"
+              class="flex h-10 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 transition-all placeholder:text-gray-400 focus:border-transparent focus:ring-2 focus:ring-blue-500 focus:outline-none dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100 dark:placeholder:text-gray-500"
+              placeholder="http://127.0.0.1:8765"
+            />
+            <p class="mt-1.5 text-xs text-gray-500 dark:text-gray-400">
+              Requires AnkiConnect add-on to be installed and running in Anki.
+            </p>
           </div>
-          <div class="field">
-            <label for="default-deck">Default Deck</label>
-            <div class="input-group">
-              <select id="default-deck">
+          <div class="mb-6">
+            <label
+              for="default-deck"
+              class="mb-2 block text-sm font-medium text-gray-900 dark:text-gray-200"
+              >Default Deck</label
+            >
+            <div class="flex gap-3">
+              <select
+                id="default-deck"
+                class="select-field flex h-10 w-full appearance-none items-center justify-between rounded-md border border-gray-300 bg-white px-3 py-2 pr-10 text-sm text-gray-900 transition-all placeholder:text-gray-400 focus:border-transparent focus:ring-2 focus:ring-blue-500 focus:outline-none disabled:cursor-not-allowed disabled:opacity-50 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100 dark:placeholder:text-gray-500"
+              >
                 <option value="Default">Default</option>
               </select>
-              <button id="refresh-anki" title="Refresh Decks/Models">
-                <span class="icon refresh"></span>
+              <button
+                id="refresh-anki"
+                class="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-md border border-gray-300 bg-white text-sm font-medium text-gray-500 transition-colors hover:bg-gray-100 hover:text-gray-900 focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:outline-none disabled:pointer-events-none disabled:opacity-50 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-gray-100"
+                title="Refresh Decks/Models"
+              >
+                <span data-icon="refresh" data-icon-size="16"></span>
               </button>
             </div>
           </div>
-          <div class="field">
-            <label for="default-note-type">Default Note Type</label>
-            <select id="default-note-type">
+          <div class="mb-6">
+            <label
+              for="default-note-type"
+              class="mb-2 block text-sm font-medium text-gray-900 dark:text-gray-200"
+              >Default Note Type</label
+            >
+            <select
+              id="default-note-type"
+              class="select-field flex h-10 w-full appearance-none items-center justify-between rounded-md border border-gray-300 bg-white px-3 py-2 pr-10 text-sm text-gray-900 transition-all placeholder:text-gray-400 focus:border-transparent focus:ring-2 focus:ring-blue-500 focus:outline-none disabled:cursor-not-allowed disabled:opacity-50 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100 dark:placeholder:text-gray-500"
+            >
               <option value="Basic">Basic</option>
             </select>
           </div>
-          <div id="field-mapping-container" class="field" style="display: none">
-            <label>Field Mapping</label>
-            <div id="field-mapping-list">
+          <div id="field-mapping-container" class="mb-6 hidden">
+            <label class="mb-2 block text-sm font-medium text-gray-900 dark:text-gray-200"
+              >Field Mapping</label
+            >
+            <div
+              id="field-mapping-list"
+              class="space-y-3 rounded-lg border border-gray-200 bg-gray-50 p-4 dark:border-gray-700 dark:bg-gray-800/50"
+            >
               <!-- Field mappings will be populated here -->
             </div>
           </div>
         </section>
 
         <section>
-          <h2><span class="icon ui"></span> UI & Appearance</h2>
-          <div class="field">
-            <label for="popup-width">Popup Width (px)</label>
-            <input type="number" id="popup-width" min="300" max="800" />
+          <h2
+            class="mb-6 flex items-center gap-3 border-b-2 border-blue-50 pb-2 text-lg font-semibold text-blue-600 dark:border-blue-900/30 dark:text-blue-400"
+          >
+            <span
+              class="flex h-6 w-6 items-center justify-center"
+              data-icon="layout"
+              data-icon-size="20"
+            ></span>
+            UI & Appearance
+          </h2>
+          <div class="mb-6">
+            <label
+              for="popup-width"
+              class="mb-2 block text-sm font-medium text-gray-900 dark:text-gray-200"
+              >Popup Width (px)</label
+            >
+            <input
+              type="number"
+              id="popup-width"
+              min="300"
+              max="800"
+              class="flex h-10 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 transition-all placeholder:text-gray-400 focus:border-transparent focus:ring-2 focus:ring-blue-500 focus:outline-none dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100 dark:placeholder:text-gray-500"
+            />
           </div>
-          <div class="field">
-            <label for="popup-height">Popup Height (px)</label>
-            <input type="number" id="popup-height" min="200" max="1000" />
+          <div class="mb-6">
+            <label
+              for="popup-height"
+              class="mb-2 block text-sm font-medium text-gray-900 dark:text-gray-200"
+              >Popup Height (px)</label
+            >
+            <input
+              type="number"
+              id="popup-height"
+              min="200"
+              max="1000"
+              class="flex h-10 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 transition-all placeholder:text-gray-400 focus:border-transparent focus:ring-2 focus:ring-blue-500 focus:outline-none dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100 dark:placeholder:text-gray-500"
+            />
           </div>
-          <div class="field">
-            <label for="theme">Theme</label>
-            <select id="theme">
+          <div class="mb-6">
+            <label
+              for="theme"
+              class="mb-2 block text-sm font-medium text-gray-900 dark:text-gray-200"
+              >Theme</label
+            >
+            <select
+              id="theme"
+              class="select-field flex h-10 w-full appearance-none items-center justify-between rounded-md border border-gray-300 bg-white px-3 py-2 pr-10 text-sm text-gray-900 transition-all placeholder:text-gray-400 focus:border-transparent focus:ring-2 focus:ring-blue-500 focus:outline-none disabled:cursor-not-allowed disabled:opacity-50 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100 dark:placeholder:text-gray-500"
+            >
               <option value="auto">System Default</option>
               <option value="light">Always Light</option>
               <option value="dark">Always Dark</option>
@@ -87,13 +201,33 @@
         </section>
       </div>
 
-      <div class="actions">
-        <button id="reset" title="Reset all settings to default">
-          <span class="icon reset"></span> Reset Defaults
+      <div
+        class="flex items-center justify-between border-t border-gray-100 bg-gray-50 px-8 py-6 dark:border-gray-800 dark:bg-gray-800/50"
+      >
+        <button
+          id="reset"
+          class="inline-flex items-center justify-center rounded-md px-4 py-2 text-sm font-medium text-red-500 transition-colors hover:bg-red-50 hover:text-red-700 focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:outline-none disabled:pointer-events-none disabled:opacity-50 dark:hover:bg-red-900/20"
+          title="Reset all settings to default"
+        >
+          <span class="flex items-center gap-2">
+            <span data-icon="reset" data-icon-size="16"></span>
+            Reset Defaults
+          </span>
         </button>
-        <div class="main-actions">
-          <div id="status"></div>
-          <button id="save" class="primary"><span class="icon save"></span> Save Changes</button>
+        <div class="flex items-center gap-4">
+          <div
+            id="status"
+            class="translate-y-2 text-sm font-medium opacity-0 transition-all dark:text-gray-300"
+          ></div>
+          <button
+            id="save"
+            class="inline-flex h-10 items-center justify-center rounded-md bg-blue-600 px-6 py-2 text-sm font-medium text-white shadow-sm transition-colors hover:bg-blue-700 focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 focus-visible:outline-none disabled:pointer-events-none disabled:opacity-50 dark:focus-visible:ring-offset-gray-900"
+          >
+            <span class="flex items-center gap-2">
+              <span data-icon="save" data-icon-size="16"></span>
+              Save Changes
+            </span>
+          </button>
         </div>
       </div>
     </div>

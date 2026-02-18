@@ -1,8 +1,6 @@
-@use "../../../assets/scss/theme" as *;
-
 iframe#ankilex-popup {
   all: initial;
-  background-color: transparent;
+  background-color: #f6f5f4; /* Adwaita Light 2 */
   border: 1px solid rgba(0, 0, 0, 0.15);
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
   border-radius: 12px;
@@ -16,15 +14,17 @@ iframe#ankilex-popup {
   transition:
     opacity 0.2s,
     transform 0.2s;
+  color-scheme: light dark;
 }
 
-#ankilex-lookup-icon {
+#ankilex-lookup-icon,
+.ankilex-lookup-icon {
   position: absolute;
   width: 28px;
   height: 28px;
-  background: #3584e4;
+  background: #3584e4; /* Adwaita Blue 3 */
   color: white;
-  border-radius: 8px;
+  border-radius: 8px; /* Slightly more rounded for Adwaita */
   display: none;
   align-items: center;
   justify-content: center;
@@ -43,17 +43,19 @@ iframe#ankilex-popup {
   }
 
   &:hover {
-    background: #1b66c9;
+    background: #1c71d8; /* Adwaita Blue 4 */
     transform: scale(1.1);
   }
 
-  .icon {
-    @include adw-icon($icon-search, 16px);
+  svg {
+    width: 16px;
+    height: 16px;
   }
 }
 
 @media (prefers-color-scheme: dark) {
   iframe#ankilex-popup {
+    background-color: #241f31; /* Adwaita Dark 4 */
     border-color: rgba(255, 255, 255, 0.15);
     box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
   }

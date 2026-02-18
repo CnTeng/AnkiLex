@@ -1,299 +1,262 @@
-import type { Definition, DictionaryEntry, Pronunciation } from "@lib/model";
-
-export class DictionaryEntryRenderer {
-  constructor(
-    private entry: DictionaryEntry,
-    private showAddButton: boolean = true,
-  ) { }
-
-  render(doc: Document): DocumentFragment {
-    const fragment = doc.createDocumentFragment();
-
-    const components = [
-      this.renderHeader(doc),
-      this.renderMetadata(doc),
-      this.renderPronunciations(doc),
-      this.renderDefinitions(doc),
-    ];
-
-    components.filter(Boolean).forEach((component) => {
-      if (component) fragment.appendChild(component);
-    });
-
-    return fragment;
-  }
-
-  private renderHeader(doc: Document): HTMLDivElement {
-    const header = doc.createElement("div");
-    header.className = "result-header";
-
-    const wordElement = doc.createElement("h2");
-    wordElement.className = "word";
-    wordElement.textContent = this.entry.word;
-
-    const providerElement = doc.createElement("span");
-    providerElement.className = "provider";
-    providerElement.textContent = this.entry.provider;
-
-    header.appendChild(wordElement);
-    header.appendChild(providerElement);
-
-    return header;
-  }
-
-  private renderMetadata(doc: Document): HTMLDivElement | null {
-    if (!this.entry.metadata) return null;
-
-    const tags = (this.entry.metadata.tags as string[]) || [];
-    const frequency = (this.entry.metadata.frequency as number) || 0;
-
-    if (tags.length === 0 && frequency === 0) return null;
-
-    const metadata = doc.createElement("div");
-    metadata.className = "metadata";
-
-    const frequencyElement = this.renderFrequencyStars(doc, frequency);
-    const tagsElement = this.renderTags(doc, tags);
-
-    if (frequencyElement) metadata.appendChild(frequencyElement);
-    if (tagsElement) metadata.appendChild(tagsElement);
-
-    return metadata;
-  }
-
-  private renderFrequencyStars(doc: Document, frequency: number): HTMLDivElement | null {
-    if (frequency <= 0) return null;
-
-    const container = doc.createElement("div");
-    container.className = "frequency-stars";
-    container.setAttribute("aria-label", "Frequency");
-
-    for (let i = 0; i < 5; i++) {
-      const isActive = i < frequency;
-      const starIcon = doc.createElement("span");
-      starIcon.className = `icon ${isActive ? "star-filled" : "star"}${isActive ? " active" : ""}`;
-      container.appendChild(starIcon);
-    }
-
-    return container;
-  }
-
-  private renderTags(doc: Document, tags: string[]): HTMLDivElement | null {
-    if (tags.length === 0) return null;
-
-    const container = doc.createElement("div");
-    container.className = "tags-list";
-
-    tags.forEach((tag) => {
-      const tagElement = doc.createElement("span");
-      tagElement.className = "meta-tag";
-      tagElement.textContent = tag;
-      container.appendChild(tagElement);
-    });
-
-    return container;
-  }
-
-  private renderPronunciations(doc: Document): HTMLDivElement | null {
-    const pronunciations = this.entry.pronunciations;
-    if (!pronunciations || pronunciations.length === 0) return null;
-
-    const container = doc.createElement("div");
-    container.className = "pronunciations";
-
-    pronunciations.forEach((pronunciation) => {
-      const element = this.renderSinglePronunciation(doc, pronunciation);
-      if (element) container.appendChild(element);
-    });
-
-    return container.children.length > 0 ? container : null;
-  }
-
-  private renderSinglePronunciation(
-    doc: Document,
-    pronunciation: Pronunciation,
-  ): HTMLDivElement | null {
-    const container = doc.createElement("div");
-    container.className = "pronunciation-item";
-
-    if (pronunciation.type) {
-      const pronType = doc.createElement("span");
-      pronType.className = "pron-type";
-      pronType.textContent = pronunciation.type;
-      container.appendChild(pronType);
-    }
-
-    if (pronunciation.text) {
-      const pronText = doc.createElement("span");
-      pronText.className = "pron-text";
-      pronText.textContent = pronunciation.text;
-      container.appendChild(pronText);
-    }
-
-    if (pronunciation.audioUrl) {
-      container.appendChild(this.renderAudioButton(doc, pronunciation.audioUrl));
-    }
-
-    return container;
-  }
-
-  private renderAudioButton(doc: Document, audioUrl: string): HTMLButtonElement {
-    const button = doc.createElement("button");
-    button.className = "play-audio";
-    button.setAttribute("data-url", audioUrl);
-    button.setAttribute("aria-label", "Play audio");
-
-    const icon = doc.createElement("span");
-    icon.className = "icon audio";
-
-    button.appendChild(icon);
-    return button;
-  }
-
-  private renderDefinitions(doc: Document): HTMLDivElement | null {
-    if (!this.entry.definitions || this.entry.definitions.length === 0) return null;
-
-    const container = doc.createElement("div");
-    container.className = "definitions-grid";
-
-    this.entry.definitions.forEach((definition, defIndex) => {
-      const element = this.renderDefinition(doc, definition, defIndex);
-      if (element) container.appendChild(element);
-    });
-
-    return container.children.length > 0 ? container : null;
-  }
-
-  private renderDefinition(
-    doc: Document,
-    definition: Definition,
-    defIndex: number,
-  ): HTMLDivElement {
-    const card = doc.createElement("div");
-    card.className = "definition-card";
-
-    const contentWrapper = doc.createElement("div");
-    contentWrapper.className = "definition-content-wrapper";
-
-    const mainContent = doc.createElement("div");
-    mainContent.className = "definition-main";
-
-    const definitionContent = this.renderDefinitionContent(doc, definition);
-    definitionContent.forEach((component) => {
-      mainContent.appendChild(component);
-    });
-
-    contentWrapper.appendChild(mainContent);
-
-    if (this.showAddButton) {
-      const addButton = this.renderAddAnkiButton(doc, defIndex);
-      contentWrapper.appendChild(addButton);
-    }
-
-    card.appendChild(contentWrapper);
-
-    const examples = this.renderExamples(doc, definition.examples);
-    if (examples) {
-      card.appendChild(examples);
-    }
-
-    return card;
-  }
-
-  private renderDefinitionContent(doc: Document, definition: Definition): HTMLElement[] {
-    const components: HTMLElement[] = [];
-
-    if (definition.partOfSpeech) {
-      const posTag = doc.createElement("span");
-      posTag.className = "pos-tag";
-      posTag.textContent = definition.partOfSpeech;
-      components.push(posTag);
-    }
-
-    const defText = doc.createElement("span");
-    defText.className = "def-text";
-    defText.textContent = definition.text;
-    components.push(defText);
-
-    return components;
-  }
-
-  private renderAddAnkiButton(doc: Document, defIndex: number): HTMLButtonElement {
-    const button = doc.createElement("button");
-    button.className = "add-anki-mini-btn";
-    button.setAttribute("data-def-index", defIndex.toString());
-    button.setAttribute("title", "Add to Anki");
-
-    const icon = doc.createElement("span");
-    icon.className = "icon plus";
-
-    button.appendChild(icon);
-    return button;
-  }
-
-  private renderExamples(
-    doc: Document,
-    examples?: Array<string | { text: string; translation?: string }>,
-  ): HTMLDivElement | null {
-    if (!examples || examples.length === 0) return null;
-
-    const container = doc.createElement("div");
-    container.className = "examples";
-
-    examples.forEach((example) => {
-      const element = this.renderSingleExample(doc, example);
-      if (element) container.appendChild(element);
-    });
-
-    return container.children.length > 0 ? container : null;
-  }
-
-  private renderSingleExample(
-    doc: Document,
-    example: string | { text: string; translation?: string },
-  ): HTMLDivElement {
-    const container = doc.createElement("div");
-    container.className = "example-item";
-
-    const text = typeof example === "string" ? example : example.text;
-    const translation =
-      typeof example === "object" && example.translation ? example.translation : "";
-
-    const textNode = doc.createTextNode(text);
-    container.appendChild(textNode);
-
-    if (translation) {
-      const translationSpan = doc.createElement("span");
-      translationSpan.textContent = ` ${translation}`;
-      translationSpan.style.opacity = "0.7";
-      translationSpan.style.fontSize = "0.9em";
-      container.appendChild(translationSpan);
-    }
-
-    return container;
-  }
+import { Badge, Button } from "@lib/components";
+import type { Definition, DictionaryEntry, Example, Pronunciation } from "@lib/model";
+import { createElement, Play, Plus, Star } from "lucide";
+import { cn, cx } from "tailwind-variants";
+
+interface DictionaryEntryProps {
+  entry: DictionaryEntry;
+  showAddButton?: boolean;
+  doc?: Document;
 }
 
-export function renderDictionaryEntry(
-  doc: Document,
-  result: DictionaryEntry,
-  showAddButton: boolean = true,
-): DocumentFragment {
-  const renderer = new DictionaryEntryRenderer(result, showAddButton);
-  return renderer.render(doc);
-}
+export const DictionaryEntryUI = ({
+  entry,
+  showAddButton = true,
+  doc = document,
+}: DictionaryEntryProps): DocumentFragment => {
+  const fragment = doc.createDocumentFragment();
 
-export function attachAudioListeners(container: Element) {
-  const playButtons = container.querySelectorAll(".play-audio");
-  playButtons.forEach((btn) => {
-    btn.addEventListener("click", (e) => {
-      e.stopPropagation();
-      const url = btn.getAttribute("data-url");
-      if (url) {
-        const audio = document.createElement("audio");
-        audio.src = url;
-        audio.play();
-      }
-    });
+  const components = [
+    renderHeader(doc, entry),
+    // renderMetadata(doc, entry),
+    // renderPronunciations(doc, entry),
+    renderDefinitions(doc, entry, showAddButton),
+  ];
+
+  components.filter(Boolean).forEach((component) => {
+    if (component) fragment.append(component);
   });
+
+  return fragment;
+};
+
+function renderHeader(doc: Document, entry: DictionaryEntry): HTMLDivElement {
+  const header = doc.createElement("div");
+  header.className = cx("mb-2 flex items-center justify-between") ?? "";
+
+  const word = doc.createElement("h2");
+  word.className = cx("text-foreground text-2xl font-bold") ?? "";
+  word.textContent = entry.word;
+
+  const provider = doc.createElement("span");
+  provider.className = cx("text-muted-foreground px-2 py-0.5 text-xs font-medium uppercase") ?? "";
+  provider.textContent = entry.provider;
+
+  header.append(word, provider);
+  return header;
+}
+
+function renderMetadata(doc: Document, entry: DictionaryEntry): HTMLDivElement | null {
+  if (!entry.metadata) return null;
+
+  const tags = (entry.metadata.tags as string[]) || [];
+  const frequency = (entry.metadata.frequency as number) || 0;
+
+  if (tags.length === 0 && frequency === 0) return null;
+
+  const container = doc.createElement("div");
+  container.className = cx("mb-2 flex items-center gap-3") ?? "";
+
+  const frequencyElement = renderFrequencyStars(doc, frequency);
+  const tagsElement = renderTags(doc, tags);
+
+  if (frequencyElement) container.append(frequencyElement);
+  if (tagsElement) container.append(tagsElement);
+
+  return container;
+}
+
+function renderFrequencyStars(doc: Document, frequency: number): HTMLDivElement | null {
+  if (frequency <= 0) return null;
+
+  const container = doc.createElement("div");
+  container.className = cx("flex items-center gap-0.5") ?? "";
+
+  const STAR_COUNT = 5;
+  for (let i = 0; i < STAR_COUNT; i++) {
+    const starIcon = createElement(Star);
+
+    starIcon.setAttribute(
+      "class",
+      cn("h-4 w-4", i < frequency ? "text-warning fill-current" : "text-muted-foreground") ?? "",
+    );
+
+    container.append(starIcon);
+  }
+
+  return container;
+}
+
+function renderTags(doc: Document, tags: string[]): HTMLDivElement | null {
+  if (tags.length === 0) return null;
+
+  const container = doc.createElement("div");
+  container.className = cx("flex flex-wrap gap-1.5") ?? "";
+
+  tags.forEach((tag) => {
+    const badge = Badge({ label: tag, variant: "secondary" });
+    container.append(badge);
+  });
+
+  return container;
+}
+
+function renderPronunciations(doc: Document, entry: DictionaryEntry): HTMLDivElement | null {
+  const pronunciations = entry.pronunciations;
+  // if (!pronunciations || pronunciations.length === 0) return null;
+
+  const container = doc.createElement("div");
+  container.className = cx("mb-2 flex flex-wrap gap-4") ?? "";
+
+  pronunciations.forEach((pronunciation) => {
+    const element = renderSinglePronunciation(doc, pronunciation);
+    if (element) container.append(element);
+  });
+
+  return container.children.length > 0 ? container : null;
+}
+
+function renderSinglePronunciation(
+  doc: Document,
+  pronunciation: Pronunciation,
+): HTMLDivElement | null {
+  const container = doc.createElement("div");
+  container.className = cx("flex items-center gap-2") ?? "";
+
+  if (pronunciation.type) {
+    const pronType = doc.createElement("span");
+    pronType.className = cx("text-muted-foreground text-xs font-semibold uppercase") ?? "";
+    pronType.textContent = pronunciation.type;
+    container.append(pronType);
+  }
+
+  if (pronunciation.text) {
+    const pronText = doc.createElement("span");
+    pronText.className = cx("text-foreground font-mono text-sm") ?? "";
+    pronText.textContent = pronunciation.text;
+    container.append(pronText);
+  }
+
+  if (pronunciation.audioUrl) {
+    const audio = doc.createElement("audio");
+    audio.src = pronunciation.audioUrl;
+
+    const audioBtn = Button({
+      variant: "ghost",
+      size: "icon-xs",
+      icon: createElement(Play),
+      onClick: (e) => {
+        e.stopPropagation();
+        audio.currentTime = 0;
+        audio.play();
+      },
+    });
+
+    container.append(audioBtn);
+  }
+
+  return container;
+}
+
+function renderDefinitions(
+  doc: Document,
+  entry: DictionaryEntry,
+  showAddButton: boolean,
+): HTMLDivElement | null {
+  if (!entry.definitions || entry.definitions.length === 0) return null;
+
+  const container = doc.createElement("div");
+  container.className = cx("divide-border flex flex-col divide-y") ?? "";
+
+  entry.definitions.forEach((definition, defIndex) => {
+    const element = renderDefinition(doc, definition, defIndex, showAddButton);
+    if (element) container.append(element);
+  });
+
+  return container.children.length > 0 ? container : null;
+}
+
+function renderDefinition(
+  doc: Document,
+  definition: Definition,
+  defIndex: number,
+  showAddButton: boolean,
+): HTMLDivElement {
+  const container = doc.createElement("div");
+  container.className = cx("flex flex-col gap-1 py-4 first:pt-2 last:pb-2") ?? "";
+
+  const headerRow = doc.createElement("div");
+  headerRow.className = cx("flex flex-1 items-center justify-between gap-1") ?? "";
+
+  const mainContent = renderDefinitionContent(doc, definition);
+  headerRow.append(mainContent);
+
+  if (showAddButton) {
+    const addButton = Button({
+      variant: "ghost",
+      size: "icon",
+      title: "Add to Anki",
+      icon: createElement(Plus),
+    });
+    addButton.setAttribute("data-def-index", defIndex.toString());
+    headerRow.append(addButton);
+  }
+
+  container.append(headerRow);
+
+  const examples = renderExamples(doc, definition.examples);
+  if (examples) container.append(examples);
+
+  return container;
+}
+
+function renderDefinitionContent(doc: Document, definition: Definition): HTMLDivElement {
+  const container = doc.createElement("div");
+  container.className = cx("leading-relaxed") ?? "";
+
+  if (definition.partOfSpeech) {
+    const posTag = doc.createElement("span");
+    posTag.className = cx("text-muted-foreground mr-2 font-serif text-xs font-medium italic") ?? "";
+    posTag.textContent = definition.partOfSpeech;
+    container.append(posTag);
+  }
+
+  const defText = doc.createElement("span");
+  defText.className = cx("text-foreground text-sm leading-relaxed") ?? "";
+  defText.textContent = definition.text;
+  container.append(defText);
+
+  return container;
+}
+
+function renderExamples(doc: Document, examples?: Array<Example>): HTMLUListElement | null {
+  if (!examples || examples.length === 0) return null;
+
+  const ul = doc.createElement("ul");
+  ul.className = cx("mt-2 list-disc flex-col space-y-2 pl-3") ?? "";
+
+  examples.forEach((example) => {
+    const element = renderSingleExample(doc, example);
+    if (element) ul.append(element);
+  });
+
+  return ul.children.length > 0 ? ul : null;
+}
+
+function renderSingleExample(doc: Document, example: Example): HTMLLIElement {
+  const container = doc.createElement("li");
+  container.className = cx("text-muted-foreground text-sm") ?? "";
+
+  const textNode = doc.createElement("span");
+  textNode.textContent = example.text;
+  container.appendChild(textNode);
+
+  if (example.translation) {
+    const translationSpan = doc.createElement("span");
+    translationSpan.textContent = ` ${example.translation}`;
+    translationSpan.className = cx("ml-1") ?? "";
+    container.append(translationSpan);
+  }
+
+  return container;
 }

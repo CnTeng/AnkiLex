@@ -1,0 +1,8 @@
+@import "../assets/theme.css";
+@import "../assets/scrollbar.css";
+@import "../assets/editor.css";
+@import "tailwindcss";
+
+.selection-popup {
+  max-width: 400px;
+}

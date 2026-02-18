@@ -1,6 +1,7 @@
 import { autoUpdate, computePosition, flip, offset, shift } from "@floating-ui/dom";
 import { api } from "@lib/api";
 import type { DictionaryEntry } from "@lib/model";
+import { LookupIcon } from "@lib/ui";
 
 function detectLocale(): string | undefined {
   return document.documentElement.lang?.split("-")[0] || navigator.language?.split("-")[0];
@@ -19,7 +20,7 @@ class AnkiLexContent {
   private currentResult: DictionaryEntry | null = null;
   private cleanupPosition: (() => void) | null = null;
 
-  private lookupIcon: HTMLDivElement | null = null;
+  private lookupIcon: HTMLButtonElement | null = null;
   private selectedWord = "";
   private currentContext = "";
 
@@ -268,10 +269,7 @@ class AnkiLexContent {
   }
 
   private createIcon() {
-    this.lookupIcon = document.createElement("div");
-    this.lookupIcon.id = "ankilex-lookup-icon";
-
-    this.lookupIcon.innerHTML = `<span class="icon search"></span>`;
+    this.lookupIcon = LookupIcon();
 
     this.lookupIcon.onmousedown = (e) => {
       e.stopPropagation();

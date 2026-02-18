@@ -4,52 +4,8 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>AnkiLex - Anki Dictionary Helper</title>
-    <link rel="stylesheet" href="popup.scss" />
+    <link rel="stylesheet" href="popup.css" />
   </head>
-  <body>
-    <div id="app">
-      <!-- Search Bar -->
-      <div class="search-container">
-        <div class="search-input-wrapper">
-          <span class="search-icon">
-            <i class="icon search"></i>
-          </span>
-          <input type="text" id="search-input" placeholder="Search ..." autocomplete="off" />
-          <button id="settings-btn" class="icon-btn" title="Settings">
-            <i class="icon ui"></i>
-          </button>
-        </div>
-      </div>
-
-      <!-- Loading Indicator -->
-      <div id="loading" class="loading hidden">
-        <div class="spinner"></div>
-        <span>Looking up...</span>
-      </div>
-
-      <!-- Results Container -->
-      <div id="results-container" class="results-container"></div>
-
-      <!-- Context Editor Section -->
-      <div id="context-section" class="context-section" style="display: none">
-        <textarea
-          id="context-note"
-          rows="2"
-          placeholder="Context / Note (Markdown supported)..."
-        ></textarea>
-      </div>
-
-      <!-- Empty State -->
-      <div id="empty-state" class="empty-state">
-        <p>Enter a word to start searching</p>
-      </div>
-
-      <!-- Error State -->
-      <div id="error-state" class="error-state hidden">
-        <p id="error-message"></p>
-      </div>
-    </div>
-
-    <script src="./popup.ts" type="module"></script>
-  </body>
+  <body></body>
+  <script src="./popup.ts" type="module"></script>
 </html>

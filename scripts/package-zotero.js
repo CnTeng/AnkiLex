@@ -1,6 +1,6 @@
 const AdmZip = require("adm-zip");
-const path = require("path");
-const fs = require("fs");
+const path = require("node:path");
+const fs = require("node:fs");
 
 const distPath = path.resolve(__dirname, "../dist");
 const zoteroDistPath = path.join(distPath, "zotero");

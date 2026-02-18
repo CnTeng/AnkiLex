@@ -4,6 +4,19 @@
 
 import { api } from "@lib/api";
 import type { AnkiLexSettings } from "@lib/model";
+import { theme } from "@lib/theme";
+import {
+  Book,
+  Check,
+  ChevronDown,
+  createElement,
+  Layout,
+  RefreshCw,
+  RotateCcw,
+  Save,
+  Shield,
+} from "lucide";
+import { twMerge } from "tailwind-merge";
 
 class AnkiLexOptions {
   constructor() {
@@ -11,7 +24,10 @@ class AnkiLexOptions {
   }
 
   async init() {
+    await theme.init();
     console.log("AnkiLex Options initializing");
+
+    this.initIcons();
 
     // Load current settings
     const settings = await api.settings.get();
@@ -33,6 +49,54 @@ class AnkiLexOptions {
       const target = e.target as HTMLSelectElement;
       this.loadFieldMappings(target.value);
     });
+  }
+
+  private initIcons() {
+    this.renderIcons();
+    document.querySelectorAll<HTMLSelectElement>("select.select-field").forEach((select) => {
+      this.decorateSelect(select);
+    });
+  }
+
+  private renderIcons() {
+    const iconMap = {
+      book: Book,
+      check: Check,
+      layout: Layout,
+      refresh: RefreshCw,
+      reset: RotateCcw,
+      save: Save,
+      shield: Shield,
+    } as const;
+
+    document.querySelectorAll<HTMLElement>("[data-icon]").forEach((el) => {
+      const name = el.dataset.icon as keyof typeof iconMap | undefined;
+      const Icon = name ? iconMap[name] : undefined;
+      if (!Icon) return;
+
+      const size = Number(el.dataset.iconSize ?? 16);
+      el.replaceChildren(createElement(Icon, { width: size, height: size }));
+    });
+  }
+
+  private decorateSelect(select: HTMLSelectElement): HTMLDivElement {
+    if (select.parentElement?.classList.contains("select-wrapper")) {
+      return select.parentElement as HTMLDivElement;
+    }
+
+    const wrapper = document.createElement("div");
+    wrapper.className = "select-wrapper";
+
+    select.classList.add("select-field");
+
+    const icon = createElement(ChevronDown, { width: 16, height: 16 });
+    icon.classList.add("select-icon");
+
+    select.parentElement?.insertBefore(wrapper, select);
+    wrapper.appendChild(select);
+    wrapper.appendChild(icon);
+
+    return wrapper;
   }
 
   populateForm(settings: AnkiLexSettings) {
@@ -87,20 +151,17 @@ class AnkiLexOptions {
 
       response.fields.forEach((field: string) => {
         const fieldRow = document.createElement("div");
-        fieldRow.className = "field-mapping-row";
-        fieldRow.style.display = "flex";
-        fieldRow.style.alignItems = "center";
-        fieldRow.style.marginBottom = "8px";
-        fieldRow.style.gap = "12px";
+        fieldRow.className = "flex items-center gap-4 py-1";
 
         const label = document.createElement("label");
         label.textContent = field;
-        label.style.width = "120px";
-        label.style.marginBottom = "0";
+        label.className = "w-36 text-sm font-medium text-gray-700 text-right shrink-0";
 
         const select = document.createElement("select");
         select.dataset.field = field;
-        select.className = "field-mapping-select";
+        select.className = twMerge(
+          "select-field flex h-9 w-full items-center justify-between rounded-md border border-gray-300 bg-white px-3 py-1 pr-10 text-sm placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:cursor-not-allowed disabled:opacity-50 transition-all appearance-none",
+        );
 
         lexFields.forEach((lexField) => {
           const option = document.createElement("option");
@@ -113,7 +174,7 @@ class AnkiLexOptions {
         });
 
         fieldRow.appendChild(label);
-        fieldRow.appendChild(select);
+        fieldRow.appendChild(this.decorateSelect(select));
         list.appendChild(fieldRow);
       });
     } catch (error) {
@@ -138,18 +199,16 @@ class AnkiLexOptions {
 
     languages.forEach((lang) => {
       const langRow = document.createElement("div");
-      langRow.className = "language-row";
-      langRow.style.marginBottom = "10px";
-      langRow.style.display = "flex";
-      langRow.style.alignItems = "center";
-      langRow.style.gap = "10px";
+      langRow.className = "flex items-center gap-4 py-1";
 
       const label = document.createElement("label");
       label.textContent = lang.name;
-      label.style.width = "100px";
+      label.className = "w-24 text-sm font-medium text-gray-700 shrink-0";
 
       const select = document.createElement("select");
-      select.className = "dictionary-select";
+      select.className = twMerge(
+        "dictionary-select select-field flex h-9 w-full items-center justify-between rounded-md border border-gray-300 bg-white px-3 py-1 pr-10 text-sm placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:cursor-not-allowed disabled:opacity-50 transition-all appearance-none",
+      );
       select.dataset.lang = lang.code;
 
       // Add "None" option
@@ -175,7 +234,7 @@ class AnkiLexOptions {
       }
 
       langRow.appendChild(label);
-      langRow.appendChild(select);
+      langRow.appendChild(this.decorateSelect(select));
       list.appendChild(langRow);
     });
   }
@@ -296,9 +355,23 @@ class AnkiLexOptions {
     const status = document.getElementById("status");
     if (status) {
       status.textContent = message;
-      status.className = `show ${type}`;
+
+      // Reset classes
+      status.classList.remove("text-green-600", "text-red-600", "text-blue-600");
+
+      // Add color
+      if (type === "success") status.classList.add("text-green-600");
+      if (type === "error") status.classList.add("text-red-600");
+      if (type === "info") status.classList.add("text-blue-600");
+
+      // Show
+      status.classList.remove("opacity-0", "translate-y-2");
+      status.classList.add("opacity-100", "translate-y-0");
+
       setTimeout(() => {
-        status.className = type;
+        // Hide
+        status.classList.remove("opacity-100", "translate-y-0");
+        status.classList.add("opacity-0", "translate-y-2");
       }, 3000);
     }
   }
