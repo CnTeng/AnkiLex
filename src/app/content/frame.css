@@ -1,0 +1,8 @@
+@import "../../assets/theme.css";
+@import "../../assets/scrollbar.css";
+@import "tailwindcss";
+
+html,
+body {
+  @apply m-0 h-full overflow-hidden p-0;
+}

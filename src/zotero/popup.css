@@ -1,0 +1,18 @@
+@import "../assets/theme.css";
+@import "../assets/scrollbar.css";
+@import "tailwindcss" important;
+
+.anki-lex-popup {
+  width: 400px;
+  max-height: 400px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+
+  box-sizing: border-box;
+  color: var(--color-foreground);
+  background-color: var(--color-background);
+
+  font-size: 14px;
+  line-height: 1.5;
+}

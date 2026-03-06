@@ -1,4 +1,4 @@
-export const STORAGE_KEY = "ankilex_settings";
+export const STORAGE_KEY = "extensions.ankilex.settings";
 
 export interface AnkiLexSettings {
   // Dictionary settings
@@ -10,13 +10,7 @@ export interface AnkiLexSettings {
   ankiDefaultNoteType: string;
   ankiFieldMap: Record<string, string>;
 
-  // UI settings
-  popupWidth: number;
-  popupHeight: number;
-  theme: "light" | "dark" | "auto";
-
   // Behavior settings
-  autoLookup: boolean;
   showContextMenu: boolean;
 }
 
@@ -33,10 +27,5 @@ export const DEFAULT_SETTINGS: AnkiLexSettings = {
     Back: "definition",
   },
 
-  popupWidth: 400,
-  popupHeight: 600,
-  theme: "auto",
-
-  autoLookup: true,
   showContextMenu: true,
 };

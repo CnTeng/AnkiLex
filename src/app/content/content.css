@@ -1,0 +1,64 @@
+.anki-lex-popover {
+  margin: 0;
+  padding: 0;
+  border: none;
+  border-radius: 12px;
+  width: 400px;
+  height: 520px;
+  background: transparent;
+  overflow: hidden;
+  box-shadow:
+    0 10px 25px -5px rgba(0, 0, 0, 0.1),
+    0 8px 10px -6px rgba(0, 0, 0, 0.1);
+}
+
+.anki-lex-frame {
+  width: 100%;
+  height: 100%;
+  border: none;
+  display: block;
+}
+
+.anki-lex-floating-root {
+  position: fixed;
+  z-index: 2147483647;
+  width: 0;
+  height: 0;
+}
+
+.anki-lex-floating-btn {
+  all: initial;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  background-color: #fafafb;
+  color: #1d1d20;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  cursor: pointer;
+}
+
+.anki-lex-floating-btn:hover {
+  background-color: #ebebed;
+}
+
+@media (prefers-color-scheme: dark) {
+  .anki-lex-floating-btn {
+    background-color: #2e2e32;
+    color: #ffffff;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+  }
+
+  .anki-lex-floating-btn:hover {
+    background-color: #3a3a3f;
+  }
+}
+
+.anki-lex-floating-btn svg {
+  width: 18px;
+  height: 18px;
+  stroke: currentColor;
+  stroke-width: 2.5;
+}

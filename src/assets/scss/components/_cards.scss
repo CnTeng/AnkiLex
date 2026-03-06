@@ -1,9 +1,0 @@
-@use "variables" as *;
-
-@mixin adw-card {
-  background: var(--card-bg);
-  border-radius: var(--radius-main);
-  border: 1px solid var(--border-color);
-  box-shadow: var(--shadow-sm);
-  padding: 24px;
-}

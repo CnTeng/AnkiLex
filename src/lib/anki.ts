@@ -72,7 +72,7 @@ export const anki = {
 
     const note: AnkiNote = {
       deckName: options?.deck || currentSettings.ankiDefaultDeck,
-      modelName: options?.noteType || currentSettiankiDefaultNoteTypeType,
+      modelName: options?.noteType || currentSettings.ankiDefaultNoteType,
       fields: {},
       tags: ["ankilex"],
     };

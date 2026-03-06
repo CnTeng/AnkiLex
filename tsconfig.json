@@ -3,7 +3,7 @@
     "target": "ES2022",
     "module": "ESNext",
     "lib": ["DOM", "ES2022"],
-    "rootDir": "./src",
+    "rootDir": ".",
     "outDir": "./dist/temp",
     "allowJs": false,
     "checkJs": false,
@@ -20,6 +20,12 @@
       "@lib/*": ["./src/lib/*"]
     }
   },
-  "include": ["src/app/**/*", "src/lib/**/*"],
+  "include": [
+    "src/app/**/*",
+    "src/lib/**/*",
+    "src/zotero/**/*",
+    "src/manifests/**/*",
+    "package.json"
+  ],
   "exclude": ["node_modules", "dist"]
 }

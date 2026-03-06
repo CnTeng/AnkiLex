@@ -1,41 +1,50 @@
 import { resolve } from "node:path";
+import tailwindcss from "@tailwindcss/vite";
 import { defineConfig } from "vite";
 import { viteStaticCopy } from "vite-plugin-static-copy";
+import { getManifest } from "./src/manifests";
 
 export default defineConfig({
+  root: "src",
+
   plugins: [
+    tailwindcss(),
+    {
+      name: "generate-manifest",
+      generateBundle() {
+        this.emitFile({
+          type: "asset",
+          fileName: "manifest.json",
+          source: JSON.stringify(getManifest("zotero"), null, 2),
+        });
+      },
+    },
     viteStaticCopy({
       targets: [
         {
-          src: "src/zotero/manifest.json",
-          dest: ".",
-        },
-        {
-          src: "src/assets/icons/*",
+          src: "assets/icons/*",
           dest: "icons",
         },
       ],
     }),
   ],
-  resolve: {
-    alias: {
-      "@": resolve(__dirname, "src"),
-    },
-  },
+
   build: {
-    outDir: "dist/zotero",
-    emptyOutDir: true,
+    outDir: "../dist/zotero",
     minify: false,
+    cssCodeSplit: false,
+    emptyOutDir: true,
+
     lib: {
-      entry: resolve(__dirname, "src/zotero/bootstrap.ts"),
+      entry: "zotero/bootstrap.ts",
       name: "ZoteroPlugin",
-      fileName: () => "bootstrap.js",
       formats: ["iife"],
+      fileName: () => "bootstrap.js",
     },
+
     rollupOptions: {
       output: {
-        extend: true, // Use existing variable if it exists
-        // Simply return the exports so they are assigned to ZoteroPlugin (the 'name' option)
+        extend: true,
         footer: `
           var install = ZoteroPlugin.install;
           var startup = ZoteroPlugin.startup;
@@ -43,6 +52,12 @@ export default defineConfig({
           var uninstall = ZoteroPlugin.uninstall;
         `,
       },
+    },
+  },
+
+  resolve: {
+    alias: {
+      "@lib": resolve(__dirname, "src/lib"),
     },
   },
 });
