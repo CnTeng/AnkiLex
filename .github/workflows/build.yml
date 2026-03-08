@@ -20,7 +20,7 @@ jobs:
 
     strategy:
       matrix:
-        browser: [chrome, firefox]
+        browser: [chrome, firefox, zotero]
 
     steps:
       - name: Checkout
@@ -35,26 +35,14 @@ jobs:
       - name: Install dependencies
         run: npm ci --prefer-offline --no-audit
 
-      - name: Build extension
-        run: npm run build:${{ matrix.browser }}
-
-      - name: Package extension
-        shell: bash
-        run: |
-          set -e
-          DATE=$(date -u +%Y%m%d)
-          DIST="dist/${{ matrix.browser }}"
-          OUT="${{ env.APP_NAME }}-${{ matrix.browser }}-nightly-${DATE}.zip"
-
-          cd "$DIST"
-          zip -qr "../../$OUT" .
-          echo "OUT_FILE=$OUT" >> "$GITHUB_ENV"
+      - name: Build and Package extension
+        run: npm run package:${{ matrix.browser }}
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
-          name: nightly-${{ matrix.browser }}
-          path: ${{ env.OUT_FILE }}
+          name: ${{ matrix.browser }}
+          path: dist/*.${{ matrix.browser == 'chrome' && 'zip' || 'xpi' }}
           retention-days: 14
 
   release:
@@ -69,6 +57,7 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           path: artifacts
+          merge-multiple: true
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
@@ -76,7 +65,7 @@ jobs:
           name: Nightly Build
           tag_name: nightly
           prerelease: true
-          files: artifacts/**/*
+          files: artifacts/*.{zip,xpi}
           body: |
             ⚠️ This is an automated nightly build.
 
