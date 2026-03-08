@@ -39,7 +39,7 @@
     "zotero-types": "^4.1.0-beta.4"
   },
   "dependencies": {
-    "@floating-ui/dom": "^1.7.5",
+    "@floating-ui/dom": "^1.7.6",
     "lucide": "^0.575.0",
     "tailwind-merge": "^3.4.1",
     "tailwind-variants": "^3.2.2"
