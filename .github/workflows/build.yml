@@ -37,8 +37,11 @@ jobs:
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: build-artifacts
-          path: dist/*.{zip,xpi}
+          name: nightly-build
+          path: |
+            dist/*.zip
+            dist/*.xpi
+          if-no-files-found: error
 
   release:
     name: Publish Nightly Release
@@ -48,10 +51,13 @@ jobs:
       contents: write
 
     steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
       - name: Download artifacts
         uses: actions/download-artifact@v8
         with:
-          name: build-artifacts
+          name: nightly-build
           path: artifacts
 
       - name: Delete old nightly release
@@ -66,7 +72,7 @@ jobs:
           name: Nightly Build
           tag_name: nightly
           prerelease: true
-          files: artifacts/*.{zip,xpi}
+          files: artifacts/*
           body: |
             ⚠️ This is an automated nightly build.
 
