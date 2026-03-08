@@ -26,24 +26,24 @@ A browser extension for looking up words in online dictionaries and adding them 
    npm install
    ```
 
-2. Build the extension:
+2. Build and package:
 
    ```bash
+   # Build all platforms
    npm run build
+
+   # Package all platforms (creates .zip and .xpi files in dist/)
+   npm run package
+
+   # Build/Package specific platform
+   npm run package:chrome
+   npm run package:firefox
+   npm run package:zotero
    ```
 
-3. Load in Chrome/Firefox:
-   - Open extensions management page
-   - Enable "Developer mode"
-   - Load the `dist` folder after building
-
-### Development
-
-Run the compiler in watch mode:
-
-```bash
-npm run dev
-```
+3. Load in Chrome/Firefox/Zotero:
+   - Chrome/Firefox: Load the `dist/chrome` or `dist/firefox` folder as an unpacked extension.
+   - Zotero: Install the `.xpi` file from the `dist/` folder.
 
 ### Testing
 
