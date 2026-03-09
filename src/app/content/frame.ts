@@ -9,7 +9,7 @@ async function init() {
   document.body.append(app);
 
   const stateView = ViewSwitch({
-    className: cx("flex min-h-0 flex-1 flex-col"),
+    className: cx("flex h-0 flex-1 flex-col"),
     states: new Map([
       ["loading", LoadingView({})],
       ["empty", EmptyView({})],

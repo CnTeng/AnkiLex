@@ -17,10 +17,10 @@ export function DictionaryPanel({
   context = "",
 }: DictionaryPanelOptions) {
   const container = doc.createElement("div");
-  container.className = cn("flex min-h-0 flex-1 flex-col overflow-hidden") as string;
+  container.className = cn("flex h-0 flex-1 flex-col overflow-hidden") as string;
 
   const scrollArea = doc.createElement("div");
-  scrollArea.className = cn("min-h-0 flex-1 overflow-y-auto px-4 py-4") as string;
+  scrollArea.className = cn("h-0 flex-1 overflow-y-auto px-4 py-4") as string;
   scrollArea.append(DictionaryView({ doc, entry, showAddButton }));
 
   const editorWrapper = doc.createElement("div");

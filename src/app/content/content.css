@@ -29,6 +29,7 @@
   background: transparent;
   overflow: hidden;
   box-shadow: var(--popover-shadow);
+  pointer-events: auto;
 }
 
 .anki-lex-frame {
