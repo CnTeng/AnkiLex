@@ -4,5 +4,5 @@
 
 html,
 body {
-  @apply m-0 w-80 p-0;
+  @apply m-0 w-100 p-0;
 }
