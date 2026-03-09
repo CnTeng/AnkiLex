@@ -5,7 +5,7 @@ import { boldWordInSentence, extractSentence } from "@lib/sentence";
 import { PopoverView } from "@lib/view";
 import { Search } from "lucide";
 
-import "./content.css";
+import contentStyles from "./content.css?inline";
 
 let selectedWord = "";
 let currentContext = "";
@@ -15,6 +15,15 @@ const floating = PopoverView({
   placement: "right-start",
   middleware: [inline(), offset(8), shift({ padding: 8 }), flip()],
 });
+
+const container = document.createElement("div");
+const shadow = container.attachShadow({ mode: "open" });
+const styleElement = document.createElement("style");
+styleElement.textContent = contentStyles;
+shadow.append(styleElement, floating.button, floating.popover);
+
+document.documentElement.append(container);
+
 floating.button.className = "anki-lex-floating-btn";
 floating.button.title = `Search in Anki Lex`;
 

@@ -20,14 +20,12 @@ export function PopoverView({
   button.append(icon);
   button.style.position = "absolute";
   button.style.display = "none";
-  button.style.zIndex = "9999";
+  button.style.zIndex = "2147483647";
 
   const popover = document.createElement("div");
-  popover.style.position = "fixed";
+  popover.style.position = "absolute";
   popover.popover = "auto";
-  popover.style.zIndex = "9999";
-
-  document.body.append(button, popover);
+  popover.style.zIndex = "2147483647";
 
   button.popoverTargetElement = popover;
   button.popoverTargetAction = "toggle";
@@ -45,7 +43,7 @@ export function PopoverView({
     computePosition(reference, button, {
       placement,
       middleware,
-      strategy: "fixed",
+      strategy: "absolute",
     }).then(({ x, y }) => {
       button.style.left = `${x}px`;
       button.style.top = `${y}px`;
@@ -58,7 +56,7 @@ export function PopoverView({
     computePosition(reference, popover, {
       placement,
       middleware,
-      strategy: "fixed",
+      strategy: "absolute",
     }).then(({ x, y }) => {
       popover.style.left = `${x}px`;
       popover.style.top = `${y}px`;
@@ -88,9 +86,8 @@ export function PopoverView({
   }
 
   function handleOutsideClick(e: MouseEvent) {
-    const target = e.target;
-    if (!(target instanceof Node)) return;
-    if (button.contains(target)) return;
+    const path = e.composedPath();
+    if (path.includes(button) || path.includes(popover)) return;
     hide();
   }
   document.addEventListener("mousedown", handleOutsideClick);

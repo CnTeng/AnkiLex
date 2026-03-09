@@ -21,6 +21,7 @@
     }
   },
   "include": [
+    "src/env.d.ts",
     "src/app/**/*",
     "src/lib/**/*",
     "src/zotero/**/*",

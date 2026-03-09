@@ -1,3 +1,24 @@
+:host {
+  display: block;
+  pointer-events: none;
+
+  --background: #fafafb;
+  --foreground: #1d1d20;
+  --secondary: #ebebed;
+  --border: #deddda;
+  --shadow: 0 4px 12px rgba(0, 0, 0, 0.12), 0 2px 4px rgba(0, 0, 0, 0.04);
+  --popover-shadow: 0 12px 32px -4px rgba(0, 0, 0, 0.15), 0 8px 12px -4px rgba(0, 0, 0, 0.1);
+
+  @media (prefers-color-scheme: dark) {
+    --background: #222226;
+    --foreground: #ffffff;
+    --secondary: #2e2e32;
+    --border: rgb(255 255 255 / 15%);
+    --shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+    --popover-shadow: 0 12px 32px -4px rgba(0, 0, 0, 0.5), 0 8px 12px -4px rgba(0, 0, 0, 0.3);
+  }
+}
+
 .anki-lex-popover {
   margin: 0;
   padding: 0;
@@ -7,9 +28,7 @@
   height: 520px;
   background: transparent;
   overflow: hidden;
-  box-shadow:
-    0 10px 25px -5px rgba(0, 0, 0, 0.1),
-    0 8px 10px -6px rgba(0, 0, 0, 0.1);
+  box-shadow: var(--popover-shadow);
 }
 
 .anki-lex-frame {
@@ -17,13 +36,6 @@
   height: 100%;
   border: none;
   display: block;
-}
-
-.anki-lex-floating-root {
-  position: fixed;
-  z-index: 2147483647;
-  width: 0;
-  height: 0;
 }
 
 .anki-lex-floating-btn {
@@ -34,31 +46,22 @@
   width: 32px;
   height: 32px;
   border-radius: 8px;
-  background-color: #fafafb;
-  color: #1d1d20;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  background-color: var(--background);
+  color: var(--foreground);
+  box-shadow: var(--shadow);
   cursor: pointer;
-}
+  border: 1px solid var(--border);
+  transition: background-color 0.15s ease;
+  pointer-events: auto;
 
-.anki-lex-floating-btn:hover {
-  background-color: #ebebed;
-}
-
-@media (prefers-color-scheme: dark) {
-  .anki-lex-floating-btn {
-    background-color: #2e2e32;
-    color: #ffffff;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+  &:hover {
+    background-color: var(--secondary);
   }
 
-  .anki-lex-floating-btn:hover {
-    background-color: #3a3a3f;
+  svg {
+    width: 18px;
+    height: 18px;
+    stroke: currentColor;
+    stroke-width: 2.5;
   }
-}
-
-.anki-lex-floating-btn svg {
-  width: 18px;
-  height: 18px;
-  stroke: currentColor;
-  stroke-width: 2.5;
 }
