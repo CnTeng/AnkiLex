@@ -2,9 +2,9 @@
  * Settings View - Reusable settings/options page logic
  */
 
-import { api } from "@lib/api";
 import { Button, Icon, Input, Select, type SelectElement } from "@lib/components";
 import type { AnkiLexSettings } from "@lib/model";
+import { rpc } from "@lib/rpc";
 import { Book, type IconNode, RefreshCw, RotateCcw, Save, Shield } from "lucide";
 import { cn } from "tailwind-variants";
 
@@ -28,10 +28,13 @@ const LEX_FIELDS: LexField[] = [
   { id: "", name: "(None)" },
   { id: "word", name: "Word/Expression" },
   { id: "definition", name: "Definition" },
-  { id: "pronunciation", name: "Pronunciation" },
+  { id: "examples", name: "Examples" },
+  { id: "pronunciations", name: "Pronunciations" },
+  { id: "provider", name: "Provider" },
+  { id: "metadata", name: "Metadata" },
   { id: "audio", name: "Audio" },
-  { id: "example", name: "Sentence Example" },
   { id: "context", name: "Original Context" },
+  { id: "data", name: "Full JSON Data" },
 ];
 
 const LANGUAGES: Language[] = [
@@ -130,7 +133,7 @@ function populateSelect(
   currentValue: string,
   fallback: string,
 ): void {
-  select.innerHTML = "";
+  const options: HTMLOptionElement[] = [];
 
   if (items.length > 0) {
     for (const item of items) {
@@ -138,14 +141,16 @@ function populateSelect(
       option.value = item;
       option.textContent = item;
       option.selected = item === currentValue;
-      select.append(option);
+      options.push(option);
     }
   } else {
     const option = document.createElement("option");
     option.value = fallback;
     option.textContent = fallback;
-    select.append(option);
+    options.push(option);
   }
+
+  select.replaceChildren(...options);
 }
 
 // ============================================================================
@@ -183,19 +188,33 @@ async function loadFieldMappings(
   if (!noteType) return;
 
   try {
-    const response = await api.anki.getFields(noteType);
+    const response = await rpc.anki.getModelFields({ modelName: noteType });
+    const fields = Array.isArray(response) ? response : (response?.fields ?? []);
 
-    if (!response.fields?.length) {
+    if (!fields.length) {
       fieldMappingContainer.style.display = "none";
       return;
     }
 
     fieldMappingContainer.style.display = "block";
-    fieldMappingList.innerHTML = "";
 
-    for (const field of response.fields) {
-      fieldMappingList.append(createFieldRow(field, currentMappings));
+    const newMappings = { ...currentMappings };
+    const rows: HTMLDivElement[] = [];
+
+    for (const field of fields) {
+      // Auto-mapping logic
+      if (!newMappings[field]) {
+        const lowerField = field.toLowerCase();
+        const guess = LEX_FIELDS.find((f) => f.id !== "" && lowerField.includes(f.id));
+
+        if (guess) {
+          newMappings[field] = guess.id;
+        }
+      }
+      rows.push(createFieldRow(field, newMappings));
     }
+
+    fieldMappingList.replaceChildren(...rows);
   } catch (error) {
     console.warn("Failed to load fields", error);
   }
@@ -238,16 +257,14 @@ function createLanguageRow(
 
 async function loadDictionaries(languageDictionaries: Record<string, string>): Promise<void> {
   try {
-    const response = await api.dictionary.getProviders();
+    const response = await rpc.dictionary.getProviders();
     if (!response.providers) return;
 
-    dictionaryList.innerHTML = "";
-
+    const rows: HTMLDivElement[] = [];
     for (const lang of LANGUAGES) {
-      dictionaryList.append(
-        createLanguageRow(lang, response.providers, languageDictionaries[lang.code] || ""),
-      );
+      rows.push(createLanguageRow(lang, response.providers, languageDictionaries[lang.code] || ""));
     }
+    dictionaryList.replaceChildren(...rows);
   } catch (error) {
     console.warn("Failed to load dictionaries", error);
   }
@@ -264,12 +281,12 @@ async function refreshAnki(): Promise<void> {
   showStatus("Connecting to Anki...", "info");
 
   try {
-    const decksResponse = await api.anki.getDecks();
+    const decksResponse = await rpc.anki.getDecks();
     const currentDeck = deckSelect.select.value;
     const decks = Array.isArray(decksResponse) ? decksResponse : (decksResponse?.decks ?? []);
     populateSelect(deckSelect.select, decks, currentDeck, "Default");
 
-    const noteTypeResponse = await api.anki.getNoteTypes();
+    const noteTypeResponse = await rpc.anki.getModels();
     const currentNoteType = noteTypeSelect.select.value;
     const noteTypes = Array.isArray(noteTypeResponse)
       ? noteTypeResponse
@@ -352,7 +369,7 @@ async function saveSettings(): Promise<void> {
   };
 
   try {
-    await api.settings.update(settings);
+    await rpc.settings.update({ partial: settings });
     showStatus("Settings saved successfully!", "success");
   } catch (error) {
     console.error("Failed to save settings", error);
@@ -365,7 +382,7 @@ async function resetSettings(): Promise<void> {
     return;
   }
 
-  const settings = await api.settings.reset();
+  const settings = await rpc.settings.reset();
   populateForm(settings);
   loadDictionaries(settings.dictionaryProviders);
   showStatus("Settings reset to defaults.", "success");
@@ -460,30 +477,65 @@ function buildPage(): HTMLElement {
   noteTypeSelect = Select({
     id: "default-note-type",
     options: [{ value: "Basic", label: "Basic" }],
-    onChange: (value) => loadFieldMappings(value),
+    onChange: (value) => {
+      const currentMappings = collectFieldMappings();
+      loadFieldMappings(value, currentMappings);
+    },
   });
+
+  const setupBtn = Button({
+    variant: "outline",
+    size: "default",
+    label: "Setup or Update Template",
+    title: "Create or upgrade the optimized Anki-Lex Modern note type in Anki",
+    onClick: async () => {
+      try {
+        showStatus("Processing Anki template...", "info");
+        await rpc.anki.setupDefaultModel();
+        showStatus("Anki template is up to date!", "success");
+        await refreshAnki();
+      } catch (error) {
+        showStatus(
+          `Processing failed: ${error instanceof Error ? error.message : String(error)}`,
+          `error`,
+        );
+      }
+    },
+  });
+  setupBtn.classList.add("mt-2", "w-full");
+
   ankiSection.append(
     FormField({
       label: "Default Note Type",
       htmlFor: "default-note-type",
-      children: noteTypeSelect,
+      children: [noteTypeSelect.select, setupBtn],
     }),
   );
 
-  // Field Mapping
+  // Field Mapping (Collapsible Advanced Section)
   fieldMappingContainer = document.createElement("div");
   fieldMappingContainer.className = cn("mb-6 hidden") as string;
 
-  const fieldLabel = document.createElement("label");
-  fieldLabel.className = cn("text-foreground mb-2 block text-sm font-medium") as string;
-  fieldLabel.textContent = "Field Mapping";
+  const advancedToggle = document.createElement("details");
+  advancedToggle.className = cn("group") as string;
+
+  const summary = document.createElement("summary");
+  summary.className = cn(
+    "text-muted-foreground hover:text-foreground mb-4 flex cursor-pointer list-none items-center gap-2 text-sm font-medium transition-colors",
+  ) as string;
+
+  const iconSpan = document.createElement("span");
+  iconSpan.className = cn("transition-transform group-open:rotate-90") as string;
+  iconSpan.textContent = "▸";
+  summary.append(iconSpan, document.createTextNode(" Advanced: Field Mapping"));
 
   fieldMappingList = document.createElement("div");
   fieldMappingList.className = cn(
     "border-border bg-muted space-y-3 rounded-lg border p-4",
   ) as string;
 
-  fieldMappingContainer.append(fieldLabel, fieldMappingList);
+  advancedToggle.append(summary, fieldMappingList);
+  fieldMappingContainer.append(advancedToggle);
   ankiSection.append(fieldMappingContainer);
 
   content.append(dictSection, ankiSection);
@@ -536,7 +588,7 @@ export async function initSettingsView(): Promise<void> {
   document.body.append(page);
 
   // Load current settings
-  const settings = await api.settings.get();
+  const settings = await rpc.settings.get();
   populateForm(settings);
 
   // Load available dictionaries

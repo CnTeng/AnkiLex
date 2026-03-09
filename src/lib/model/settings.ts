@@ -23,8 +23,9 @@ export const DEFAULT_SETTINGS: AnkiLexSettings = {
   ankiDefaultDeck: "Default",
   ankiDefaultNoteType: "Basic",
   ankiFieldMap: {
-    Front: "word",
-    Back: "definition",
+    word: "word",
+    definition: "definition",
+    examples: "examples",
   },
 
   showContextMenu: true,

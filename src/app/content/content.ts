@@ -1,6 +1,6 @@
 import { flip, inline, offset, shift } from "@floating-ui/dom";
-import { api } from "@lib/api";
 import { Icon } from "@lib/components";
+import { rpc } from "@lib/rpc";
 import { boldWordInSentence, extractSentence } from "@lib/sentence";
 import { PopoverView } from "@lib/view";
 import { Search } from "lucide";
@@ -37,8 +37,8 @@ iframe.loading = "lazy";
 floating.popover.append(iframe);
 
 function performLookup(word: string, context: string): void {
-  api.dictionary
-    .lookup(word)
+  rpc.dictionary
+    .lookup({ word })
     .then((result) => {
       iframe?.contentWindow?.postMessage({ action: "update", data: { result, context } }, "*");
     })

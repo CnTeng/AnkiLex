@@ -1,4 +1,4 @@
-import { api } from "@lib/api";
+import { rpc } from "@lib/rpc";
 import {
   DictionaryPanel,
   EmptyView,
@@ -33,17 +33,31 @@ async function init() {
     onSettingsClick: () => chrome.runtime.openOptionsPage(),
     onSearch: async (word) => {
       stateView.setState("loading");
-      api.dictionary
-        .lookup(word)
+      rpc.dictionary
+        .lookup({ word })
         .then((result) => {
           if (!result) {
             stateView.setState("empty");
             return;
           }
 
-          const panel = DictionaryPanel({
+          let panel: ReturnType<typeof DictionaryPanel> | null = null;
+          const onAddClick = async (index?: number) => {
+            if (typeof index !== "number") return;
+            if (!panel) return;
+            const context = panel.getContext();
+            await rpc.anki.createNoteFromResult({
+              result,
+              defIndex: index,
+              options: {},
+              context,
+            });
+          };
+
+          panel = DictionaryPanel({
             entry: result,
             showAddButton: true,
+            onAddClick,
           });
 
           stateView.setState("content", panel.element);

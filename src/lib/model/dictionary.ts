@@ -18,6 +18,7 @@ export interface DictionaryEntry {
   definitions: Definition[];
   pronunciations: Pronunciation[];
   metadata?: Record<string, unknown>;
+  context?: string;
 }
 
 export interface Definition {
