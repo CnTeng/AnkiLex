@@ -22,11 +22,11 @@
   "devDependencies": {
     "@tailwindcss/vite": "^4.2.0",
     "@types/chrome": "^0.1.36",
-    "@types/jsdom": "^27.0.0",
+    "@types/jsdom": "^28.0.0",
     "@types/node": "^25.3.5",
     "@vitest/browser": "^4.0.18",
     "adm-zip": "^0.5.16",
-    "jsdom": "^27.4.0",
+    "jsdom": "^28.1.0",
     "npm-run-all2": "^8.0.4",
     "prettier": "^3.8.1",
     "prettier-plugin-tailwindcss": "^0.7.2",
