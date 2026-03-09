@@ -22,7 +22,8 @@ const runBuild = async (target: Target) => {
   if (target === "zotero") {
     await runVite("zotero");
   } else {
-    await Promise.all([runVite(`${target}:app`), runVite(`${target}:content`)]);
+    await runVite(`${target}:app`);
+    await runVite(`${target}:content`);
   }
 
   const duration = ((Date.now() - start) / 1000).toFixed(2);
