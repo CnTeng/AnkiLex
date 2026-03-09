@@ -8,9 +8,10 @@ export function extractSentence(range: Range, word: string): string | null {
       ? range.startContainer.parentElement
       : (range.startContainer as Element)) ?? null;
 
-  const block = el?.closest(
-    "p, div, li, blockquote, h1, h2, h3, h4, h5, h6, section, article, main, header, footer",
-  ) || el;
+  const block =
+    el?.closest(
+      "p, div, li, blockquote, h1, h2, h3, h4, h5, h6, section, article, main, header, footer",
+    ) || el;
   if (!block) return null;
 
   const text = block.textContent ?? "";
