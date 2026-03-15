@@ -12,7 +12,6 @@ export interface AnkiNote {
 export interface AnkiMedia {
   url?: string;
   filename?: string;
-  data?: string;
   fields?: string[];
 }
 

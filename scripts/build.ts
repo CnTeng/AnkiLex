@@ -19,12 +19,7 @@ const runBuild = async (target: Target) => {
   const start = Date.now();
   console.info(`🛠️ Building: ${target}...`);
 
-  if (target === "zotero") {
-    await runVite("zotero");
-  } else {
-    await runVite(`${target}:app`);
-    await runVite(`${target}:content`);
-  }
+  await runVite(target);
 
   const duration = ((Date.now() - start) / 1000).toFixed(2);
   console.info(`✅ Done: ${target} built in ${duration}s`);

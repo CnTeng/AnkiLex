@@ -2,11 +2,29 @@ import { resolve } from "node:path";
 import tailwindcss from "@tailwindcss/vite";
 import { defineConfig, mergeConfig, type UserConfig } from "vite";
 import { viteStaticCopy } from "vite-plugin-static-copy";
-import { manifestPlugin, type Target } from "./src/manifests";
+import type { Target } from "./src/manifests";
+import { iifePlugin, manifestPlugin } from "./src/plugins";
 
-const strategies: Record<"app" | "content" | "zotero", (target: Target) => UserConfig> = {
-  app: (target) => ({
+const strategies: Record<"browser" | "zotero", (target: Target) => UserConfig> = {
+  browser: (target) => ({
     plugins: [
+      iifePlugin({
+        entries: [
+          {
+            entry: "app/content/content.ts",
+            name: "AnkiLexContent",
+            fileName: "app/content/content.js",
+            minify: false,
+          },
+        ],
+        modules: {
+          "iife:anki-card": {
+            entry: "lib/anki/templates/card.ts",
+            name: "AnkiCard",
+            minify: true,
+          },
+        },
+      }),
       manifestPlugin({ target }),
       viteStaticCopy({
         targets: [
@@ -29,20 +47,6 @@ const strategies: Record<"app" | "content" | "zotero", (target: Target) => UserC
           chunkFileNames: "assets/chunks/[name].js",
           entryFileNames: (chunkInfo) =>
             chunkInfo.name === "frame" ? "app/content/frame.js" : "app/[name]/[name].js",
-        },
-      },
-    },
-  }),
-
-  content: () => ({
-    build: {
-      rollupOptions: {
-        input: { content: "src/app/content/content.ts" },
-        output: {
-          format: "iife",
-          name: "AnkiLexContent",
-          entryFileNames: "app/content/[name].js",
-          assetFileNames: "assets/[name].[ext]",
         },
       },
     },
@@ -73,14 +77,11 @@ const strategies: Record<"app" | "content" | "zotero", (target: Target) => UserC
 };
 
 export default defineConfig(({ mode }) => {
-  const [browser, rawSubTarget] = mode.split(":");
-  const target = browser as Target;
+  const target = mode as Target;
 
-  const subTarget = rawSubTarget ?? (target === "zotero" ? "zotero" : "app");
-  const strategy = strategies[subTarget as keyof typeof strategies];
-
+  const strategy = target === "zotero" ? strategies.zotero : strategies.browser;
   if (!strategy) {
-    throw new Error(`Invalid build mode: ${subTarget}`);
+    throw new Error(`Invalid build mode: ${mode}`);
   }
 
   const baseConfig: UserConfig = {
@@ -91,7 +92,7 @@ export default defineConfig(({ mode }) => {
       target: "esnext",
       minify: false,
       outDir: resolve(__dirname, `dist/${target}`),
-      emptyOutDir: subTarget !== "content",
+      emptyOutDir: true,
     },
   };
 

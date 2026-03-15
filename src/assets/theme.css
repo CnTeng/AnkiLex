@@ -13,6 +13,7 @@
   --color-muted-foreground: var(--muted-foreground);
   --color-destructive: var(--destructive);
   --color-warning: var(--warning);
+  --color-success: var(--success);
   --color-info: var(--info);
   --color-border: var(--border);
   --color-input: var(--input);
@@ -33,6 +34,7 @@
   --muted-foreground: #77767b;
   --destructive: #e01b24;
   --warning: #e5a50a;
+  --success: #2ec27e;
   --info: #3584e4;
   --border: #deddda;
   --input: #c0bfbc;
@@ -58,6 +60,7 @@
     --muted-foreground: #9a9996;
     --destructive: #c01c28;
     --warning: #cd9309;
+    --success: #26a269;
     --info: #62a0ea;
     --border: rgb(255 255 255 / 15%);
     --input: rgb(255 255 255 / 22%);
@@ -68,4 +71,28 @@
     --scrollbar-thumb-hover: rgb(255 255 255 / 16%);
     --scrollbar-track: transparent;
   }
+}
+
+/* Force dark theme when Anki's nightMode class is active */
+:root.nightMode,
+.nightMode :root,
+body.nightMode {
+  --background: #222226;
+  --foreground: #ffffff;
+  --card-foreground: #ffffff;
+  --primary: #3584e4;
+  --primary-foreground: #ffffff;
+  --secondary: #2e2e32;
+  --secondary-foreground: #ffffff;
+  --muted: #2e2e32;
+  --muted-foreground: #9a9996;
+  --destructive: #c01c28;
+  --warning: #cd9309;
+  --success: #26a269;
+  --info: #62a0ea;
+  --border: rgb(255 255 255 / 15%);
+  --input: rgb(255 255 255 / 22%);
+  --ring: #62a0ea;
+  --scrollbar-thumb: rgb(255 255 255 / 10%);
+  --scrollbar-thumb-hover: rgb(255 255 255 / 16%);
 }

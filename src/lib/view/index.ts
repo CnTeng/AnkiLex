@@ -1,5 +1,4 @@
 export * from "./dictionary";
-export * from "./dictionary-panel";
 export * from "./empty";
 export * from "./error";
 export * from "./loading";

@@ -3,4 +3,5 @@ export * from "./button";
 export * from "./editor";
 export * from "./icon";
 export * from "./input";
+export * from "./markdown";
 export * from "./select";

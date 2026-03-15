@@ -1,0 +1,11 @@
+{{FrontSide}}
+<script id="raw-data" type="application/json">{{data}}</script>
+
+<hr id="answer" class="border-border/80 my-6 border-t" />
+
+<div id="ankilex-back-root"></div>
+
+<script>
+  {{! BACK_SCRIPT }}
+  if (typeof AnkiCard !== "undefined") AnkiCard.initAnkiBack();
+</script>

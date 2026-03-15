@@ -1,5 +1,6 @@
 import { dictionary } from "@lib/dictionary";
-import { dispatchAction } from "@lib/message";
+import { listenRPC } from "@lib/rpc";
+import { allHandlers } from "@lib/rpc/handlers";
 import { settings } from "@lib/settings";
 
 chrome.runtime.onInstalled.addListener(async () => {
@@ -8,6 +9,7 @@ chrome.runtime.onInstalled.addListener(async () => {
 });
 
 dictionary.registerAll();
+listenRPC(allHandlers); // Listen for all RPC calls with the inferred handlers
 
 async function setupContextMenu() {
   const s = await settings.get();
@@ -21,16 +23,6 @@ async function setupContextMenu() {
     });
   });
 }
-
-chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
-  dispatchAction(message.action, message.data)
-    .then(sendResponse)
-    .catch((error) => {
-      console.error("Action handler error:", error);
-      sendResponse({ error: error.message });
-    });
-  return true;
-});
 
 chrome.contextMenus.onClicked.addListener(async (info, tab) => {
   const selectedText = info.selectionText?.trim();

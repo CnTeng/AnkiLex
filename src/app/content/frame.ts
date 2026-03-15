@@ -1,3 +1,4 @@
+import { rpc } from "@lib/rpc";
 import { DictionaryPanel, EmptyView, ErrorView, LoadingView, ViewSwitch } from "@lib/view";
 import { cx } from "tailwind-variants";
 
@@ -19,7 +20,7 @@ async function init() {
   });
   app.append(stateView.element);
 
-  window.addEventListener("message", (event) => {
+  window.addEventListener("message", async (event) => {
     const { action, data } = event.data;
 
     if (action !== "update") return;
@@ -31,13 +32,38 @@ async function init() {
       return;
     }
 
-    const panel = DictionaryPanel({
-      entry: data.result,
-      showAddButton: true,
-      context: data?.context ?? "",
-    });
+    const render = () => {
+      const panel = DictionaryPanel({
+        entry: data.result,
+        showAddButton: true,
+        context: data?.context ?? "",
+        onAddClick: async (index) => {
+          if (typeof index !== "number") return;
 
-    stateView.setState("content", panel.element);
+          try {
+            const context = panel.getContext();
+            await rpc.anki.createNoteFromResult({
+              result: data.result,
+              defIndex: index,
+              options: {},
+              context,
+            });
+
+            render();
+          } catch (error) {
+            console.error("Failed to add to Anki", error);
+            alert(
+              `Failed to add to Anki: ${error instanceof Error ? error.message : String(error)}`,
+            );
+            throw error;
+          }
+        },
+      });
+
+      stateView.setState("content", panel.element);
+    };
+
+    render();
   });
 }
 
