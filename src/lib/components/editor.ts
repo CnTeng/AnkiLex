@@ -108,7 +108,7 @@ function diffLines(oldLines: string[], newLines: string[]): LineDiff {
 
 function createLineElement(ownerDocument: Document, line: string) {
   const div = ownerDocument.createElement("div");
-  div.className = cn("break-words whitespace-pre-wrap") as string;
+  div.className = cn("wrap-break-word whitespace-pre-wrap") as string;
 
   for (const token of tokenize(line)) {
     const span = ownerDocument.createElement("span");

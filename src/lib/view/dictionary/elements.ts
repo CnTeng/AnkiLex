@@ -1,4 +1,4 @@
-import { Badge, Button, buttonVariants, Icon } from "@lib/components";
+import { Badge, Button, buttonVariants, Icon, Markdown } from "@lib/components";
 import type { Definition, Example, Pronunciation } from "@lib/model";
 import { Check, Play, Plus, Star, X } from "lucide";
 import { cn } from "tailwind-variants";
@@ -42,9 +42,9 @@ export function createContextElement(doc: Document, context?: string): HTMLDivEl
 
   const content = doc.createElement("div");
   content.className = cn(
-    "bg-secondary/40 text-muted-foreground border-border/40 rounded-xl border p-4 text-[0.9rem] leading-relaxed italic shadow-sm",
+    "bg-secondary/40 text-foreground border-border/40 rounded-xl border p-4 text-[0.9rem] leading-relaxed italic shadow-sm",
   ) as string;
-  content.textContent = `"${context.trim()}"`;
+  content.append(Markdown({ ownerDocument: doc, text: context.trim() }));
 
   container.append(label, content);
   return container;
