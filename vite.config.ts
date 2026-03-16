@@ -69,7 +69,7 @@ const strategies: Record<"browser" | "zotero", (target: Target) => UserConfig> =
       rollupOptions: {
         output: {
           extend: true,
-          footer: "var { install, startup, shutdown, uninstall } = ZoteroPlugin;",
+          footer: "var { install, uninstall, startup, shutdown } = ZoteroPlugin;",
         },
       },
     },
