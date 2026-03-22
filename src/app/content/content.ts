@@ -1,10 +1,9 @@
 import { flip, inline, offset, shift } from "@floating-ui/dom";
 import { Icon } from "@lib/components";
+import { extractContext } from "@lib/context";
 import { rpc } from "@lib/rpc";
-import { boldWordInSentence, extractSentence } from "@lib/sentence";
 import { PopoverView } from "@lib/view";
 import { Search } from "lucide";
-
 import contentStyles from "./content.css?inline";
 
 let selectedWord = "";
@@ -49,7 +48,9 @@ floating.button.onclick = () => {
   performLookup(selectedWord, currentContext);
 };
 
-const handleMouseUp = () => {
+const handleMouseUp = (event: MouseEvent) => {
+  if (event.composedPath().includes(container)) return;
+
   const sel = window.getSelection();
   if (!sel?.rangeCount) return;
 
@@ -57,11 +58,11 @@ const handleMouseUp = () => {
   if (!word || word.length > 100) return;
 
   const range = sel.getRangeAt(0);
-  const sentence = extractSentence(range, word);
-  if (!sentence) return;
+  const context = extractContext(range, document.documentElement.lang);
+  if (!context) return;
 
   selectedWord = word;
-  currentContext = boldWordInSentence(sentence, word);
+  currentContext = context;
   floating.show(range);
 };
 

@@ -16,3 +16,11 @@
   font-size: 14px;
   line-height: 1.5;
 }
+
+.anki-lex-popup.label-popup {
+  position: static;
+  inset: auto;
+  left: auto;
+  top: auto;
+  padding: 0;
+}
