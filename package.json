@@ -20,7 +20,7 @@
     "package": "npm run clean && run-p -sl package:*"
   },
   "devDependencies": {
-    "@tailwindcss/vite": "^4.2.0",
+    "@tailwindcss/vite": "^4.2.2",
     "@types/chrome": "^0.1.36",
     "@types/jsdom": "^27.0.0",
     "@types/node": "^25.3.5",
