@@ -37,17 +37,7 @@ export abstract class DictionaryProvider implements IDictionaryProvider {
       });
     }
 
-    if (this.isNodeEnv()) {
-      const { JSDOM } = require("jsdom");
-      const dom = new JSDOM(html);
-      return this.parseDocument(dom.window.document);
-    }
-
     return null;
-  }
-
-  protected isNodeEnv(): boolean {
-    return typeof process !== "undefined" && !!process.versions?.node;
   }
 
   protected isZotero(): boolean {
