@@ -1,21 +1,15 @@
 {
   "compilerOptions": {
-    "target": "ES2022",
+    "target": "ESNext",
     "module": "ESNext",
-    "lib": ["DOM", "ES2022"],
-    "rootDir": ".",
-    "outDir": "./dist/temp",
-    "allowJs": false,
-    "checkJs": false,
-    "noEmitOnError": false,
-    "sourceMap": true,
+    "lib": ["DOM", "ESNext"],
+    "noEmit": true,
     "strict": true,
     "types": ["chrome", "node", "zotero-types"],
     "esModuleInterop": true,
     "skipLibCheck": true,
-    "moduleResolution": "node",
+    "moduleResolution": "bundler",
     "resolveJsonModule": true,
-    "downlevelIteration": true,
     "paths": {
       "@lib/*": ["./src/lib/*"]
     }
@@ -25,8 +19,7 @@
     "src/app/**/*",
     "src/lib/**/*",
     "src/zotero/**/*",
-    "src/manifests/**/*",
-    "package.json"
+    "src/manifests/**/*"
   ],
   "exclude": ["node_modules", "dist"]
 }

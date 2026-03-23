@@ -8,6 +8,7 @@
   "scripts": {
     "test": "vitest run",
     "format": "prettier --write .",
+    "typecheck": "tsc --noEmit",
     "clean": "rm -rf dist",
     "build:chrome": "tsx scripts/build.ts chrome",
     "build:firefox": "tsx scripts/build.ts firefox",
