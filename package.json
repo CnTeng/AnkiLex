@@ -6,7 +6,6 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "vite",
     "test": "vitest run",
     "format": "prettier --write .",
     "clean": "rm -rf dist",
