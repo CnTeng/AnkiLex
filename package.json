@@ -41,7 +41,7 @@
   "dependencies": {
     "@floating-ui/dom": "^1.7.6",
     "eld": "^2.0.3",
-    "lucide": "^1.0.1",
+    "lucide": "^1.4.0",
     "sentencex-ts": "^0.1.13-ts",
     "tailwind-merge": "^3.5.0",
     "tailwind-variants": "^3.2.2"
