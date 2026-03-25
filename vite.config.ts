@@ -28,8 +28,8 @@ const strategies: Record<"browser" | "zotero", (target: Target) => UserConfig> =
       manifestPlugin({ target }),
       viteStaticCopy({
         targets: [
-          { src: "assets/icons/*", dest: "assets/icons" },
-          { src: "_locales/**/*", dest: "_locales" },
+          { src: "assets/icons/*", dest: "." },
+          { src: "_locales/**/*", dest: "." },
         ],
       }),
     ],
@@ -56,7 +56,7 @@ const strategies: Record<"browser" | "zotero", (target: Target) => UserConfig> =
     plugins: [
       manifestPlugin({ target }),
       viteStaticCopy({
-        targets: [{ src: "assets/icons/*", dest: "icons" }],
+        targets: [{ src: "assets/icons/*", dest: "." }],
       }),
     ],
     build: {
