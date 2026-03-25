@@ -1,5 +1,5 @@
 import { dictionary } from "@lib/dictionary";
-import { registerPlugin, unregisterPlugin } from "./event";
+import { registerPopup, unregisterPopup } from "./popup";
 
 Object.defineProperty(globalThis, "document", {
   configurable: true,
@@ -9,7 +9,7 @@ Object.defineProperty(globalThis, "document", {
 export function install() {}
 
 export function uninstall() {
-  unregisterPlugin();
+  unregisterPopup();
 }
 
 export async function startup(
@@ -17,9 +17,9 @@ export async function startup(
   _reason: number,
 ) {
   dictionary.registerAll();
-  registerPlugin(params.id);
+  registerPopup(params.id);
 }
 
 export function shutdown() {
-  unregisterPlugin();
+  unregisterPopup();
 }

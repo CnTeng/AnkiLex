@@ -55,13 +55,13 @@ const handler = (event: _ZoteroTypes.Reader.EventParams<"renderTextSelectionPopu
 
 let registeredPluginId: string | null = null;
 
-export function registerPlugin(pluginId: string) {
+export function registerPopup(pluginId: string) {
   if (registeredPluginId) return;
   Zotero.Reader.registerEventListener("renderTextSelectionPopup", handler, pluginId);
   registeredPluginId = pluginId;
 }
 
-export function unregisterPlugin() {
+export function unregisterPopup() {
   if (!registeredPluginId) return;
 
   Zotero.Reader.unregisterEventListener("renderTextSelectionPopup", handler);
