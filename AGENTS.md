@@ -94,8 +94,6 @@ Use this order unless the task asks otherwise:
 - Prefer early return over else.
 - Prefer const over let.
 - Inline variables when used once.
-- Keep changes scoped to the request; avoid drive-by refactors.
-- Do not edit unrelated files unless required by the task.
 
 ```ts
 // Good
@@ -167,3 +165,10 @@ function foo() {
 
 - Vitest is configured with `jsdom` and `globals`.
 - Prefer targeted tests over broad suites when debugging.
+
+## Zotero Runtime Notes
+
+- Zotero plugin bootstrap runs in a non-standard runtime (no guaranteed DOM globals at module eval time).
+- Avoid top-level access to `document`, `window`, `HTMLElement`, and similar browser-only globals in shared modules.
+- For Zotero settings panes, prefer registering pane resources via `chrome://` mappings and mount UI from pane lifecycle events (`onload`/`onshowing`) instead of assuming web-extension page behavior.
+- Keep bootstrap-side imports safe for non-DOM evaluation; defer DOM-dependent logic until pane/window callbacks.

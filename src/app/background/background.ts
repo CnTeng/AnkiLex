@@ -1,14 +1,11 @@
-import { dictionary } from "@lib/dictionary";
 import { listenRPC } from "@lib/rpc";
 import { allHandlers } from "@lib/rpc/handlers";
 import { settings } from "@lib/settings";
 
 chrome.runtime.onInstalled.addListener(async () => {
-  dictionary.registerAll();
   await setupContextMenu();
 });
 
-dictionary.registerAll();
 listenRPC(allHandlers); // Listen for all RPC calls with the inferred handlers
 
 async function setupContextMenu() {

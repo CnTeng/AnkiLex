@@ -35,7 +35,7 @@ const handler = (event: _ZoteroTypes.Reader.EventParams<"renderTextSelectionPopu
   append(container);
 
   dictionary
-    .lookup(expression, "youdao")
+    .lookup(expression, { en: "youdao" })
     .then((entry) => {
       if (entry) {
         const panel = DictionaryPanel({

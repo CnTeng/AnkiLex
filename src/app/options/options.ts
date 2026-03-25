@@ -1,11 +1,10 @@
-/**
- * Options Page Entry Point
- */
+import { SettingsView } from "@lib/view/settings";
+import { cn } from "tailwind-variants";
 
-import { initSettingsView } from "@lib/view";
+const root = document.createElement("div");
+root.className = cn(
+  "border-border bg-background mx-auto my-10 max-w-4xl overflow-hidden rounded-xl border shadow-xl",
+) as string;
 
-async function init(): Promise<void> {
-  await initSettingsView();
-}
-
-init();
+root.append(SettingsView());
+document.body.append(root);
