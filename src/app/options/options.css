@@ -1,5 +1,5 @@
-@import "../../assets/theme.css";
-@import "../../assets/scrollbar.css";
+@import "@assets/theme.css";
+@import "@assets/scrollbar.css";
 @import "tailwindcss";
 
 body {
