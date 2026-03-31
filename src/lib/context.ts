@@ -2,11 +2,12 @@ import { eld } from "eld/medium";
 import { getSentenceBoundaries } from "sentencex-ts";
 
 const blockSelector =
-  "p, div, li, blockquote, h1, h2, h3, h4, h5, h6, section, article, main, header, footer";
+  "p, pre, div, li, blockquote, h1, h2, h3, h4, h5, h6, section, article, main, header, footer";
 
 const textLayerSelector = ".textLayer, .page, .pdfViewer, [data-page-number], iframe, frame";
 
 type Mapping = { text: string; s: number; e: number };
+type Span = { start: number; end: number };
 
 function closestFromStart(range: Range, selector: string): Element | null {
   const node = range.startContainer;
@@ -150,25 +151,34 @@ function mapText(root: Node, range: Range): Mapping | null {
   return { text, s, e };
 }
 
+function trimSpan(text: string, span: Span): Span | null {
+  const segment = text.slice(span.start, span.end);
+
+  const start = span.start + (segment.match(/^\s*/)?.[0].length ?? 0);
+  const end = span.end - (segment.match(/\s*$/)?.[0].length ?? 0);
+  if (end <= start) return null;
+
+  return { start, end };
+}
+
 function findSentence(text: string, s: number, e: number, lang: string): Mapping | null {
   const bounds = getSentenceBoundaries(lang, text);
+  let cursor = 0;
 
-  for (const b of bounds) {
-    let start = b.startIndex;
-    let end = b.endIndex;
+  for (const boundary of bounds) {
+    const matchedStart = text.indexOf(boundary.text, cursor);
+    const start = matchedStart >= 0 ? matchedStart : boundary.startIndex;
+    const end = matchedStart >= 0 ? matchedStart + boundary.text.length : boundary.endIndex;
+    cursor = end;
 
-    const seg = text.slice(start, end);
+    const trimmed = trimSpan(text, { start, end });
+    if (!trimmed) continue;
 
-    start += seg.match(/^\s*/)?.[0].length ?? 0;
-    end -= seg.match(/\s*$/)?.[0].length ?? 0;
-
-    if (end <= start) continue;
-
-    if (start <= s && end >= e) {
+    if (trimmed.start <= s && trimmed.end >= e) {
       return {
-        text: text.slice(start, end),
-        s: s - start,
-        e: e - start,
+        text: text.slice(trimmed.start, trimmed.end),
+        s: s - trimmed.start,
+        e: e - trimmed.start,
       };
     }
   }
