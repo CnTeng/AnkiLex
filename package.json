@@ -35,7 +35,7 @@
     "typescript": "^6.0.2",
     "vite": "^8.0.3",
     "vite-plugin-static-copy": "^4.0.0",
-    "vitest": "^4.1.1",
+    "vitest": "^4.1.2",
     "zotero-types": "^4.1.2"
   },
   "dependencies": {
