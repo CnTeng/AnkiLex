@@ -86,7 +86,12 @@ export default defineConfig(({ mode }) => {
 
   const baseConfig: UserConfig = {
     root: "src",
-    resolve: { alias: { "@lib": resolve(__dirname, "src/lib") } },
+    resolve: {
+      alias: {
+        "@assets": resolve(__dirname, "src/assets"),
+        "@lib": resolve(__dirname, "src/lib"),
+      },
+    },
     plugins: [tailwindcss()],
     build: {
       target: "esnext",
