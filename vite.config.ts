@@ -3,7 +3,7 @@ import tailwindcss from "@tailwindcss/vite";
 import { defineConfig, mergeConfig, type UserConfig } from "vite";
 import { viteStaticCopy } from "vite-plugin-static-copy";
 import type { Target } from "./src/manifests";
-import { iifePlugin, manifestPlugin } from "./src/plugins";
+import { cssPlugin, iifePlugin, manifestPlugin } from "./src/plugins";
 
 const strategies: Record<"browser" | "zotero", (target: Target) => UserConfig> = {
   browser: (target) => ({
@@ -54,9 +54,26 @@ const strategies: Record<"browser" | "zotero", (target: Target) => UserConfig> =
 
   zotero: (target) => ({
     plugins: [
+      iifePlugin({
+        modules: {
+          "iife:anki-card": {
+            entry: "lib/anki/templates/card.ts",
+            name: "AnkiCard",
+            minify: true,
+          },
+        },
+      }),
+      cssPlugin([{ entry: "zotero/prefs/prefs.css", fileName: "prefs/prefs.css" }]),
       manifestPlugin({ target }),
       viteStaticCopy({
-        targets: [{ src: "assets/icons/*", dest: "." }],
+        targets: [
+          { src: "assets/icons/*", dest: "." },
+          {
+            src: "zotero/prefs/prefs.xhtml",
+            dest: "prefs",
+            rename: { stripBase: true },
+          },
+        ],
       }),
     ],
     build: {

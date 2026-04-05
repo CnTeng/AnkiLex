@@ -1,4 +1,5 @@
-import { ChevronDown, createElement } from "lucide";
+import { Icon } from "@lib/components/icon";
+import { ChevronDown } from "lucide";
 import { cn } from "tailwind-variants";
 
 interface SelectOption {
@@ -16,11 +17,11 @@ interface SelectProps {
 }
 
 const SELECT_CLASS = cn(
-  "border-input bg-background text-foreground placeholder:text-muted-foreground focus:ring-ring flex h-10 w-full appearance-none items-center justify-between rounded-md border px-3 py-2 pr-10 text-sm transition-all focus:border-transparent focus:ring-2 focus:outline-none disabled:cursor-not-allowed disabled:opacity-50",
+  "border-input bg-background text-foreground placeholder:text-muted-foreground focus-visible:ring-ring flex h-10 w-full appearance-none rounded-md border px-3 py-2 pr-10 text-sm transition-all focus-visible:border-transparent focus-visible:ring-2 focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50",
 ) as string;
 
 const CHEVRON_CLASS = cn(
-  "text-muted-foreground pointer-events-none absolute top-1/2 right-3 -translate-y-1/2",
+  "text-muted-foreground pointer-events-none absolute inset-y-0 right-3 flex items-center",
 ) as string;
 
 export function Select({
@@ -36,6 +37,8 @@ export function Select({
 
   const select = doc.createElement("select");
   select.className = SELECT_CLASS;
+  select.style.setProperty("-moz-appearance", "none");
+  select.style.setProperty("background-image", "none");
 
   if (id) select.id = id;
   if (className) select.classList.add(...className.split(" "));
@@ -55,10 +58,14 @@ export function Select({
     select.addEventListener("change", (e) => handler((e.target as HTMLSelectElement).value));
   }
 
-  const chevron = createElement(ChevronDown, {
-    width: 16,
-    height: 16,
-  }) as unknown as Element;
+  const chevron = Icon({
+    doc,
+    iconNode: ChevronDown,
+    customAttrs: {
+      width: 16,
+      height: 16,
+    },
+  });
   const chevronWrapper = doc.createElement("span");
   chevronWrapper.className = CHEVRON_CLASS;
   chevronWrapper.append(chevron);

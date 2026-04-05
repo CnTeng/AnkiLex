@@ -7,8 +7,8 @@ export const zoteroManifest = {
   author,
   homepage_url: "https://github.com/cnteng/ankilex",
   icons: {
-    "48": "icons/icon48.png",
-    "128": "icons/icon128.png",
+    "48": "assets/icons/icon48.png",
+    "128": "assets/icons/icon128.png",
   },
   manifest_version: 2,
   applications: {

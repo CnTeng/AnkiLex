@@ -1,22 +1,25 @@
 import { dictionary } from "@lib/dictionary";
 import { settings } from "@lib/settings";
-import { eld } from "eld/medium";
+import type { DictionaryRow } from "@lib/view/settings";
+
+function dictionaryRows(selected: Record<string, string>): DictionaryRow[] {
+  return dictionary.getLanguageCodes().map((languageCode) => ({
+    languageCode,
+    displayName: `${dictionary.getLanguageName(languageCode)} (${languageCode})`,
+    providers: [
+      { value: "", label: "(None)" },
+      ...dictionary
+        .getProvidersForLanguage(languageCode)
+        .map((provider) => ({ value: provider.id, label: provider.name })),
+    ],
+    selectedProvider: selected[languageCode] || "",
+  }));
+}
 
 export const dictionaryHandlers = {
   lookup: async (data: { word: string }) => {
     const { dictionaryProviders } = await settings.get();
-
-    const res = eld.detect(data.word);
-    const lang = res.isReliable() ? res.language : "en";
-
-    const providerId =
-      dictionaryProviders[lang] && dictionary.getProvider(dictionaryProviders[lang])
-        ? dictionaryProviders[lang]
-        : (dictionary.getProviders()[0]?.id ?? null);
-    if (!providerId) return null;
-
-    return dictionary.lookup(data.word, providerId);
+    return dictionary.lookup(data.word, dictionaryProviders);
   },
-
-  getProviders: async () => ({ providers: dictionary.getProviders() }),
+  getRows: async (data: { selected: Record<string, string> }) => dictionaryRows(data.selected),
 };

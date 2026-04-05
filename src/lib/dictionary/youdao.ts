@@ -1,5 +1,6 @@
 import type { Definition, DictionaryEntry, Example, Pronunciation } from "@lib/model";
 import { DictionaryProvider } from "./provider";
+import { registerDictionaryProvider } from "./registry";
 
 export class YoudaoDictionary extends DictionaryProvider {
   get id() {
@@ -164,3 +165,5 @@ export class YoudaoDictionary extends DictionaryProvider {
     return metadata;
   }
 }
+
+registerDictionaryProvider(new YoudaoDictionary());

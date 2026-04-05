@@ -1,29 +1,38 @@
-import { anki } from "@lib/anki";
+import { anki, applyLexFieldGuesses, LEX_FIELD_OPTIONS } from "@lib/anki";
 import type { AnkiNote, DictionaryEntry } from "@lib/model";
+import type { FieldMappingRow } from "@lib/view/settings";
+
+function fieldMappingRows(fields: string[], current: Record<string, string>): FieldMappingRow[] {
+  const mapped = applyLexFieldGuesses(fields, current);
+  return fields.map((fieldName) => ({
+    fieldName,
+    options: LEX_FIELD_OPTIONS,
+    selectedValue: mapped[fieldName] || "",
+  }));
+}
 
 export const ankiHandlers = {
-  check: async () => ({ available: await anki.isAvailable() }),
-  getDecks: async () => ({ decks: await anki.getDecks() }),
-  getModels: async () => ({ noteTypes: await anki.getModels() }),
-  getModelFields: async (data: { modelName: string }) => ({
-    fields: await anki.getModelFields(data.modelName),
-  }),
-  addNote: async (data: { note: AnkiNote }) => ({ noteId: await anki.addNote(data.note) }),
-  createNoteFromResult: async (data: {
+  check: () => anki.isAvailable(),
+  getDecks: () => anki.getDecks(),
+  getModels: () => anki.getModels(),
+  getModelFields: (data: { modelName: string }) => anki.getModelFields(data.modelName),
+  getFieldMappingRows: async (data: { noteType: string; currentMap: Record<string, string> }) => {
+    if (!data.noteType) return null;
+    const fields = await anki.getModelFields(data.noteType);
+    if (fields.length === 0) return null;
+    return fieldMappingRows(fields, data.currentMap);
+  },
+  addNote: (data: { note: AnkiNote }) => anki.addNote(data.note),
+  createNoteFromResult: (data: {
     result: DictionaryEntry;
     options: Record<string, unknown>;
     context: string;
     defIndex?: number;
-  }) => {
-    const result = await anki.createNoteFromResult(
+  }) =>
+    anki.createNoteFromResult(
       data.result,
-      {
-        ...data.options,
-        context: data.context,
-      },
+      { ...data.options, context: data.context },
       data.defIndex,
-    );
-    return { noteId: Array.isArray(result) ? result[0] : result };
-  },
-  setupDefaultModel: async () => anki.setupDefaultModel(),
+    ),
+  setupDefaultModel: () => anki.setupDefaultModel(),
 };

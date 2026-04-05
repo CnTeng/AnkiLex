@@ -1,4 +1,5 @@
-import { createElement, Search, Settings } from "lucide";
+import { Icon } from "@lib/components";
+import { Search, Settings } from "lucide";
 import { cn } from "tailwind-variants";
 
 export interface SearchBarProps {
@@ -28,7 +29,11 @@ export function SearchBar({ doc = document, ...props }: SearchBarProps = {}): {
   searchIconWrapper.className = cn(
     "text-muted-foreground flex items-center justify-center",
   ) as string;
-  const searchIcon = createElement(Search, { width: 16, height: 16 });
+  const searchIcon = Icon({
+    doc,
+    iconNode: Search,
+    customAttrs: { width: 16, height: 16 },
+  });
   searchIconWrapper.append(searchIcon);
 
   const input = doc.createElement("input");
@@ -57,7 +62,11 @@ export function SearchBar({ doc = document, ...props }: SearchBarProps = {}): {
   settingsButton.className = cn(
     "text-muted-foreground hover:bg-muted hover:text-foreground flex h-7 w-7 items-center justify-center rounded-full transition-colors",
   ) as string;
-  const settingsIcon = createElement(Settings, { width: 16, height: 16 });
+  const settingsIcon = Icon({
+    doc,
+    iconNode: Settings,
+    customAttrs: { width: 16, height: 16 },
+  });
   settingsButton.append(settingsIcon);
   if (props.onSettingsClick) settingsButton.addEventListener("click", props.onSettingsClick);
 

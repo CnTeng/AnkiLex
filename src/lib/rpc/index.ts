@@ -4,30 +4,40 @@ type HandlerDomain = keyof AllHandlers;
 
 let _handlers: AllHandlers | null = null;
 
-export const rpc = new Proxy({} as AllHandlers, {
-  get: (_, domain: string) =>
-    new Proxy(
-      {},
-      {
-        get: (_, method: string) => (data: unknown) => {
-          const domainHandlers = _handlers?.[domain as HandlerDomain];
-          const handler = (domainHandlers as Record<string, unknown> | undefined)?.[method];
+export function createRPC(options: { passthrough?: AllHandlers } = {}) {
+  return new Proxy({} as AllHandlers, {
+    get: (_, domain: string) =>
+      new Proxy(
+        {},
+        {
+          get: (_, method: string) => (data: unknown) => {
+            const domainHandlers =
+              options.passthrough?.[domain as HandlerDomain] ??
+              _handlers?.[domain as HandlerDomain];
+            const handler = (domainHandlers as Record<string, unknown> | undefined)?.[method];
 
-          if (typeof handler === "function") {
-            return handler(data);
-          }
+            if (typeof handler === "function") {
+              return handler(data);
+            }
 
-          return chrome.runtime.sendMessage({ domain, method, data }).then((res) => {
-            if (res?.error) throw new Error(res.error);
-            return res;
-          });
+            return chrome.runtime.sendMessage({ domain, method, data }).then((res) => {
+              if (res?.error) throw new Error(res.error);
+              return res;
+            });
+          },
         },
-      },
-    ),
-});
+      ),
+  });
+}
+
+export const rpc = createRPC();
+
+export function setRPCPassthrough(handlers: AllHandlers | null) {
+  _handlers = handlers;
+}
 
 export function listenRPC(handlers: AllHandlers) {
-  _handlers = handlers;
+  setRPCPassthrough(handlers);
 
   chrome.runtime.onMessage.addListener((msg: unknown, _sender, sendResponse) => {
     if (!msg || typeof msg !== "object") return;

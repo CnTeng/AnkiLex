@@ -4,5 +4,4 @@ export * from "./error";
 export * from "./loading";
 export * from "./popover";
 export * from "./search-bar";
-export * from "./settings";
 export * from "./switch";

@@ -10,7 +10,7 @@ interface InputProps {
 }
 
 const INPUT_CLASS = cn(
-  "border-input bg-background text-foreground placeholder:text-muted-foreground focus:ring-ring flex h-10 w-full rounded-md border px-3 py-2 text-sm transition-all focus:border-transparent focus:ring-2 focus:outline-none",
+  "border-input bg-background text-foreground placeholder:text-muted-foreground focus-visible:ring-ring flex h-10 w-full rounded-md border px-3 py-2 text-sm transition-all focus-visible:border-transparent focus-visible:ring-2 focus-visible:outline-none",
 ) as string;
 
 export function Input({
