@@ -9,9 +9,6 @@ export interface AnkiLexSettings {
   ankiDefaultDeck: string;
   ankiDefaultNoteType: string;
   ankiFieldMap: Record<string, string>;
-
-  // Behavior settings
-  showContextMenu: boolean;
 }
 
 export const DEFAULT_SETTINGS: AnkiLexSettings = {
@@ -28,6 +25,4 @@ export const DEFAULT_SETTINGS: AnkiLexSettings = {
     definition: "definition",
     examples: "examples",
   },
-
-  showContextMenu: true,
 };
