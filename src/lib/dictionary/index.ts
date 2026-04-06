@@ -2,6 +2,7 @@ import type { DictionaryEntry, DictionaryProviderInfo } from "@lib/model";
 import { eld } from "eld/medium";
 import { getDictionaryProvider, listDictionaryProviders } from "./registry";
 import "./youdao";
+import "./zdic";
 
 const languageDisplayNames = new Intl.DisplayNames(["en"], {
   type: "language",

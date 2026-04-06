@@ -17,6 +17,7 @@ export interface AnkiLexSettings {
 export const DEFAULT_SETTINGS: AnkiLexSettings = {
   dictionaryProviders: {
     en: "youdao",
+    zh: "zdic",
   },
 
   ankiConnectUrl: "http://127.0.0.1:8765",
