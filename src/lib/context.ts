@@ -1,3 +1,4 @@
+import type { Context } from "@lib/model";
 import { eld } from "eld/medium";
 import { getSentenceBoundaries } from "sentencex-ts";
 
@@ -201,19 +202,19 @@ function cleanText(text: string): string {
   return text.replace(/\s+/g, " ").trim();
 }
 
-function detectLanguage(text: string): string | null {
-  const r = eld.detect(text);
-  if (!r.isReliable()) return null;
-  return r.language;
+function detectLanguage(word: string, fallback?: string): string | null {
+  const result = eld.detect(word);
+  if (result.isReliable()) return result.language;
+
+  return fallback?.split("-")[0]?.trim() || null;
 }
 
-export function extractContext(range: Range | undefined, lang?: string): string | null {
+export function extractContext(range?: Range, lang?: string): Context | null {
   if (!range || range.collapsed) {
     return null;
   }
 
   let mapped: Mapping | null;
-
   if (closestFromStart(range, textLayerSelector)) {
     const normalized = normalizeRange(range);
     if (!normalized) return null;
@@ -224,10 +225,9 @@ export function extractContext(range: Range | undefined, lang?: string): string 
     const root = closestFromStart(range, blockSelector) || range.commonAncestorContainer;
     mapped = mapRange(root, range);
   }
-
   if (!mapped) return null;
 
-  const language = lang?.split("-")[0] || detectLanguage(mapped.text);
+  const language = detectLanguage(mapped.text, lang);
   if (!language) return null;
 
   const sentence = findSentence(mapped.text, mapped.s, mapped.e, language);
@@ -236,5 +236,8 @@ export function extractContext(range: Range | undefined, lang?: string): string 
   const bold = boldRange(sentence.text, sentence.s, sentence.e);
   if (!bold) return null;
 
-  return cleanText(bold);
+  return {
+    context: cleanText(bold),
+    lang: language,
+  };
 }

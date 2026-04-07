@@ -1,5 +1,5 @@
 import { extractContext } from "@lib/context";
-import { dictionary } from "@lib/dictionary";
+import { rpc } from "@lib/rpc";
 import { DictionaryPanel, ErrorView, LoadingView, ViewSwitch } from "@lib/view";
 import popupStyle from "./popup.css?inline";
 
@@ -34,15 +34,15 @@ const handler = (event: _ZoteroTypes.Reader.EventParams<"renderTextSelectionPopu
   container.append(stateView.element);
   append(container);
 
-  dictionary
-    .lookup(expression, { en: "youdao" })
+  rpc.dictionary
+    .lookup({ word: expression, fallbackLanguage: context?.lang })
     .then((entry) => {
       if (entry) {
         const panel = DictionaryPanel({
           doc,
-          entry: { ...entry, context: context ?? "" },
+          entry: { ...entry, context: context?.context ?? "" },
           showAddButton: false,
-          context: context ?? "",
+          context: context?.context ?? "",
         });
         stateView.setState("content", panel.element);
       }

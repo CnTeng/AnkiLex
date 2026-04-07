@@ -1,13 +1,15 @@
 import { flip, inline, offset, shift } from "@floating-ui/dom";
 import { Icon } from "@lib/components";
 import { extractContext } from "@lib/context";
+import type { Context } from "@lib/model";
 import { rpc } from "@lib/rpc";
 import { PopoverView } from "@lib/view";
 import { Search } from "lucide";
 import contentStyles from "./content.css?inline";
 
 let selectedWord = "";
-let currentContext = "";
+let currentContext: Context | undefined;
+let currentLookupId = 0;
 
 const floating = PopoverView({
   icon: Icon({ iconNode: Search }),
@@ -35,17 +37,25 @@ iframe.loading = "lazy";
 
 floating.popover.append(iframe);
 
-function performLookup(word: string, context: string): void {
-  rpc.dictionary
-    .lookup({ word })
-    .then((result) => {
-      iframe?.contentWindow?.postMessage({ action: "update", data: { result, context } }, "*");
-    })
-    .catch((err) => console.error("Lookup failed", err));
-}
-
 floating.button.onclick = () => {
-  performLookup(selectedWord, currentContext);
+  if (!selectedWord) return;
+
+  const lookupId = ++currentLookupId;
+  iframe.contentWindow?.postMessage({ action: "loading" }, "*");
+
+  rpc.dictionary
+    .lookup({ word: selectedWord, fallbackLanguage: currentContext?.lang })
+    .then((result) => {
+      if (lookupId !== currentLookupId) return;
+      iframe.contentWindow?.postMessage(
+        {
+          action: "update",
+          data: { result, context: currentContext?.context ?? "" },
+        },
+        "*",
+      );
+    })
+    .catch((error) => console.error("Lookup failed", error));
 };
 
 const handleMouseUp = (event: MouseEvent) => {
@@ -67,13 +77,3 @@ const handleMouseUp = (event: MouseEvent) => {
 };
 
 document.addEventListener("mouseup", handleMouseUp);
-
-chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
-  if (message.action === "show-lookup") {
-    selectedWord = message.data.word;
-    currentContext = message.data.context || "";
-    performLookup(selectedWord, currentContext);
-  }
-  sendResponse({ success: true });
-  return true;
-});

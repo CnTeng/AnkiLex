@@ -2,7 +2,7 @@ import { rpc } from "@lib/rpc";
 import { DictionaryPanel, EmptyView, ErrorView, LoadingView, ViewSwitch } from "@lib/view";
 import { cx } from "tailwind-variants";
 
-async function init() {
+function init() {
   const app = document.createElement("div");
   app.className =
     cx("bg-background text-foreground flex h-full min-h-0 flex-col overflow-hidden") ?? "";
@@ -20,33 +20,37 @@ async function init() {
   });
   app.append(stateView.element);
 
-  window.addEventListener("message", async (event) => {
+  window.addEventListener("message", (event) => {
     const { action, data } = event.data;
+
+    if (action === "loading") {
+      stateView.setState("loading");
+      return;
+    }
 
     if (action !== "update") return;
 
-    stateView.setState("loading");
+    const { result, context } = data ?? {};
 
-    if (!data.result) {
+    if (!result) {
       stateView.setState("empty");
       return;
     }
 
     const render = () => {
       const panel = DictionaryPanel({
-        entry: data.result,
+        entry: result,
         showAddButton: true,
-        context: data?.context ?? "",
+        context,
         onAddClick: async (index) => {
           if (typeof index !== "number") return;
 
           try {
-            const context = panel.getContext();
             await rpc.anki.createNoteFromResult({
-              result: data.result,
+              result,
               defIndex: index,
               options: {},
-              context,
+              context: panel.getContext(),
             });
 
             render();
