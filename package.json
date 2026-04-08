@@ -21,7 +21,7 @@
   },
   "devDependencies": {
     "@tailwindcss/vite": "^4.2.2",
-    "@types/chrome": "^0.1.38",
+    "@types/chrome": "^0.1.39",
     "@types/jsdom": "^28.0.1",
     "@types/node": "^25.5.0",
     "@vitest/browser": "^4.1.2",
