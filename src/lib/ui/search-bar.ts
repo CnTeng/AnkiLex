@@ -1,20 +1,23 @@
-import { Icon } from "@lib/components";
+import { Icon, Select } from "@lib/ui/components";
 import { Search, Settings } from "lucide";
 import { cn } from "tailwind-variants";
 
-export interface SearchBarProps {
-  doc?: Document;
-  placeholder?: string;
-  onSearch?: (word: string) => Promise<void>;
-  onSettingsClick?: () => void;
+interface LanguageOption {
+  code: string;
+  name: string;
 }
 
-export function SearchBar({ doc = document, ...props }: SearchBarProps = {}): {
+export function SearchBar({
+  doc = document,
+  onSearch,
+}: {
+  doc?: Document;
+  onSearch?: (word: string, language?: string) => Promise<void>;
+} = {}): {
   container: HTMLDivElement;
   input: HTMLInputElement;
+  setLanguages: (languages: LanguageOption[]) => void;
 } {
-  const { placeholder = "Search ..." } = props;
-
   const container = doc.createElement("div");
   container.className = cn(
     "border-border bg-background relative z-10 flex h-12 items-center border-b px-3",
@@ -22,7 +25,7 @@ export function SearchBar({ doc = document, ...props }: SearchBarProps = {}): {
 
   const grid = doc.createElement("div");
   grid.className = cn(
-    "border-border bg-muted focus-within:border-ring focus-within:ring-ring/20 grid w-full grid-cols-[32px_1fr_32px] items-center rounded-full border shadow-sm transition-all focus-within:ring-2",
+    "border-border bg-muted focus-within:border-ring focus-within:ring-ring/20 grid w-full grid-cols-[32px_1fr_auto_32px] items-center rounded-full border shadow-sm transition-all focus-within:ring-2",
   ) as string;
 
   const searchIconWrapper = doc.createElement("span");
@@ -38,22 +41,46 @@ export function SearchBar({ doc = document, ...props }: SearchBarProps = {}): {
 
   const input = doc.createElement("input");
   input.type = "text";
-  input.placeholder = placeholder;
+  input.placeholder = "Search ...";
   input.autocomplete = "off";
   input.className = cn(
     "text-foreground placeholder:text-muted-foreground w-full border-none bg-transparent px-2 py-1.5 text-sm outline-none",
   ) as string;
 
+  const langSelect = Select({
+    doc,
+    variant: "ghost",
+    wrapperClassName: "w-auto",
+    className: "text-muted-foreground min-w-24",
+    chevronClassName: "right-2",
+    title: "Language",
+    options: [{ value: "", label: "Auto" }],
+    value: "",
+  });
+
+  function setLanguages(languages: LanguageOption[]) {
+    langSelect.setOptions([
+      { value: "", label: "Auto" },
+      ...languages.map((language) => ({ value: language.code, label: language.name })),
+    ]);
+  }
+
   let isSearching = false;
-  input.addEventListener("keydown", async (e) => {
+
+  function getSelectedLanguage(): string | undefined {
+    return langSelect.select.value || undefined;
+  }
+
+  input.addEventListener("keydown", (e) => {
     if (isSearching) return;
-    if (e.key === "Enter" && props.onSearch) {
+    if (e.key === "Enter" && onSearch) {
       const input = e.currentTarget as HTMLInputElement;
       const word = input.value.trim();
       if (!word) return;
       isSearching = true;
-      await props.onSearch(word);
-      isSearching = false;
+      void onSearch(word, getSelectedLanguage()).finally(() => {
+        isSearching = false;
+      });
     }
   });
 
@@ -68,12 +95,12 @@ export function SearchBar({ doc = document, ...props }: SearchBarProps = {}): {
     customAttrs: { width: 16, height: 16 },
   });
   settingsButton.append(settingsIcon);
-  if (props.onSettingsClick) settingsButton.addEventListener("click", props.onSettingsClick);
+  settingsButton.addEventListener("click", () => chrome.runtime.openOptionsPage());
 
-  grid.append(searchIconWrapper, input, settingsButton);
+  grid.append(searchIconWrapper, input, langSelect, settingsButton);
   container.append(grid);
 
   input.focus();
 
-  return { container, input };
+  return { container, input, setLanguages };
 }

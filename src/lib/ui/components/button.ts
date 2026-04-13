@@ -71,17 +71,15 @@ export function Button({
   btn.append(content);
 
   if (onClick && !loading && !disabled) {
-    btn.addEventListener("click", async (e) => {
+    btn.addEventListener("click", (e) => {
       const result = onClick(e);
       if (result instanceof Promise) {
         btn.disabled = true;
         btn.classList.add("opacity-50");
-        try {
-          await result;
-        } finally {
+        void result.finally(() => {
           btn.disabled = false;
           btn.classList.remove("opacity-50");
-        }
+        });
       }
     });
   }

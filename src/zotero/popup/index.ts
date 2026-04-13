@@ -1,6 +1,7 @@
 import { extractContext } from "@lib/context";
 import { rpc } from "@lib/rpc";
-import { DictionaryPanel, ErrorView, LoadingView, ViewSwitch } from "@lib/view";
+import { DictionaryPanel } from "@lib/ui";
+import { cx } from "tailwind-variants";
 import popupStyle from "./popup.css?inline";
 
 const handler = (event: _ZoteroTypes.Reader.EventParams<"renderTextSelectionPopup">) => {
@@ -21,36 +22,15 @@ const handler = (event: _ZoteroTypes.Reader.EventParams<"renderTextSelectionPopu
   style.textContent = popupStyle;
   container.append(style);
 
-  const stateView = ViewSwitch({
+  const stateView = DictionaryPanel({
     doc,
-    className: "min-h-0 flex-1 flex flex-col",
-    states: new Map([
-      ["loading", LoadingView({ doc })],
-      ["error", ErrorView({ doc })],
-    ]),
-    initial: "loading",
+    className: cx("flex min-h-0 flex-1 flex-col"),
   });
 
   container.append(stateView.element);
   append(container);
 
-  rpc.dictionary
-    .lookup({ word: expression, fallbackLanguage: context?.lang })
-    .then((entry) => {
-      if (entry) {
-        const panel = DictionaryPanel({
-          doc,
-          entry: { ...entry, context: context?.context ?? "" },
-          showAddButton: false,
-          context: context?.context ?? "",
-        });
-        stateView.setState("content", panel.element);
-      }
-    })
-    .catch((error) => {
-      Zotero.log(`Failed to fetch dictionary entry: ${error}`);
-      stateView.setState("error");
-    });
+  stateView.load(rpc.dictionary.lookup({ word: expression, context: context ?? undefined }));
 };
 
 let registeredPluginId: string | null = null;

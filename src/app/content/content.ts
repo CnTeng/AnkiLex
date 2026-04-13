@@ -1,17 +1,19 @@
 import { flip, inline, offset, shift } from "@floating-ui/dom";
-import { Icon } from "@lib/components";
 import { extractContext } from "@lib/context";
 import type { Context } from "@lib/model";
-import { rpc } from "@lib/rpc";
-import { PopoverView } from "@lib/view";
+import { Icon, Popover } from "@lib/ui";
 import { Search } from "lucide";
 import contentStyles from "./content.css?inline";
 
 let selectedWord = "";
 let currentContext: Context | undefined;
-let currentLookupId = 0;
 
-const floating = PopoverView({
+const iframe = document.createElement("iframe");
+iframe.src = chrome.runtime.getURL("app/content/frame.html");
+iframe.className = "anki-lex-frame";
+iframe.loading = "lazy";
+
+const floating = Popover({
   icon: Icon({ iconNode: Search }),
   placement: "right-start",
   middleware: [inline(), offset(8), shift({ padding: 8 }), flip()],
@@ -29,34 +31,21 @@ floating.button.className = "anki-lex-floating-btn";
 floating.button.title = `Search in Anki Lex`;
 
 floating.popover.className = "anki-lex-popover";
-
-const iframe = document.createElement("iframe");
-iframe.src = chrome.runtime.getURL("app/content/frame.html");
-iframe.className = "anki-lex-frame";
-iframe.loading = "lazy";
-
 floating.popover.append(iframe);
-
-floating.button.onclick = () => {
-  if (!selectedWord) return;
-
-  const lookupId = ++currentLookupId;
-  iframe.contentWindow?.postMessage({ action: "loading" }, "*");
-
-  rpc.dictionary
-    .lookup({ word: selectedWord, fallbackLanguage: currentContext?.lang })
-    .then((result) => {
-      if (lookupId !== currentLookupId) return;
-      iframe.contentWindow?.postMessage(
-        {
-          action: "update",
-          data: { result, context: currentContext?.context ?? "" },
+floating.popover.addEventListener("toggle", () => {
+  if (floating.popover.matches(":popover-open")) {
+    iframe.contentWindow?.postMessage(
+      {
+        action: "lookup",
+        data: {
+          word: selectedWord,
+          context: currentContext,
         },
-        "*",
-      );
-    })
-    .catch((error) => console.error("Lookup failed", error));
-};
+      },
+      "*",
+    );
+  }
+});
 
 const handleMouseUp = (event: MouseEvent) => {
   if (event.composedPath().includes(container)) return;

@@ -1,5 +1,6 @@
+import type { Context } from "@lib/model";
 import { rpc } from "@lib/rpc";
-import { DictionaryPanel, EmptyView, ErrorView, LoadingView, ViewSwitch } from "@lib/view";
+import { DictionaryPanel } from "@lib/ui";
 import { cx } from "tailwind-variants";
 
 function init() {
@@ -9,65 +10,21 @@ function init() {
 
   document.body.append(app);
 
-  const stateView = ViewSwitch({
+  const stateView = DictionaryPanel({
     className: cx("flex h-0 flex-1 flex-col"),
-    states: new Map([
-      ["loading", LoadingView({})],
-      ["empty", EmptyView({})],
-      ["error", ErrorView({})],
-    ]),
-    initial: "loading",
   });
   app.append(stateView.element);
 
   window.addEventListener("message", (event) => {
-    const { action, data } = event.data;
+    if (event.data?.action === "lookup") {
+      const { word, context } = (event.data?.data ?? {}) as {
+        word?: string;
+        context?: Context;
+      };
+      if (!word) return;
 
-    if (action === "loading") {
-      stateView.setState("loading");
-      return;
+      stateView.load(rpc.dictionary.lookup({ word, context }));
     }
-
-    if (action !== "update") return;
-
-    const { result, context } = data ?? {};
-
-    if (!result) {
-      stateView.setState("empty");
-      return;
-    }
-
-    const render = () => {
-      const panel = DictionaryPanel({
-        entry: result,
-        showAddButton: true,
-        context,
-        onAddClick: async (index) => {
-          if (typeof index !== "number") return;
-
-          try {
-            await rpc.anki.createNoteFromResult({
-              result,
-              defIndex: index,
-              options: {},
-              context: panel.getContext(),
-            });
-
-            render();
-          } catch (error) {
-            console.error("Failed to add to Anki", error);
-            alert(
-              `Failed to add to Anki: ${error instanceof Error ? error.message : String(error)}`,
-            );
-            throw error;
-          }
-        },
-      });
-
-      stateView.setState("content", panel.element);
-    };
-
-    render();
   });
 }
 

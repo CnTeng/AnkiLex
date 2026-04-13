@@ -1,6 +1,6 @@
-import { Button, Icon, Input, Select } from "@lib/components";
 import type { AnkiLexSettings } from "@lib/model";
 import { rpc } from "@lib/rpc";
+import { Button, Icon, Input, Select } from "@lib/ui/components";
 import { RefreshCw, Shield } from "lucide";
 import { cn } from "tailwind-variants";
 import {
@@ -281,7 +281,6 @@ export function AnkiSection(
       });
   };
 
-  // Wire internal events
   refreshButton.addEventListener("click", () => void refresh());
   noteTypeSelect.select.addEventListener("change", () => {
     void rpc.anki

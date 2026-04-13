@@ -6,7 +6,7 @@ import {
   type ReferenceElement,
 } from "@floating-ui/dom";
 
-export function PopoverView({
+export function Popover({
   icon,
   placement,
   middleware,
@@ -29,10 +29,6 @@ export function PopoverView({
 
   button.popoverTargetElement = popover;
   button.popoverTargetAction = "toggle";
-
-  button.addEventListener("click", () => {
-    button.style.display = "none";
-  });
 
   let reference: ReferenceElement | null = null;
   let cleanup: (() => void) | null = null;
@@ -90,16 +86,30 @@ export function PopoverView({
     if (path.includes(button) || path.includes(popover)) return;
     hide();
   }
+
   document.addEventListener("mousedown", handleOutsideClick);
 
-  popover.addEventListener("beforetoggle", () => {
-    updatePopoverPosition();
-    startAutoUpdate();
+  button.addEventListener("click", hide);
+
+  popover.addEventListener("beforetoggle", (e) => {
+    if (e.newState === "open") {
+      updatePopoverPosition();
+      startAutoUpdate();
+    }
   });
 
-  popover.addEventListener("toggle", () => {
-    if (!popover.matches(":popover-open")) {
+  popover.addEventListener("toggle", (e) => {
+    if (e.newState === "closed") {
       stopAutoUpdate();
+      for (const child of popover.children) {
+        (child as HTMLElement).style.visibility = "hidden";
+      }
+    } else {
+      requestAnimationFrame(() => {
+        for (const child of popover.children) {
+          (child as HTMLElement).style.visibility = "";
+        }
+      });
     }
   });
 

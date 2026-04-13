@@ -1,6 +1,6 @@
 import { anki, applyLexFieldGuesses, LEX_FIELD_OPTIONS } from "@lib/anki";
 import type { AnkiNote, DictionaryEntry } from "@lib/model";
-import type { FieldMappingRow } from "@lib/view/settings";
+import type { FieldMappingRow } from "@lib/ui/settings";
 
 function fieldMappingRows(fields: string[], current: Record<string, string>): FieldMappingRow[] {
   const mapped = applyLexFieldGuesses(fields, current);
@@ -26,13 +26,7 @@ export const ankiHandlers = {
   createNoteFromResult: (data: {
     result: DictionaryEntry;
     options: Record<string, unknown>;
-    context: string;
     defIndex?: number;
-  }) =>
-    anki.createNoteFromResult(
-      data.result,
-      { ...data.options, context: data.context },
-      data.defIndex,
-    ),
+  }) => anki.createNoteFromResult(data.result, { ...data.options }, data.defIndex),
   setupDefaultModel: () => anki.setupDefaultModel(),
 };

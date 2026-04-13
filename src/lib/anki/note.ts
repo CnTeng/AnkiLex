@@ -48,7 +48,7 @@ function formatMetadata(metadata?: Record<string, unknown>): string {
  */
 export async function buildNote(
   result: DictionaryEntry,
-  options?: { deck?: string; noteType?: string; context?: string },
+  options?: { deck?: string; noteType?: string },
   defIndex?: number,
 ): Promise<AnkiNote> {
   const currentSettings = await settings.get();
@@ -71,7 +71,7 @@ export async function buildNote(
         note.fields[ankiField] = result.word;
         break;
       case "context":
-        note.fields[ankiField] = options?.context || "";
+        note.fields[ankiField] = result.context || "";
         break;
       case "definition":
         note.fields[ankiField] = formatDefinitions(definitionsToUse);
@@ -110,7 +110,6 @@ export async function buildNote(
         note.fields[ankiField] = JSON.stringify({
           ...result,
           definitions: definitionsToUse,
-          context: options?.context || "",
         });
         break;
     }

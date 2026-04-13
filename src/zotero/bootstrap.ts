@@ -1,6 +1,11 @@
 import { registerPopup, unregisterPopup } from "./popup";
 import { mountPrefs, registerPrefs, unregisterPrefs } from "./prefs";
 
+Object.defineProperty(globalThis, "document", {
+  configurable: true,
+  get: () => Zotero.getMainWindow().document,
+});
+
 type ZoteroWithAnkiLex = typeof Zotero & {
   AnkiLex?: {
     mountPrefs: (doc: Document) => void;

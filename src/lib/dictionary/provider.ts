@@ -1,5 +1,7 @@
 import type { DictionaryEntry, IDictionaryProvider } from "@lib/model";
 
+const REQUEST_TIMEOUT_MS = 10_000;
+
 export abstract class DictionaryProvider implements IDictionaryProvider {
   abstract get id(): string;
   abstract get name(): string;
@@ -7,6 +9,12 @@ export abstract class DictionaryProvider implements IDictionaryProvider {
 
   abstract lookup(word: string): Promise<DictionaryEntry | null>;
   abstract parseDocument(doc: Document): DictionaryEntry | null;
+
+  protected async fetchWithTimeout(url: string): Promise<Response> {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
+    return fetch(url, { signal: controller.signal }).finally(() => clearTimeout(timeoutId));
+  }
 
   protected async parseHtml(html: string): Promise<DictionaryEntry | null> {
     if (this.isZotero() || this.isFirefoxBg()) {
@@ -18,6 +26,13 @@ export abstract class DictionaryProvider implements IDictionaryProvider {
     if (this.isChromeOffscreen()) {
       await this.ensureOffscreen();
       return new Promise((resolve) => {
+        let settled = false;
+        const timeoutId = setTimeout(() => {
+          if (settled) return;
+          settled = true;
+          resolve(null);
+        }, REQUEST_TIMEOUT_MS);
+
         chrome.runtime.sendMessage(
           {
             action: "parse-html",
@@ -25,7 +40,9 @@ export abstract class DictionaryProvider implements IDictionaryProvider {
             id: this.id,
           },
           (response) => {
-            console.log("Received offscreen response:", response);
+            if (settled) return;
+            settled = true;
+            clearTimeout(timeoutId);
             if (chrome.runtime.lastError) {
               console.error("Offscreen error:", chrome.runtime.lastError);
               resolve(null);

@@ -1,33 +1,32 @@
 import type { DictionaryEntry } from "@lib/model";
 import { cn } from "tailwind-variants";
 import {
-  createContextElement,
-  createDefinitionsElement,
-  createHeaderElement,
-  createMetadataElement,
-  createPronunciationsElement,
-} from "./elements";
+  createContext,
+  createDefinitions,
+  createHeader,
+  createMetadata,
+  createPronunciations,
+} from "./sections";
 
-interface AnkiCardProps {
+export function AnkiCardFront({
+  doc,
+  entry,
+  soundLinks = [],
+}: {
   doc: Document;
   entry: DictionaryEntry;
-}
-
-interface AnkiCardFrontProps extends AnkiCardProps {
   soundLinks?: HTMLAnchorElement[];
-}
-
-export function AnkiCardFront({ doc, entry, soundLinks = [] }: AnkiCardFrontProps): HTMLDivElement {
+}): HTMLDivElement {
   const container = doc.createElement("div");
   container.className = cn("mx-auto max-w-[600px] p-5 pt-10") as string;
 
-  const header = createHeaderElement(doc, entry.word, entry.provider);
+  const header = createHeader(doc, entry.word, entry.provider);
   header.className = cn("mb-4 flex items-baseline justify-center gap-3") as string;
 
-  const metadata = createMetadataElement(doc, entry.metadata);
+  const metadata = createMetadata(doc, entry.metadata);
   if (metadata) metadata.className = cn("mb-4 flex justify-center") as string;
 
-  const pronunciations = createPronunciationsElement(doc, entry.pronunciations, {
+  const pronunciations = createPronunciations(doc, entry.pronunciations, {
     soundLinks,
   });
   if (pronunciations) {
@@ -35,7 +34,7 @@ export function AnkiCardFront({ doc, entry, soundLinks = [] }: AnkiCardFrontProp
       "text-muted-foreground flex justify-center gap-6 font-sans text-[1rem]",
     ) as string;
   }
-  const context = entry.context ? createContextElement(doc, entry.context) : null;
+  const context = entry.context ? createContext(doc, entry.context) : null;
 
   container.append(header);
   if (metadata) container.append(metadata);
@@ -45,14 +44,20 @@ export function AnkiCardFront({ doc, entry, soundLinks = [] }: AnkiCardFrontProp
   return container;
 }
 
-export function AnkiCardBack({ doc, entry }: AnkiCardProps): HTMLDivElement {
+export function AnkiCardBack({
+  doc,
+  entry,
+}: {
+  doc: Document;
+  entry: DictionaryEntry;
+}): HTMLDivElement {
   const container = doc.createElement("div");
   container.className = cn("mx-auto max-w-[600px] p-5 pt-0 text-left") as string;
 
   const cardContainer = doc.createElement("div");
   cardContainer.id = "ankilex-definitions";
 
-  const definitions = createDefinitionsElement(doc, entry.definitions, {
+  const definitions = createDefinitions(doc, entry.definitions, {
     showAddButton: false,
     toggleTranslation: true,
   });
