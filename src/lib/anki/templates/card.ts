@@ -1,9 +1,9 @@
 import type { DictionaryEntry } from "@lib/model";
-import { AnkiCardBack, AnkiCardFront } from "@lib/view";
+import { AnkiCardBack, AnkiCardFront } from "@lib/ui/dictionary";
 
 const getData = (): DictionaryEntry | null => {
   const el = document.getElementById("raw-data");
-  if (!el || !el.textContent) return null;
+  if (!el?.textContent) return null;
   try {
     return JSON.parse(el.textContent);
   } catch (_) {

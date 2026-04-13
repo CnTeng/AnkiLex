@@ -1,6 +1,6 @@
 import { setRPCPassthrough } from "@lib/rpc";
 import { allHandlers } from "@lib/rpc/handlers";
-import { SettingsView } from "@lib/view/settings";
+import { SettingsView } from "@lib/ui";
 
 setRPCPassthrough(allHandlers);
 

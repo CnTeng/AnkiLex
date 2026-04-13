@@ -19,7 +19,7 @@ export class ZdicDictionary extends DictionaryProvider {
 
   async lookup(word: string): Promise<DictionaryEntry | null> {
     const url = `${this.baseUrl}/${encodeURIComponent(word)}`;
-    const response = await fetch(url);
+    const response = await this.fetchWithTimeout(url);
     if (!response.ok)
       throw new Error(`Failed to lookup from Zdic: HTTP error! status: ${response.status}`);
 

@@ -1,5 +1,5 @@
-import { Select } from "@lib/components";
 import type { AnkiLexSettings } from "@lib/model";
+import { Select } from "@lib/ui/components";
 import { Book } from "lucide";
 import { cn } from "tailwind-variants";
 import { createFormField, createSectionHeading } from "./elements";

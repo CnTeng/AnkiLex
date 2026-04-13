@@ -1,4 +1,4 @@
-import { Button, Icon, type SelectElement } from "@lib/components";
+import { Button, Icon, type SelectElement } from "@lib/ui/components";
 import { RotateCcw, Save } from "lucide";
 import { cn } from "tailwind-variants";
 import type { SelectOption, StatusLevel } from "./types";

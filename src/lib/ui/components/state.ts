@@ -1,10 +1,4 @@
-export interface ViewSwitchInstance<T extends string> {
-  element: HTMLDivElement;
-  setState: (state: T, content?: HTMLElement) => void;
-  getState: () => T;
-}
-
-export function ViewSwitch<T extends string>({
+export function StateSwitch<T extends string>({
   doc = document,
   className,
   states,
@@ -14,7 +8,7 @@ export function ViewSwitch<T extends string>({
   className?: string;
   states: Map<T, HTMLElement>;
   initial: T;
-}): ViewSwitchInstance<T> {
+}) {
   const container = doc.createElement("div");
   if (className) container.className = className;
 

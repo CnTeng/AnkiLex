@@ -162,7 +162,9 @@ function trimSpan(text: string, span: Span): Span | null {
   return { start, end };
 }
 
-function findSentence(text: string, s: number, e: number, lang: string): Mapping | null {
+function findSentence(mapping: Mapping, lang: string): Mapping | null {
+  const { text, s, e } = mapping;
+
   const bounds = getSentenceBoundaries(lang, text);
   let cursor = 0;
 
@@ -187,7 +189,9 @@ function findSentence(text: string, s: number, e: number, lang: string): Mapping
   return null;
 }
 
-function boldRange(text: string, s: number, e: number): string | null {
+function boldRange(mapping: Mapping): string | null {
+  const { text, s, e } = mapping;
+
   const sel = text.slice(s, e);
   if (!sel.trim()) return null;
 
@@ -210,9 +214,7 @@ function detectLanguage(word: string, fallback?: string): string | null {
 }
 
 export function extractContext(range?: Range, lang?: string): Context | null {
-  if (!range || range.collapsed) {
-    return null;
-  }
+  if (!range || range.collapsed) return null;
 
   let mapped: Mapping | null;
   if (closestFromStart(range, textLayerSelector)) {
@@ -230,10 +232,10 @@ export function extractContext(range?: Range, lang?: string): Context | null {
   const language = detectLanguage(mapped.text, lang);
   if (!language) return null;
 
-  const sentence = findSentence(mapped.text, mapped.s, mapped.e, language);
+  const sentence = findSentence(mapped, language);
   if (!sentence) return null;
 
-  const bold = boldRange(sentence.text, sentence.s, sentence.e);
+  const bold = boldRange(sentence);
   if (!bold) return null;
 
   return {

@@ -17,7 +17,7 @@ export class YoudaoDictionary extends DictionaryProvider {
     let url = `https://dict.youdao.com/w/${encodeURIComponent(word)}`;
 
     try {
-      let response = await fetch(url);
+      let response = await this.fetchWithTimeout(url);
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
@@ -27,7 +27,7 @@ export class YoudaoDictionary extends DictionaryProvider {
 
       if (!entry && word !== word.toLowerCase()) {
         url = `https://dict.youdao.com/w/${encodeURIComponent(word.toLowerCase())}`;
-        response = await fetch(url);
+        response = await this.fetchWithTimeout(url);
         if (!response.ok) {
           throw new Error(`HTTP error! status: ${response.status}`);
         }

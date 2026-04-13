@@ -1,12 +1,6 @@
 import { rpc } from "@lib/rpc";
-import {
-  DictionaryPanel,
-  EmptyView,
-  ErrorView,
-  LoadingView,
-  SearchBar,
-  ViewSwitch,
-} from "@lib/view";
+import { DictionaryPanel } from "@lib/ui";
+import { SearchBar } from "@lib/ui/search-bar";
 import { cx } from "tailwind-variants";
 
 async function init() {
@@ -19,56 +13,21 @@ async function init() {
 
   document.body.append(app);
 
-  const stateView = ViewSwitch({
+  const stateView = DictionaryPanel({
     className: cx("flex min-h-0 flex-1 flex-col"),
-    states: new Map([
-      ["loading", LoadingView({})],
-      ["empty", EmptyView({})],
-      ["error", ErrorView({})],
-    ]),
-    initial: "loading",
   });
 
   const searchBar = SearchBar({
-    onSettingsClick: () => chrome.runtime.openOptionsPage(),
-    onSearch: async (word) => {
-      stateView.setState("loading");
-      rpc.dictionary
-        .lookup({ word })
-        .then((result) => {
-          if (!result) {
-            stateView.setState("empty");
-            return;
-          }
+    onSearch: async (word, language) => {
+      app.dataset.state = "expanded";
 
-          let panel: ReturnType<typeof DictionaryPanel> | null = null;
-          const onAddClick = async (index?: number) => {
-            if (typeof index !== "number") return;
-            if (!panel) return;
-            const context = panel.getContext();
-            await rpc.anki.createNoteFromResult({
-              result,
-              defIndex: index,
-              options: {},
-              context,
-            });
-          };
-
-          panel = DictionaryPanel({
-            entry: result,
-            showAddButton: true,
-            onAddClick,
-          });
-
-          stateView.setState("content", panel.element);
-          app.dataset.state = "expanded";
-        })
-        .catch((error) => {
-          console.error("Search error:", error);
-          stateView.setState("error");
-        });
+      stateView.load(rpc.dictionary.lookup({ word, language })).then(() => {
+        app.dataset.state = "expanded";
+      });
     },
   });
+
+  rpc.dictionary.getEnabledLanguages().then(searchBar.setLanguages);
 
   app.append(searchBar.container, stateView.element);
 

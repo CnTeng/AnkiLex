@@ -1,4 +1,4 @@
-import { SettingsView } from "@lib/view/settings";
+import { SettingsView } from "@lib/ui";
 import { cn } from "tailwind-variants";
 
 const root = document.createElement("div");

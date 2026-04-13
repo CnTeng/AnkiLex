@@ -1,11 +1,11 @@
-import { Badge, Button, buttonVariants, Icon, Markdown } from "@lib/components";
 import type { Definition, Example, Pronunciation } from "@lib/model";
+import { Badge, Button, buttonVariants, Icon, Markdown } from "@lib/ui/components";
 import { Check, Play, Plus, Star, X } from "lucide";
 import { cn } from "tailwind-variants";
 
 const FREQUENCY_STAR_COUNT = 5;
 
-export function createHeaderElement(doc: Document, word: string, provider: string): HTMLDivElement {
+export function createHeader(doc: Document, word: string, provider: string): HTMLDivElement {
   const header = doc.createElement("div");
   header.className = cn("mb-2 flex items-center justify-between") as string;
 
@@ -28,7 +28,7 @@ export function createHeaderElement(doc: Document, word: string, provider: strin
   return header;
 }
 
-export function createContextElement(doc: Document, context?: string): HTMLDivElement | null {
+export function createContext(doc: Document, context?: string): HTMLDivElement | null {
   if (!context || context.trim() === "") return null;
 
   const container = doc.createElement("div");
@@ -50,7 +50,7 @@ export function createContextElement(doc: Document, context?: string): HTMLDivEl
   return container;
 }
 
-export function createMetadataElement(
+export function createMetadata(
   doc: Document,
   metadata?: Record<string, unknown>,
 ): HTMLDivElement | null {
@@ -64,8 +64,8 @@ export function createMetadataElement(
   const container = doc.createElement("div");
   container.className = cn("mb-2 flex items-center gap-3") as string;
 
-  const frequencyElement = createFrequencyStarsElement(doc, frequency);
-  const tagsElement = createTagsElement(doc, tags);
+  const frequencyElement = createFrequency(doc, frequency);
+  const tagsElement = createTags(doc, tags);
 
   if (frequencyElement) container.append(frequencyElement);
   if (tagsElement) container.append(tagsElement);
@@ -73,10 +73,7 @@ export function createMetadataElement(
   return container;
 }
 
-export function createFrequencyStarsElement(
-  doc: Document,
-  frequency: number,
-): HTMLDivElement | null {
+export function createFrequency(doc: Document, frequency: number): HTMLDivElement | null {
   if (frequency <= 0) return null;
 
   const container = doc.createElement("div");
@@ -96,7 +93,7 @@ export function createFrequencyStarsElement(
   return container;
 }
 
-export function createTagsElement(doc: Document, tags: string[]): HTMLDivElement | null {
+export function createTags(doc: Document, tags: string[]): HTMLDivElement | null {
   if (tags.length === 0) return null;
 
   const container = doc.createElement("div");
@@ -110,7 +107,7 @@ export function createTagsElement(doc: Document, tags: string[]): HTMLDivElement
   return container;
 }
 
-export function createPronunciationsElement(
+export function createPronunciations(
   doc: Document,
   pronunciations: Pronunciation[],
   options: { soundLinks?: HTMLAnchorElement[] } = {},
@@ -174,16 +171,14 @@ export function createPronunciationsElement(
   return container;
 }
 
-export interface CreateDefinitionOptions {
-  showAddButton?: boolean;
-  onAddClick?: (index?: number) => void;
-  toggleTranslation?: boolean;
-}
-
-export function createDefinitionsElement(
+export function createDefinitions(
   doc: Document,
   definitions: Definition[],
-  options: CreateDefinitionOptions = {},
+  options: {
+    showAddButton?: boolean;
+    onAddClick?: (index?: number) => void;
+    toggleTranslation?: boolean;
+  } = {},
 ): HTMLDivElement | null {
   if (!definitions || definitions.length === 0) return null;
 
@@ -191,18 +186,22 @@ export function createDefinitionsElement(
   container.className = cn("divide-border flex flex-col divide-y") as string;
 
   for (let i = 0; i < definitions.length; i++) {
-    const element = createDefinitionElement(doc, definitions[i], i, options);
+    const element = createDefinition(doc, definitions[i], i, options);
     container.append(element);
   }
 
   return container.children.length > 0 ? container : null;
 }
 
-export function createDefinitionElement(
+export function createDefinition(
   doc: Document,
   definition: Definition,
   index: number,
-  options: CreateDefinitionOptions = {},
+  options: {
+    showAddButton?: boolean;
+    onAddClick?: (index?: number) => void;
+    toggleTranslation?: boolean;
+  } = {},
 ): HTMLDivElement {
   const container = doc.createElement("div");
 
@@ -226,7 +225,7 @@ export function createDefinitionElement(
   const headerRow = doc.createElement("div");
   headerRow.className = cn("flex flex-1 items-center justify-between gap-1") as string;
 
-  const content = createDefinitionContentElement(doc, definition);
+  const content = createDefinitionContent(doc, definition);
   headerRow.append(content);
 
   if (options.showAddButton) {
@@ -240,7 +239,7 @@ export function createDefinitionElement(
 
   container.append(headerRow);
 
-  const examples = createExamplesElement(doc, definition.examples);
+  const examples = createExamples(doc, definition.examples);
   if (examples) container.append(examples);
 
   return container;
@@ -318,6 +317,8 @@ function createAnkiAddButton({
     try {
       setState("loading");
       await onAddClick(index);
+      if (typeof index !== "number") return;
+
       setState("success");
     } catch (error) {
       console.error("Failed to add to Anki", error);
@@ -328,10 +329,7 @@ function createAnkiAddButton({
   return addButton;
 }
 
-export function createDefinitionContentElement(
-  doc: Document,
-  definition: Definition,
-): HTMLDivElement {
+export function createDefinitionContent(doc: Document, definition: Definition): HTMLDivElement {
   const container = doc.createElement("div");
   container.className = cn("leading-relaxed") as string;
 
@@ -352,24 +350,21 @@ export function createDefinitionContentElement(
   return container;
 }
 
-export function createExamplesElement(
-  doc: Document,
-  examples?: Example[],
-): HTMLUListElement | null {
+export function createExamples(doc: Document, examples?: Example[]): HTMLUListElement | null {
   if (!examples || examples.length === 0) return null;
 
   const list = doc.createElement("ul");
   list.className = cn("mt-2 list-disc flex-col space-y-2 pl-3") as string;
 
   for (const example of examples) {
-    const item = createExampleItemElement(doc, example);
+    const item = createExampleItem(doc, example);
     list.append(item);
   }
 
   return list.children.length > 0 ? list : null;
 }
 
-export function createExampleItemElement(doc: Document, example: Example): HTMLLIElement {
+export function createExampleItem(doc: Document, example: Example): HTMLLIElement {
   const item = doc.createElement("li");
   item.className = cn("text-muted-foreground text-sm") as string;
 
