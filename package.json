@@ -33,7 +33,7 @@
     "tailwindcss": "^4.2.2",
     "tsx": "^4.21.0",
     "typescript": "^6.0.2",
-    "vite": "^8.0.3",
+    "vite": "^8.0.5",
     "vite-plugin-static-copy": "^4.0.0",
     "vitest": "^4.1.1",
     "zotero-types": "^4.1.2"
