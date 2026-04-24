@@ -1,5 +1,5 @@
 import type { DictionaryEntry } from "@lib/model";
-import { AnkiCardBack, AnkiCardFront } from "@lib/ui/dictionary";
+import { AnkiCardBack, AnkiCardFront } from "@lib/ui/dictionary/anki-card";
 
 const getData = (): DictionaryEntry | null => {
   const el = document.getElementById("raw-data");

@@ -1,7 +1,7 @@
 import type { DictionaryEntry, DictionaryProviderInfo } from "@lib/model";
 import { getDictionaryProvider, listDictionaryProviders } from "./registry";
-import "./youdao";
-import "./zdic";
+import "./providers/youdao";
+import "./providers/zdic";
 
 const languageDisplayNames = new Intl.DisplayNames(["en"], {
   type: "language",

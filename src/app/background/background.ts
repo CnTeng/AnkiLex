@@ -1,4 +1,4 @@
-import { listenRPC } from "@lib/rpc";
-import { allHandlers } from "@lib/rpc/handlers";
+import { initRPC } from "@lib/rpc";
+import "@lib/rpc/handlers";
 
-listenRPC(allHandlers);
+initRPC("remote");

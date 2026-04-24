@@ -36,6 +36,7 @@ export function iifePlugin(options: IifePluginOptions = {}): Plugin {
     const bundleResult = await build({
       configFile: false,
       root: viteConfig.root,
+      plugins: [iifePlugin({ modules })],
       build: {
         lib: {
           entry: resolveEntry(entry),

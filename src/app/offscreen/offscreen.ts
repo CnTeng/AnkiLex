@@ -1,25 +1,29 @@
 import { dictionary } from "@lib/dictionary";
+import type { DictionaryEntry } from "@lib/model";
 
-chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
-  if (message.action === "parse-html") {
-    console.log("Offscreen received parse-html request for provider:", message.id);
-    handleParseHtml(message.html, message.id)
-      .then((results) => sendResponse({ results }))
-      .catch((error) => {
-        console.error("Parse error:", error);
-        sendResponse({ results: [] });
-      });
+type ParseHtmlMessage = {
+  html: string;
+  providerId: string;
+  requestId?: string;
+};
 
-    return true;
-  }
-});
+async function parseHtml(message: ParseHtmlMessage): Promise<DictionaryEntry | null> {
+  const provider = dictionary.getProvider(message.providerId);
 
-async function handleParseHtml(html: string, providerId: string) {
-  const provider = dictionary.getProvider(providerId);
-  if (!provider) {
-    return [];
-  }
+  if (!provider) return null;
 
-  const doc = new DOMParser().parseFromString(html, "text/html");
-  return provider.parseDocument(doc);
+  return provider.parseDocument(new DOMParser().parseFromString(message.html, "text/html"));
 }
+
+chrome.runtime.onConnect.addListener((port) => {
+  if (port.name !== "offscreen") return;
+
+  port.onMessage.addListener((message: ParseHtmlMessage) => {
+    parseHtml(message)
+      .then((results) => port.postMessage({ requestId: message.requestId, results }))
+      .catch((error: Error) => {
+        console.error("Parse error:", error);
+        port.postMessage({ requestId: message.requestId, results: null });
+      });
+  });
+});

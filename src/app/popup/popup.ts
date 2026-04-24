@@ -27,7 +27,7 @@ async function init() {
     },
   });
 
-  rpc.dictionary.getEnabledLanguages().then(searchBar.setLanguages);
+  rpc.dictionary.getEnabledLanguages().then((languages) => searchBar.setLanguages(languages ?? []));
 
   app.append(searchBar.container, stateView.element);
 

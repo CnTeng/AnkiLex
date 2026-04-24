@@ -1,3 +1,4 @@
+import { initRPC } from "@lib/rpc";
 import { registerPopup, unregisterPopup } from "./popup";
 import { mountPrefs, registerPrefs, unregisterPrefs } from "./prefs";
 
@@ -35,6 +36,8 @@ export async function startup(
   _reason: number,
 ) {
   await Zotero.initializationPromise;
+
+  initRPC("local");
 
   registerGlobals();
   registerPopup(params.id);

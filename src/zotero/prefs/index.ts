@@ -1,8 +1,4 @@
-import { setRPCPassthrough } from "@lib/rpc";
-import { allHandlers } from "@lib/rpc/handlers";
 import { SettingsView } from "@lib/ui";
-
-setRPCPassthrough(allHandlers);
 
 let registeredPaneId: string | null = null;
 

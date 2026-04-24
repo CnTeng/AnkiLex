@@ -1,55 +1,38 @@
-import type { AllHandlers } from "./handlers";
+import { getHandler, type RPCHandlers } from "./handlers";
 
-type HandlerDomain = keyof AllHandlers;
+let mode: "local" | "remote" = "remote";
 
-let _handlers: AllHandlers | null = null;
+export const rpc = new Proxy({} as RPCHandlers, {
+  get: (_, domain: string) =>
+    new Proxy(
+      {},
+      {
+        get: (_, method: string) => async (data?: unknown) => {
+          const handler = getHandler(domain, method);
 
-export function createRPC(options: { passthrough?: AllHandlers } = {}) {
-  return new Proxy({} as AllHandlers, {
-    get: (_, domain: string) =>
-      new Proxy(
-        {},
-        {
-          get: (_, method: string) => (data: unknown) => {
-            const domainHandlers =
-              options.passthrough?.[domain as HandlerDomain] ??
-              _handlers?.[domain as HandlerDomain];
-            const handler = (domainHandlers as Record<string, unknown> | undefined)?.[method];
+          if (mode === "local" && typeof handler === "function") {
+            return handler(data);
+          }
 
-            if (typeof handler === "function") {
-              return handler(data);
-            }
-
-            return chrome.runtime.sendMessage({ domain, method, data }).then((res) => {
-              if (res?.error) throw new Error(res.error);
-              return res;
-            });
-          },
+          const res = await chrome.runtime.sendMessage({ type: "rpc", domain, method, data });
+          if (res?.error) throw new Error(res.error);
+          return res;
         },
-      ),
-  });
-}
+      },
+    ),
+});
 
-export const rpc = createRPC();
-
-export function setRPCPassthrough(handlers: AllHandlers | null) {
-  _handlers = handlers;
-}
-
-export function listenRPC(handlers: AllHandlers) {
-  setRPCPassthrough(handlers);
+export function initRPC(nextMode: "local" | "remote") {
+  mode = nextMode;
+  if (mode !== "remote") return;
 
   chrome.runtime.onMessage.addListener((msg: unknown, _sender, sendResponse) => {
     if (!msg || typeof msg !== "object") return;
 
-    const { domain, method, data } = msg as Record<string, unknown>;
+    const { type, domain, method, data } = msg as Record<string, unknown>;
+    if (type !== "rpc" || typeof domain !== "string" || typeof method !== "string") return;
 
-    if (typeof domain !== "string" || !(domain in handlers)) return;
-    const domainHandlers = handlers[domain as HandlerDomain];
-
-    if (!domainHandlers || typeof method !== "string" || !(method in domainHandlers)) return;
-    const handler = (domainHandlers as Record<string, unknown>)[method];
-
+    const handler = getHandler(domain, method);
     if (typeof handler !== "function") return;
 
     Promise.resolve(handler(data))
