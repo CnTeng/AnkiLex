@@ -148,7 +148,7 @@ export function createPronunciations(
       anchor.className = buttonVariants({ size: "icon-xs", variant: "ghost" });
       item.append(anchor);
     } else if (audioUrl) {
-      const audio = doc.createElement("audio");
+      const audio = document.createElement("audio");
       audio.src = audioUrl;
 
       const audioButton = Button({
