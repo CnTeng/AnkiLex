@@ -1,21 +1,19 @@
-import { type AnkiLexSettings, DEFAULT_SETTINGS, STORAGE_KEY } from "./model";
+import { DEFAULT_USER_SETTINGS, STORAGE_KEY, type UserSettings } from "./model";
 import { storage } from "./storage";
 
-export const settings = {
-  async get(): Promise<AnkiLexSettings> {
-    const stored = await storage.get<Partial<AnkiLexSettings>>(STORAGE_KEY);
-    return { ...DEFAULT_SETTINGS, ...(stored || {}) };
+export const useSettings = {
+  async get(): Promise<UserSettings> {
+    const settings = await storage.get<UserSettings>(STORAGE_KEY);
+    if (settings == null) return structuredClone(DEFAULT_USER_SETTINGS);
+
+    return settings;
   },
 
-  async update(partial: Partial<AnkiLexSettings>): Promise<AnkiLexSettings> {
-    const current = await this.get();
-    const updated = { ...current, ...partial };
-    await storage.set(STORAGE_KEY, updated);
-    return updated;
+  async set(settings: UserSettings): Promise<void> {
+    return await storage.set(STORAGE_KEY, settings);
   },
 
-  async reset(): Promise<AnkiLexSettings> {
-    await storage.set(STORAGE_KEY, DEFAULT_SETTINGS);
-    return DEFAULT_SETTINGS;
+  async reset(): Promise<void> {
+    return storage.remove(STORAGE_KEY);
   },
 };

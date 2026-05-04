@@ -42,4 +42,15 @@ export const dictionary = {
     if (!provider) return null;
     return provider.lookup(word);
   },
+
+  async lookupWithFallback(word: string, providerIds: string[]): Promise<DictionaryEntry | null> {
+    for (const providerId of providerIds) {
+      const result = await this.lookup(word, providerId).catch((error: Error) => {
+        console.warn(`[Dictionary Lookup Error] ${providerId}:`, error);
+        return null;
+      });
+      if (result) return result;
+    }
+    return null;
+  },
 };

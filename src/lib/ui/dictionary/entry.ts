@@ -24,10 +24,14 @@ export function EntryView({
       showAddButton,
       onAddClick: async (index) => {
         if (typeof index !== "number") return;
-        await rpc.anki.createNoteFromResult({
-          result: entry,
-          defIndex: index,
-          options: {},
+        const definition = entry.definitions[index];
+        if (!definition) return;
+
+        await rpc.anki.addNote({
+          result: {
+            ...entry,
+            definitions: [definition],
+          },
         });
       },
     }),

@@ -1,4 +1,4 @@
-export type StatusLevel = "success" | "error" | "info";
+export type StatusLevel = "success" | "error" | "info" | "warning";
 
 export interface SelectOption {
   value: string;
@@ -9,11 +9,6 @@ export interface DictionaryRow {
   languageCode: string;
   displayName: string;
   providers: SelectOption[];
-  selectedProvider: string;
-}
-
-export interface FieldMappingRow {
-  fieldName: string;
-  options: SelectOption[];
-  selectedValue: string;
+  selectedProviders: string[];
+  selectedAnkiDeck: string;
 }

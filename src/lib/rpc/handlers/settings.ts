@@ -1,8 +1,19 @@
-import type { AnkiLexSettings } from "@lib/model";
-import { settings } from "@lib/settings";
+import type { UserSettings } from "@lib/model";
+import { useSettings } from "@lib/settings";
 
 export const settingsHandlers = {
-  get: async () => settings.get(),
-  update: async (data: { partial: Partial<AnkiLexSettings> }) => settings.update(data.partial),
-  reset: async () => settings.reset(),
+  get: async () => useSettings.get(),
+  set: async (data: { settings: UserSettings }) => useSettings.set(data.settings),
+  update: async (data: { partial: Partial<UserSettings> }) => {
+    const current = await useSettings.get();
+    const next = {
+      languages: data.partial.languages ?? current.languages,
+      anki: data.partial.anki ?? current.anki,
+    };
+    await useSettings.set(next);
+  },
+  reset: async () => {
+    await useSettings.reset();
+    return useSettings.get();
+  },
 };

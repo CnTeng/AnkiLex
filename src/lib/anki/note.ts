@@ -1,128 +1,103 @@
-import type { AnkiNote, Definition, DictionaryEntry, Pronunciation } from "@lib/model";
-import { settings } from "@lib/settings";
-import { addNote } from "./api";
+import type { AnkiModel, AnkiNote, Definition, DictionaryEntry, Pronunciation } from "@lib/model";
 
 function formatDefinitions(definitions: Definition[]): string {
-  if (!definitions || definitions.length === 0) return "";
+  if (definitions.length === 0) return "";
   return definitions
     .map((def) => (def.partOfSpeech ? `[${def.partOfSpeech}] ${def.text}` : def.text))
     .join("\n");
 }
 
 function formatExamples(definitions: Definition[]): string {
-  const lines: string[] = [];
-  for (const def of definitions) {
-    if (!def.examples || def.examples.length === 0) continue;
-    for (const ex of def.examples) {
-      if (!ex.text) continue;
-      const translation = ex.translation ? ` :: ${ex.translation}` : "";
-      lines.push(`${ex.text}${translation}`);
-    }
-  }
-  return lines.join("\n");
+  return definitions
+    .flatMap((def) =>
+      (def.examples ?? [])
+        .filter((example) => example.text)
+        .map((example) =>
+          example.translation ? `${example.text} :: ${example.translation}` : example.text,
+        ),
+    )
+    .join("\n");
 }
 
 function formatPronunciations(pronunciations: Pronunciation[]): string {
-  const lines: string[] = [];
-  for (const pr of pronunciations) {
-    if (!pr.text) continue;
-    const label = pr.type ? `${pr.type}: ` : "";
-    lines.push(`${label}${pr.text}`);
-  }
-  return lines.join("\n");
+  return pronunciations
+    .filter((pronunciation) => pronunciation.text)
+    .map((pronunciation) =>
+      pronunciation.type ? `${pronunciation.type}: ${pronunciation.text}` : pronunciation.text,
+    )
+    .join("\n");
 }
 
 function formatMetadata(metadata?: Record<string, unknown>): string {
   if (!metadata) return "";
-  const lines: string[] = [];
-  for (const [key, value] of Object.entries(metadata)) {
-    if (value == null) continue;
-    const rendered = Array.isArray(value) ? value.join(", ") : String(value);
-    lines.push(`${key}: ${rendered}`);
-  }
-  return lines.join("\n");
+  return Object.entries(metadata)
+    .filter(([, value]) => value != null)
+    .map(([key, value]) => `${key}: ${Array.isArray(value) ? value.join(", ") : String(value)}`)
+    .join("\n");
 }
 
-/**
- * Builds an AnkiNote object from a dictionary entry
- */
-export async function buildNote(
+export function createNoteFromEntry(
+  deckName: string,
+  model: AnkiModel,
+  fieldMap: Record<string, string>,
   result: DictionaryEntry,
-  options?: { deck?: string; noteType?: string },
-  defIndex?: number,
-): Promise<AnkiNote> {
-  const currentSettings = await settings.get();
-
+): AnkiNote {
   const note: AnkiNote = {
-    deckName: options?.deck || currentSettings.ankiDefaultDeck,
-    modelName: options?.noteType || currentSettings.ankiDefaultNoteType,
+    deckName,
+    modelName: model.modelName,
     fields: {},
     tags: ["ankilex"],
   };
 
-  const definitionsToUse =
-    typeof defIndex === "number" && result.definitions[defIndex]
-      ? [result.definitions[defIndex]]
-      : result.definitions;
+  for (const fieldName of model.inOrderFields) {
+    const mappedField = fieldMap[fieldName];
+    if (!mappedField) {
+      note.fields[fieldName] = "";
+      continue;
+    }
 
-  Object.entries(currentSettings.ankiFieldMap).forEach(([ankiField, lexField]) => {
-    switch (lexField) {
+    switch (mappedField) {
       case "word":
-        note.fields[ankiField] = result.word;
+        note.fields[fieldName] = result.word;
         break;
       case "context":
-        note.fields[ankiField] = result.context || "";
+        note.fields[fieldName] = result.context || "";
         break;
       case "definition":
-        note.fields[ankiField] = formatDefinitions(definitionsToUse);
+        note.fields[fieldName] = formatDefinitions(result.definitions);
         break;
       case "examples":
-        note.fields[ankiField] = formatExamples(definitionsToUse);
+        note.fields[fieldName] = formatExamples(result.definitions);
         break;
       case "audio": {
-        const audioItems = result.pronunciations.filter((p) => p.audioUrl);
-        if (audioItems.length > 0) {
-          if (!note.audio) note.audio = [];
-          for (const item of audioItems) {
-            const label = item.type ? `_${item.type}` : "";
-            const timestamp = Date.now();
-            const filename = `ankilex_${result.word}${label}_${timestamp}.mp3`;
-            note.audio.push({
-              url: item.audioUrl,
-              filename,
-              fields: [ankiField],
-            });
-          }
-        }
-        break;
-      }
-      case "pronunciations": {
-        note.fields[ankiField] = formatPronunciations(result.pronunciations);
-        break;
-      }
-      case "provider":
-        note.fields[ankiField] = result.provider;
-        break;
-      case "metadata":
-        note.fields[ankiField] = formatMetadata(result.metadata);
-        break;
-      case "data":
-        note.fields[ankiField] = JSON.stringify({
-          ...result,
-          definitions: definitionsToUse,
+        const audioItems = result.pronunciations.filter((pronunciation) => pronunciation.audioUrl);
+        if (audioItems.length === 0) break;
+
+        note.audio = audioItems.map((item) => {
+          const label = item.type ? `_${item.type}` : "";
+          const timestamp = Date.now();
+          return {
+            url: item.audioUrl,
+            filename: `ankilex_${result.word}${label}_${timestamp}.mp3`,
+            fields: [fieldName],
+          };
         });
         break;
+      }
+      case "pronunciations":
+        note.fields[fieldName] = formatPronunciations(result.pronunciations);
+        break;
+      case "provider":
+        note.fields[fieldName] = result.provider;
+        break;
+      case "metadata":
+        note.fields[fieldName] = formatMetadata(result.metadata);
+        break;
+      case "data":
+        note.fields[fieldName] = JSON.stringify(result);
+        break;
     }
-  });
+  }
 
   return note;
-}
-
-export async function createNoteFromResult(
-  result: DictionaryEntry,
-  options?: { deck?: string; noteType?: string; context?: string },
-  defIndex?: number,
-): Promise<number | number[]> {
-  const note = await buildNote(result, options, defIndex);
-  return addNote(note);
 }

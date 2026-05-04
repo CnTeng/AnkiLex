@@ -1,12 +1,12 @@
 import { dictionary } from "@lib/dictionary";
-import type { Context } from "@lib/model";
-import { settings } from "@lib/settings";
+import type { Context, LanguageSettings } from "@lib/model";
+import { useSettings } from "@lib/settings";
 import type { DictionaryRow } from "@lib/ui/settings";
 import { eld } from "eld/medium";
 
-function enabledLanguages(providers: Record<string, string>): string[] {
-  return Object.entries(providers)
-    .filter(([, id]) => id)
+function enabledLanguages(languages: LanguageSettings): string[] {
+  return Object.entries(languages)
+    .filter(([, settings]) => settings.providers.length > 0)
     .map(([code]) => code);
 }
 
@@ -35,7 +35,7 @@ function detectLanguage(word: string, languages: string[], fallback?: string): s
   return fallback?.split("-")[0]?.trim() || null;
 }
 
-function dictionaryRows(selected: Record<string, string>): DictionaryRow[] {
+function dictionaryRows(selected: Record<string, string[]>): DictionaryRow[] {
   return dictionary.getLanguageCodes().map((languageCode) => ({
     languageCode,
     displayName: `${dictionary.getLanguageName(languageCode)} (${languageCode})`,
@@ -45,31 +45,46 @@ function dictionaryRows(selected: Record<string, string>): DictionaryRow[] {
         .getProvidersForLanguage(languageCode)
         .map((provider) => ({ value: provider.id, label: provider.name })),
     ],
-    selectedProvider: selected[languageCode] || "",
+    selectedProviders: selected[languageCode] || [],
+    selectedAnkiDeck: "",
   }));
 }
 
 export const dictionaryHandlers = {
   lookup: async (data: { word: string; language?: string; context?: Context }) => {
-    const { dictionaryProviders } = await settings.get();
-    const languages = enabledLanguages(dictionaryProviders);
+    const currentSettings = await useSettings.get();
+    const languages = enabledLanguages(currentSettings.languages);
 
     const language = data.language || detectLanguage(data.word, languages, data.context?.lang);
     if (!language) return null;
 
-    const providerId = dictionaryProviders[language];
-    if (!providerId) return null;
+    const providerIds = currentSettings.languages[language]?.providers ?? [];
+    if (providerIds.length === 0) return null;
 
-    const result = await dictionary.lookup(data.word, providerId);
+    const result = await dictionary.lookupWithFallback(data.word, providerIds);
     if (!result) return null;
 
+    result.language = language;
     if (data.context?.context) result.context = data.context.context;
     return result;
   },
-  getRows: async (data: { selected: Record<string, string> }) => dictionaryRows(data.selected),
+
+  getRows: async (data: { selected: Record<string, { providers: string[]; deck: string }> }) =>
+    dictionaryRows(
+      Object.fromEntries(
+        Object.entries(data.selected).map(([languageCode, languageSetting]) => [
+          languageCode,
+          languageSetting.providers,
+        ]),
+      ),
+    ).map((row) => ({
+      ...row,
+      selectedAnkiDeck: data.selected[row.languageCode]?.deck || "",
+    })),
+
   getEnabledLanguages: async () => {
-    const { dictionaryProviders } = await settings.get();
-    return enabledLanguages(dictionaryProviders).map((code) => ({
+    const currentSettings = await useSettings.get();
+    return enabledLanguages(currentSettings.languages).map((code) => ({
       code,
       name: dictionary.getLanguageName(code),
     }));

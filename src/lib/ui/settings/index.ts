@@ -1,4 +1,4 @@
-import { DEFAULT_SETTINGS } from "@lib/model";
+import { DEFAULT_USER_SETTINGS, type UserSettings } from "@lib/model";
 import { rpc } from "@lib/rpc";
 import { cn } from "tailwind-variants";
 import { AnkiSection } from "./anki";
@@ -13,13 +13,28 @@ function showError(status: SettingsStatusElement, message: string, error: unknow
   status.show(`${message}: ${error instanceof Error ? error.message : String(error)}`, "error");
 }
 
+function loadDictionaryRows(draft: UserSettings) {
+  return rpc.dictionary.getRows({
+    selected: draft.languages,
+  });
+}
+
+function loadDeckOptions() {
+  return rpc.anki
+    .getDecks()
+    .then((decks) => decks.map((deck) => ({ value: deck, label: deck })))
+    .catch(() => []);
+}
+
 export function SettingsView({ doc = document }: SettingsViewOptions = {}): HTMLDivElement {
   const container = doc.createElement("div");
 
-  const draft = { ...DEFAULT_SETTINGS };
+  const draft = structuredClone(DEFAULT_USER_SETTINGS);
   const status = createStatus(doc);
   const dict = DictionarySection(doc, draft);
-  const anki = AnkiSection(doc, draft, status);
+  const anki = AnkiSection(doc, draft, status, (decks) => {
+    dict.setDeckOptions(decks.map((deck) => ({ value: deck, label: deck })));
+  });
 
   const save = () =>
     rpc.settings
@@ -37,20 +52,12 @@ export function SettingsView({ doc = document }: SettingsViewOptions = {}): HTML
     return rpc.settings
       .reset()
       .then(async (settings) => {
-        Object.assign(draft, settings);
-        dict.render(
-          await rpc.dictionary.getRows({
-            selected: draft.dictionaryProviders,
-          }),
-        );
-        anki.render({
-          ankiConnectUrl: draft.ankiConnectUrl,
-          ankiDefaultDeck: draft.ankiDefaultDeck,
-          ankiDefaultNoteType: draft.ankiDefaultNoteType,
-          fieldMappingRows: await rpc.anki.getFieldMappingRows({
-            noteType: draft.ankiDefaultNoteType,
-            currentMap: draft.ankiFieldMap,
-          }),
+        if (settings) Object.assign(draft, settings);
+        dict.render((await loadDictionaryRows(draft)) ?? []);
+        dict.setDeckOptions(await loadDeckOptions());
+        await anki.render({
+          connectUrl: draft.anki.connectUrl,
+          noteType: draft.anki.noteType,
         });
       })
       .then(() => {
@@ -72,20 +79,12 @@ export function SettingsView({ doc = document }: SettingsViewOptions = {}): HTML
   void rpc.settings
     .get()
     .then(async (settings) => {
-      Object.assign(draft, settings);
-      dict.render(
-        await rpc.dictionary.getRows({
-          selected: draft.dictionaryProviders,
-        }),
-      );
-      anki.render({
-        ankiConnectUrl: draft.ankiConnectUrl,
-        ankiDefaultDeck: draft.ankiDefaultDeck,
-        ankiDefaultNoteType: draft.ankiDefaultNoteType,
-        fieldMappingRows: await rpc.anki.getFieldMappingRows({
-          noteType: draft.ankiDefaultNoteType,
-          currentMap: draft.ankiFieldMap,
-        }),
+      if (settings) Object.assign(draft, settings);
+      dict.render((await loadDictionaryRows(draft)) ?? []);
+      dict.setDeckOptions(await loadDeckOptions());
+      await anki.render({
+        connectUrl: draft.anki.connectUrl,
+        noteType: draft.anki.noteType,
       });
     })
     .catch((error) => {
@@ -95,4 +94,4 @@ export function SettingsView({ doc = document }: SettingsViewOptions = {}): HTML
   return container;
 }
 
-export type { DictionaryRow, FieldMappingRow } from "./types";
+export type { DictionaryRow } from "./types";

@@ -95,6 +95,7 @@ export function createStatus(doc: Document): SettingsStatusElement {
     success: "text-green-600",
     error: "text-red-600",
     info: "text-blue-600",
+    warning: "text-amber-600",
   };
   let hideTimer: ReturnType<typeof setTimeout> | null = null;
 

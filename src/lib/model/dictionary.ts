@@ -13,13 +13,9 @@ export interface DictionaryProviderInfo {
   supportedLanguages: string[];
 }
 
-export interface DictionaryLookupRequest {
-  word: string;
-  providerId: string;
-}
-
 export interface DictionaryEntry {
   word: string;
+  language?: string;
   provider: string;
   definitions: Definition[];
   pronunciations: Pronunciation[];

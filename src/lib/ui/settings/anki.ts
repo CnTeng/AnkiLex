@@ -1,4 +1,8 @@
-import type { AnkiLexSettings } from "@lib/model";
+import {
+  ANKI_DEFAULT_MODEL_FIELDS,
+  guessAnkiModelField,
+  type UserSettings,
+} from "@lib/model";
 import { rpc } from "@lib/rpc";
 import { Button, Icon, Input, Select } from "@lib/ui/components";
 import { RefreshCw, Shield } from "lucide";
@@ -9,20 +13,44 @@ import {
   type SettingsStatusElement,
   setSelectOptions,
 } from "./elements";
-import type { FieldMappingRow } from "./types";
 
 export interface AnkiSectionResult {
   element: HTMLElement;
-  render: (values: {
-    ankiConnectUrl: string;
-    ankiDefaultDeck: string;
-    ankiDefaultNoteType: string;
-    fieldMappingRows: FieldMappingRow[] | null;
-  }) => void;
+  render: (values: { connectUrl: string; noteType: string }) => Promise<void>;
 }
+
+const VALID_LEX_FIELDS = new Set(ANKI_DEFAULT_MODEL_FIELDS);
+const LEX_FIELD_OPTIONS = [
+  { value: "", label: "(None)" },
+  { value: "word", label: "Word/Expression" },
+  { value: "definition", label: "Definition" },
+  { value: "examples", label: "Examples" },
+  { value: "pronunciations", label: "Pronunciations" },
+  { value: "provider", label: "Provider" },
+  { value: "metadata", label: "Metadata" },
+  { value: "audio", label: "Audio" },
+  { value: "context", label: "Original Context" },
+  { value: "data", label: "Full JSON Data" },
+];
 
 function stringOptions(values: string[]) {
   return values.map((value) => ({ value, label: value }));
+}
+
+function getValidFieldMap(
+  fields: string[],
+  currentMap: Record<string, string>,
+): Record<string, string> {
+  const validFields = new Set(fields);
+  const nextMap: Record<string, string> = {};
+
+  Object.entries(currentMap).forEach(([fieldName, mappedField]) => {
+    if (!validFields.has(fieldName)) return;
+    if (!VALID_LEX_FIELDS.has(mappedField)) return;
+    nextMap[fieldName] = mappedField;
+  });
+
+  return nextMap;
 }
 
 function createControlRow(doc: Document, children: HTMLElement[]) {
@@ -62,51 +90,62 @@ function createFieldMapping(doc: Document) {
   };
 }
 
-function renderFieldMappingRows(
+async function renderFieldMapping(
   doc: Document,
   fieldMapping: ReturnType<typeof createFieldMapping>,
-  draft: AnkiLexSettings,
-  rows: FieldMappingRow[] | null,
+  draft: UserSettings,
+  noteType: string,
 ) {
-  if (!rows) {
+  if (!noteType) {
     fieldMapping.show(false);
     fieldMapping.content.replaceChildren();
-    draft.ankiFieldMap = {};
     return;
   }
 
-  // Sync draft from rendered rows
-  draft.ankiFieldMap = Object.fromEntries(
-    rows.filter((row) => row.selectedValue).map((row) => [row.fieldName, row.selectedValue]),
-  );
+  const fields = await rpc.anki.getModelFields({ modelName: noteType });
+  if (fields.length === 0) {
+    fieldMapping.show(false);
+    fieldMapping.content.replaceChildren();
+    return;
+  }
+
+  const currentMap = getValidFieldMap(fields, draft.anki.fieldMap ?? {});
+  const nextMap: Record<string, string> = {};
 
   fieldMapping.show(true);
   fieldMapping.content.replaceChildren(
-    ...rows.map((row) => {
+    ...fields.map((fieldName) => {
+      const selectedValue = currentMap[fieldName] || guessAnkiModelField(fieldName) || "";
+      if (selectedValue) nextMap[fieldName] = selectedValue;
+
       const select = Select({
         doc,
-        options: row.options,
-        value: row.selectedValue,
+        options: LEX_FIELD_OPTIONS,
+        value: selectedValue,
         onChange: (value) => {
           if (value) {
-            draft.ankiFieldMap[row.fieldName] = value;
+            draft.anki.fieldMap[fieldName] = value;
           } else {
-            delete draft.ankiFieldMap[row.fieldName];
+            delete draft.anki.fieldMap[fieldName];
           }
         },
       });
-      return createFormField(doc, row.fieldName, {
+
+      return createFormField(doc, fieldName, {
         children: select as HTMLElement,
         layout: "inline",
       });
     }),
   );
+
+  draft.anki.fieldMap = nextMap;
 }
 
 export function AnkiSection(
   doc: Document,
-  draft: AnkiLexSettings,
+  draft: UserSettings,
   status: SettingsStatusElement,
+  onDeckOptionsChange: (decks: string[]) => void,
 ): AnkiSectionResult {
   const section = doc.createElement("section");
   section.append(createSectionHeading(doc, Shield, "Anki"));
@@ -120,26 +159,7 @@ export function AnkiSection(
     id: "anki-url",
     placeholder: "http://127.0.0.1:8765",
     onChange: (value) => {
-      draft.ankiConnectUrl = value;
-    },
-  });
-  content.append(
-    createFormField(doc, "AnkiConnect URL", {
-      htmlFor: "anki-url",
-      help: "Requires the AnkiConnect add-on to be installed and running in Anki.",
-      children: urlInput,
-      layout: "inline",
-    }),
-  );
-
-  // Default Deck
-  const deckSelect = Select({
-    doc,
-    id: "default-deck",
-    options: [{ value: "Default", label: "Default" }],
-    value: "Default",
-    onChange: (value) => {
-      draft.ankiDefaultDeck = value;
+      draft.anki.connectUrl = value;
     },
   });
   const refreshButton = Button({
@@ -155,21 +175,21 @@ export function AnkiSection(
   });
   refreshButton.classList.add("h-10", "w-10");
   content.append(
-    createFormField(doc, "Default Deck", {
-      htmlFor: "default-deck",
-      children: createControlRow(doc, [deckSelect as HTMLElement, refreshButton]),
+    createFormField(doc, "AnkiConnect URL", {
+      htmlFor: "anki-url",
+      children: createControlRow(doc, [urlInput, refreshButton]),
       layout: "inline",
     }),
   );
 
-  // Default Note Type
+  // Note Type
   const noteTypeSelect = Select({
     doc,
     id: "default-note-type",
     options: [{ value: "Basic", label: "Basic" }],
     value: "Basic",
     onChange: (value) => {
-      draft.ankiDefaultNoteType = value;
+      draft.anki.noteType = value;
     },
   });
   const setupButton = Button({
@@ -181,7 +201,7 @@ export function AnkiSection(
   });
   setupButton.classList.add("shrink-0");
   content.append(
-    createFormField(doc, "Default Note Type", {
+    createFormField(doc, "Note Type", {
       htmlFor: "default-note-type",
       children: createControlRow(doc, [noteTypeSelect as HTMLElement, setupButton]),
       layout: "inline",
@@ -197,50 +217,35 @@ export function AnkiSection(
     status.show(`${message}: ${error instanceof Error ? error.message : String(error)}`, "error");
   }
 
-  function render(values: {
-    ankiConnectUrl: string;
-    ankiDefaultDeck: string;
-    ankiDefaultNoteType: string;
-    fieldMappingRows: FieldMappingRow[] | null;
-  }) {
-    urlInput.value = values.ankiConnectUrl;
-    draft.ankiConnectUrl = values.ankiConnectUrl;
+  function showWarning(message: string, error: unknown) {
+    status.show(`${message}: ${error instanceof Error ? error.message : String(error)}`, "warning");
+  }
 
-    setSelectOptions(
-      doc,
-      deckSelect,
-      [{ value: values.ankiDefaultDeck, label: values.ankiDefaultDeck }],
-      values.ankiDefaultDeck,
-    );
-    draft.ankiDefaultDeck = values.ankiDefaultDeck;
+  async function render(values: { connectUrl: string; noteType: string }) {
+    urlInput.value = values.connectUrl;
+    draft.anki.connectUrl = values.connectUrl;
 
     setSelectOptions(
       doc,
       noteTypeSelect,
       [
         {
-          value: values.ankiDefaultNoteType,
-          label: values.ankiDefaultNoteType,
+          value: values.noteType,
+          label: values.noteType,
         },
       ],
-      values.ankiDefaultNoteType,
+      values.noteType,
     );
-    draft.ankiDefaultNoteType = values.ankiDefaultNoteType;
+    draft.anki.noteType = values.noteType;
 
-    renderFieldMappingRows(doc, fieldMapping, draft, values.fieldMappingRows);
+    await renderFieldMapping(doc, fieldMapping, draft, values.noteType);
   }
 
   const refresh = () => {
     status.show("Connecting to Anki...", "info");
     return Promise.all([rpc.anki.getDecks(), rpc.anki.getModels()])
       .then(async ([decks, models]) => {
-        setSelectOptions(
-          doc,
-          deckSelect,
-          stringOptions(decks.length > 0 ? decks : ["Default"]),
-          deckSelect.select.value,
-        );
-        draft.ankiDefaultDeck = deckSelect.select.value;
+        onDeckOptionsChange(decks.length > 0 ? decks : ["Default"]);
 
         setSelectOptions(
           doc,
@@ -248,30 +253,22 @@ export function AnkiSection(
           stringOptions(models.length > 0 ? models : ["Basic"]),
           noteTypeSelect.select.value,
         );
-        draft.ankiDefaultNoteType = noteTypeSelect.select.value;
+        draft.anki.noteType = noteTypeSelect.select.value;
 
-        renderFieldMappingRows(
-          doc,
-          fieldMapping,
-          draft,
-          await rpc.anki.getFieldMappingRows({
-            noteType: draft.ankiDefaultNoteType,
-            currentMap: draft.ankiFieldMap,
-          }),
-        );
+        await renderFieldMapping(doc, fieldMapping, draft, draft.anki.noteType);
       })
       .then(() => {
         status.show("Anki connection successful!", "success");
       })
       .catch((error) => {
-        showError("Failed to connect to Anki", error);
+        showWarning("Failed to connect to Anki", error);
       });
   };
 
   const setupTemplate = () => {
     status.show("Processing Anki template...", "info");
     return rpc.anki
-      .setupDefaultModel()
+      .syncModel()
       .then(() => refresh())
       .then(() => {
         status.show("Anki template is up to date!", "success");
@@ -283,17 +280,9 @@ export function AnkiSection(
 
   refreshButton.addEventListener("click", () => void refresh());
   noteTypeSelect.select.addEventListener("change", () => {
-    void rpc.anki
-      .getFieldMappingRows({
-        noteType: draft.ankiDefaultNoteType,
-        currentMap: draft.ankiFieldMap,
-      })
-      .then((rows) => {
-        renderFieldMappingRows(doc, fieldMapping, draft, rows);
-      })
-      .catch((error) => {
-        showError("Failed to load field mapping", error);
-      });
+    void renderFieldMapping(doc, fieldMapping, draft, draft.anki.noteType).catch((error) => {
+      showError("Failed to load field mapping", error);
+    });
   });
   setupButton.addEventListener("click", () => void setupTemplate());
 
