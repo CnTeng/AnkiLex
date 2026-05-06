@@ -1,5 +1,5 @@
 import { OptionsPage } from "@ui/options";
-import { createChromePlatformServices } from "@services";
+import { BrowserPlatformServices } from "@services";
 import { cn } from "tailwind-variants";
 
 const root = document.createElement("div");
@@ -9,4 +9,10 @@ root.className = cn(
 
 document.body.append(root);
 
-void OptionsPage.create({ root, services: createChromePlatformServices() });
+const services = new BrowserPlatformServices();
+void OptionsPage.create({
+  root,
+  configService: services.config,
+  dictionaryService: services.dictionary,
+  ankiService: services.anki,
+});

@@ -9,7 +9,7 @@ let selectedWord = "";
 let currentContext: Context | undefined;
 
 const iframe = document.createElement("iframe");
-iframe.src = chrome.runtime.getURL("browser/content/frame.html");
+iframe.src = chrome.runtime.getURL("platforms/browser/content/frame.html");
 iframe.className = "anki-lex-frame";
 iframe.loading = "lazy";
 

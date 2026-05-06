@@ -3,7 +3,9 @@ import type {
   AnkiState,
   ConfigChangeEvent,
   DictionaryLanguageInfo,
-  PlatformServices,
+  IAnkiService,
+  IConfigService,
+  IDictionaryService,
   UserConfig,
 } from "@common/model";
 import { normalizeAnkiFieldMap } from "@common/model";
@@ -56,7 +58,9 @@ export class OptionsPage {
 
   private readonly doc: Document;
   private readonly root: HTMLElement;
-  private readonly services: PlatformServices;
+  private readonly configService: IConfigService;
+  private readonly dictionaryService: IDictionaryService;
+  private readonly ankiService: IAnkiService;
   private readonly footer: OptionsFooter;
   private readonly dictionaryOptions: DictionaryOptions;
   private readonly ankiOptions: AnkiOptions;
@@ -72,21 +76,27 @@ export class OptionsPage {
   private constructor({
     doc = document,
     root,
-    services,
+    configService,
+    dictionaryService,
+    ankiService,
     userConfig,
     dictionaryLanguages,
     ankiState,
   }: {
     doc?: Document;
     root: HTMLElement;
-    services: PlatformServices;
+    configService: IConfigService;
+    dictionaryService: IDictionaryService;
+    ankiService: IAnkiService;
     userConfig: UserConfig;
     dictionaryLanguages: DictionaryLanguageInfo[];
     ankiState: AnkiState;
   }) {
     this.doc = doc;
     this.root = root;
-    this.services = services;
+    this.configService = configService;
+    this.dictionaryService = dictionaryService;
+    this.ankiService = ankiService;
     this.userConfig = userConfig;
     this.dictionaryLanguages = dictionaryLanguages;
     this.ankiState = ankiState;
@@ -111,7 +121,7 @@ export class OptionsPage {
 
     this.ankiOptions = new AnkiOptions({
       doc: this.doc,
-      ankiService: this.services.anki,
+      ankiService: this.ankiService,
       getConfig: () => this.userConfig.anki,
       setConfig: (ankiConfig) => this.setAnkiConfig(ankiConfig),
       setAnkiState: (nextAnkiState, nextAnkiConfig) =>
@@ -128,7 +138,7 @@ export class OptionsPage {
     this.element.append(sections, this.footer.element);
     this.root.replaceChildren(this.element);
 
-    this.unsubscribeConfigChange = this.services.config.onDidChange((event) => {
+    this.unsubscribeConfigChange = this.configService.onDidChange((event) => {
       void this.reloadFromConfig(event);
     });
     this.render();
@@ -137,20 +147,30 @@ export class OptionsPage {
   static async create({
     doc = document,
     root,
-    services,
+    configService,
+    dictionaryService,
+    ankiService,
   }: {
     doc?: Document;
     root: HTMLElement;
-    services: PlatformServices;
+    configService: IConfigService;
+    dictionaryService: IDictionaryService;
+    ankiService: IAnkiService;
   }) {
     root.replaceChildren(createStateMessage(doc, "Loading options..."));
 
-    const userConfig = await services.config.get();
-    const { dictionaryLanguages, ankiState } = await loadOptionsState(services, userConfig);
+    const userConfig = await configService.get();
+    const { dictionaryLanguages, ankiState } = await loadOptionsState(
+      dictionaryService,
+      ankiService,
+      userConfig,
+    );
     return new OptionsPage({
       doc,
       root,
-      services,
+      configService,
+      dictionaryService,
+      ankiService,
       userConfig,
       dictionaryLanguages,
       ankiState,
@@ -171,7 +191,7 @@ export class OptionsPage {
 
     const task = this.saveChain.then(() => {
       if (sameUserConfig(nextUserConfig, this.savedUserConfig)) return;
-      return this.services.config.update(nextUserConfig).then(() => {
+      return this.configService.update(nextUserConfig).then(() => {
         this.savedUserConfig = nextUserConfig;
       });
     });
@@ -217,9 +237,13 @@ export class OptionsPage {
       return;
     }
 
-    await resetOptionsState(this.services)
+    await resetOptionsState(this.configService, this.dictionaryService, this.ankiService)
       .then(async ({ userConfig, ankiState }) => {
-        const { dictionaryLanguages } = await loadOptionsState(this.services, userConfig);
+        const { dictionaryLanguages } = await loadOptionsState(
+          this.dictionaryService,
+          this.ankiService,
+          userConfig,
+        );
         this.userConfig = userConfig;
         this.savedUserConfig = userConfig;
         this.ankiState = ankiState;
@@ -242,7 +266,8 @@ export class OptionsPage {
       .then(async () => {
         const nextUserConfig = event.currentConfig;
         const { dictionaryLanguages, ankiState } = await loadOptionsState(
-          this.services,
+          this.dictionaryService,
+          this.ankiService,
           nextUserConfig,
         );
         this.userConfig = nextUserConfig;

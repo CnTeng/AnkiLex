@@ -1,2 +1,2 @@
-export * from "./chrome";
-export * from "./direct";
+export * from "./browser";
+export * from "./local";

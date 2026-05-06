@@ -2,7 +2,7 @@ import type { DictionaryEntry } from "@common/model";
 import { getDictionaryProvider } from "./registry";
 
 const OFFSCREEN_PORT = "offscreen";
-const OFFSCREEN_DOCUMENT = "browser/offscreen/offscreen.html";
+const OFFSCREEN_DOCUMENT = "platforms/browser/offscreen/offscreen.html";
 const PARSE_TIMEOUT_MS = 10_000;
 
 export type HtmlParser = (html: string, providerId: string) => Promise<DictionaryEntry | null>;

@@ -15,7 +15,7 @@ export const browserManifest = {
   manifest_version: 3,
   default_locale: "en",
   action: {
-    default_popup: "browser/popup/popup.html",
+    default_popup: "platforms/browser/popup/popup.html",
     default_icon: {
       "16": "assets/icons/icon16.png",
       "19": "assets/icons/icon19.png",
@@ -39,7 +39,7 @@ export const browserManifest = {
   web_accessible_resources: [
     {
       resources: [
-        "browser/content/frame.html",
+        "platforms/browser/content/frame.html",
         "browser/content/frame.js",
         "assets/*",
         "assets/chunks/*",

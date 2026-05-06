@@ -1,10 +1,10 @@
 import type { Context } from "@common/model";
-import { createChromePlatformServices } from "@services";
+import { BrowserPlatformServices } from "@services";
 import { DictionaryPanel } from "@ui/dictionary";
 import { cx } from "tailwind-variants";
 
 function init() {
-  const services = createChromePlatformServices();
+  const services = new BrowserPlatformServices();
   const app = document.createElement("div");
   app.className =
     cx("bg-base-100 text-base-content flex h-full min-h-0 flex-col overflow-hidden") ?? "";
@@ -25,7 +25,7 @@ function init() {
       };
       if (!word) return;
 
-      stateView.load(services.dictionary.lookup({ word, context }));
+      stateView.load(services.dictionary.lookup(word, context));
     }
   });
 }

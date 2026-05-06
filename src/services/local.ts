@@ -1,25 +1,23 @@
-import { AnkiClient } from "@services/anki";
-import { config } from "@services/config";
-import { dictionary } from "@services/dict";
 import type {
   AnkiModel,
   ConfigChangeEvent,
+  Context,
   DictionaryEntry,
   DictionaryLanguageInfo,
-  DictionaryLookupParams,
   IAnkiService,
   IConfigService,
   IDictionaryService,
-  PlatformServices,
   UserConfig,
 } from "@common/model";
-import { ANKI_DEFAULT_MODEL_NAME } from "@common/model";
+import { AnkiClient } from "@services/anki";
+import { config } from "@services/config";
+import { dictionary } from "@services/dict";
 import { eld } from "eld/medium";
 
 function detectCjkLanguage(text: string, languages: string[]): string | null {
   const languageSet = new Set(languages);
   if (/\p{Script=Han}/u.test(text) && languageSet.has("zh")) return "zh";
-  if (/[\p{Script=Hiragana}\p{Script=Katakana}]/u.test(text) && languageSet.has("ja")) return "ja";
+  if (/\p{Script=Hiragana}\p{Script=Katakana}/u.test(text) && languageSet.has("ja")) return "ja";
   if (/\p{Script=Hangul}/u.test(text) && languageSet.has("ko")) return "ko";
   return null;
 }
@@ -41,12 +39,7 @@ function detectLanguage(word: string, languages: string[], fallback?: string): s
   return fallback?.split("-")[0]?.trim() || null;
 }
 
-async function createClient() {
-  const userConfig = await config.get();
-  return new AnkiClient(userConfig.anki.connectUrl);
-}
-
-class DirectConfigService implements IConfigService {
+class LocalConfigService implements IConfigService {
   onDidChange(listener: (event: ConfigChangeEvent) => void) {
     return config.onDidChange(listener);
   }
@@ -77,21 +70,17 @@ class DirectConfigService implements IConfigService {
   }
 }
 
-class DirectDictionaryService implements IDictionaryService {
+class LocalDictionaryService implements IDictionaryService {
   constructor(private readonly configService: IConfigService) {}
 
   async getLanguages(): Promise<DictionaryLanguageInfo[]> {
     return dictionary.getLanguages();
   }
 
-  async lookup({
-    word,
-    language,
-    context,
-  }: DictionaryLookupParams): Promise<DictionaryEntry | null> {
+  async lookup(word: string, context?: Context): Promise<DictionaryEntry | null> {
     const userConfig = await this.configService.get();
     const languages = await this.configService.getLanguageCodes();
-    const resolvedLanguage = language || detectLanguage(word, languages, context?.lang);
+    const resolvedLanguage = detectLanguage(word, languages, context?.lang);
     if (!resolvedLanguage) return null;
 
     const providerIds = userConfig.dictionary[resolvedLanguage]?.providers ?? [];
@@ -106,11 +95,13 @@ class DirectDictionaryService implements IDictionaryService {
   }
 }
 
-class DirectAnkiService implements IAnkiService {
-  constructor(
-    private readonly configService: IConfigService,
-    private readonly getDefaultModel: () => AnkiModel,
-  ) {}
+class LocalAnkiService implements IAnkiService {
+  constructor(private readonly configService: IConfigService) {}
+
+  private async createClient() {
+    const userConfig = await this.configService.get();
+    return new AnkiClient(userConfig.anki.connectUrl);
+  }
 
   async addNote(result: DictionaryEntry): Promise<unknown> {
     const userConfig = await this.configService.get();
@@ -129,40 +120,30 @@ class DirectAnkiService implements IAnkiService {
   }
 
   async getDecks(): Promise<string[]> {
-    return createClient().then((client) => client.getDeckNames());
+    return this.createClient().then((client) => client.getDeckNames());
   }
 
   async getModels(): Promise<string[]> {
-    return createClient().then((client) => client.getModelNames());
+    return this.createClient().then((client) => client.getModelNames());
   }
 
   async getModelFields(modelName: string): Promise<string[]> {
-    return createClient().then((client) => client.getModelFieldNames(modelName));
+    return this.createClient().then((client) => client.getModelFieldNames(modelName));
   }
 
-  async syncModel(): Promise<void> {
-    const client = await createClient();
-    const model = this.getDefaultModel();
-    const models = await client.getModelNames();
-
-    if (models.includes(ANKI_DEFAULT_MODEL_NAME)) {
-      await client.updateModel(model);
-      return;
-    }
-
+  async createModel(model: AnkiModel): Promise<void> {
+    const client = await this.createClient();
     await client.createModel(model);
+  }
+
+  async updateModel(model: AnkiModel): Promise<void> {
+    const client = await this.createClient();
+    await client.updateModel(model);
   }
 }
 
-export function createDirectPlatformServices({
-  getDefaultModel,
-}: {
-  getDefaultModel: () => AnkiModel;
-}): PlatformServices {
-  const configService = new DirectConfigService();
-  return {
-    config: configService,
-    dictionary: new DirectDictionaryService(configService),
-    anki: new DirectAnkiService(configService, getDefaultModel),
-  };
+export class LocalPlatformServices {
+  readonly config = new LocalConfigService();
+  readonly dictionary = new LocalDictionaryService(this.config);
+  readonly anki: IAnkiService = new LocalAnkiService(this.config);
 }

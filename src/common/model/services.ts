@@ -1,4 +1,5 @@
-import type { AnkiConfig, UserConfig } from "./config";
+import type { AnkiModel } from "./anki";
+import type { UserConfig } from "./config";
 import type { Context } from "./context";
 import type { DictionaryEntry, DictionaryLanguageInfo } from "./dictionary";
 
@@ -6,12 +7,6 @@ export interface ConfigChangeEvent {
   currentConfig: UserConfig;
   previousConfig: UserConfig;
   affects(path: string): boolean;
-}
-
-export interface DictionaryLookupParams {
-  word: string;
-  language?: string;
-  context?: Context;
 }
 
 export interface IConfigService {
@@ -25,7 +20,7 @@ export interface IConfigService {
 
 export interface IDictionaryService {
   getLanguages(): Promise<DictionaryLanguageInfo[]>;
-  lookup(params: DictionaryLookupParams): Promise<DictionaryEntry | null>;
+  lookup(word: string, context?: Context): Promise<DictionaryEntry | null>;
 }
 
 export interface IAnkiService {
@@ -33,11 +28,6 @@ export interface IAnkiService {
   getDecks(): Promise<string[]>;
   getModels(): Promise<string[]>;
   getModelFields(modelName: string): Promise<string[]>;
-  syncModel(ankiConfig: AnkiConfig): Promise<void>;
-}
-
-export interface PlatformServices {
-  config: IConfigService;
-  dictionary: IDictionaryService;
-  anki: IAnkiService;
+  createModel(model: AnkiModel): Promise<void>;
+  updateModel(model: AnkiModel): Promise<void>;
 }

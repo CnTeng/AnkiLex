@@ -19,8 +19,8 @@
     }
   },
   "include": [
+    "build/**/*",
     "src/env.d.ts",
-    "src/build/**/*",
     "src/common/**/*",
     "src/platforms/**/*",
     "src/services/**/*",

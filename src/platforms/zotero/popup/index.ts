@@ -1,12 +1,11 @@
 import { extractContext } from "@common/context";
-import { createDirectPlatformServices } from "@services";
+import { LocalPlatformServices } from "@services";
 import { DictionaryPanel } from "@ui/dictionary";
 import { cx } from "tailwind-variants";
-import { ANKI_DEFAULT_MODEL } from "@ui/dictionary/templates";
 import popupStyle from "./popup.css?inline";
 
 const handler = (event: _ZoteroTypes.Reader.EventParams<"renderTextSelectionPopup">) => {
-  const services = createDirectPlatformServices({ getDefaultModel: () => ANKI_DEFAULT_MODEL });
+  const services = new LocalPlatformServices();
   const { reader, doc, params, append } = event;
   const popup = doc.querySelector(".selection-popup") as HTMLDivElement;
   popup.style.maxWidth = "none";
@@ -34,7 +33,7 @@ const handler = (event: _ZoteroTypes.Reader.EventParams<"renderTextSelectionPopu
   container.append(stateView.element);
   append(container);
 
-  stateView.load(services.dictionary.lookup({ word: expression, context: context ?? undefined }));
+  stateView.load(services.dictionary.lookup(expression, context ?? undefined));
 };
 
 let registeredPluginId: string | null = null;

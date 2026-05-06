@@ -1,32 +1,13 @@
 import {
   CONFIG_STORAGE_KEY,
-  DEFAULT_USER_CONFIG,
   type ConfigChangeEvent,
+  DEFAULT_USER_CONFIG,
   type UserConfig,
 } from "@common/model";
+import { createConfigChangeEvent } from "@services/config/change-event";
 import { storage } from "./storage";
 
 const listeners = new Set<(event: ConfigChangeEvent) => void>();
-
-function getValueAtPath(value: unknown, path: string) {
-  return path.split(".").reduce<unknown>((current, segment) => {
-    if (!current || typeof current !== "object") return undefined;
-    return (current as Record<string, unknown>)[segment];
-  }, value);
-}
-
-function createConfigChangeEvent(
-  previousConfig: UserConfig,
-  currentConfig: UserConfig,
-): ConfigChangeEvent {
-  return {
-    currentConfig,
-    previousConfig,
-    affects: (path: string) =>
-      JSON.stringify(getValueAtPath(previousConfig, path)) !==
-      JSON.stringify(getValueAtPath(currentConfig, path)),
-  };
-}
 
 function emitConfigChange(previousConfig: UserConfig, currentConfig: UserConfig) {
   const event = createConfigChangeEvent(previousConfig, currentConfig);

@@ -2,7 +2,9 @@ import type {
   AnkiConfig,
   AnkiState,
   DictionaryLanguageInfo,
-  PlatformServices,
+  IAnkiService,
+  IConfigService,
+  IDictionaryService,
   SelectOption,
   UserConfig,
 } from "@common/model";
@@ -21,18 +23,18 @@ function ensureNoteType(noteType: string, options: SelectOption[]) {
   return options[0]?.value ?? noteType;
 }
 
-export async function loadFieldNames(services: PlatformServices, noteType: string) {
+export async function loadFieldNames(ankiService: IAnkiService, noteType: string) {
   if (!noteType) return [];
-  return services.anki.getModelFields(noteType);
+  return ankiService.getModelFields(noteType);
 }
 
 export async function loadAnkiState(
-  services: PlatformServices,
+  ankiService: IAnkiService,
   ankiConfig: AnkiConfig,
 ): Promise<AnkiState> {
   const [decks, models] = await Promise.all([
-    services.anki.getDecks().catch(() => []),
-    services.anki.getModels().catch(() => []),
+    ankiService.getDecks().catch(() => []),
+    ankiService.getModels().catch(() => []),
   ]);
 
   const noteTypeOptions = toSelectOptions(
@@ -44,26 +46,31 @@ export async function loadAnkiState(
     deckOptions: toSelectOptions(decks),
     noteType,
     noteTypeOptions,
-    fieldNames: await loadFieldNames(services, noteType).catch(() => []),
+    fieldNames: await loadFieldNames(ankiService, noteType).catch(() => []),
   };
 }
 
 export function loadOptionsState(
-  services: PlatformServices,
+  dictionaryService: IDictionaryService,
+  ankiService: IAnkiService,
   userConfig: UserConfig,
 ): Promise<LoadedOptionsState> {
   return Promise.all([
-    services.dictionary.getLanguages(),
-    loadAnkiState(services, userConfig.anki),
+    dictionaryService.getLanguages(),
+    loadAnkiState(ankiService, userConfig.anki),
   ]).then(([dictionaryLanguages, ankiState]) => ({
     dictionaryLanguages,
     ankiState,
   }));
 }
 
-export function resetOptionsState(services: PlatformServices) {
-  return services.config.reset().then((userConfig) =>
-    loadOptionsState(services, userConfig).then(({ ankiState }) => ({
+export function resetOptionsState(
+  configService: IConfigService,
+  dictionaryService: IDictionaryService,
+  ankiService: IAnkiService,
+) {
+  return configService.reset().then((userConfig) =>
+    loadOptionsState(dictionaryService, ankiService, userConfig).then(({ ankiState }) => ({
       userConfig,
       ankiState,
     })),

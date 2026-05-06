@@ -8,9 +8,9 @@ import {
   type Target,
   zoteroManifest,
 } from "./src/platforms/manifests";
-import { cssPlugin } from "./src/build/css";
-import { iifePlugin } from "./src/build/iife";
-import { manifestPlugin } from "./src/build/manifest";
+import { cssPlugin } from "./build/css";
+import { iifePlugin } from "./build/iife";
+import { manifestPlugin } from "./build/manifest";
 
 const manifestByTarget = {
   chrome: chromeManifest,
@@ -49,11 +49,11 @@ const strategies: Record<"browser" | "zotero", (target: Target) => UserConfig> =
     build: {
       rollupOptions: {
         input: {
-          background: "src/platforms/browser/background/background.ts",
-          frame: "src/platforms/browser/content/frame.html",
-          offscreen: "src/platforms/browser/offscreen/offscreen.html",
-          options: "src/platforms/browser/options/options.html",
-          popup: "src/platforms/browser/popup/popup.html",
+          background: "platforms/browser/background/background.ts",
+          frame: "platforms/browser/content/frame.html",
+          offscreen: "platforms/browser/offscreen/offscreen.html",
+          options: "platforms/browser/options/options.html",
+          popup: "platforms/browser/popup/popup.html",
         },
         output: {
           assetFileNames: "assets/[name].[ext]",

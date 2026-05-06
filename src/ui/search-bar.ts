@@ -245,10 +245,10 @@ export class SearchBar {
       this.render();
 
       try {
-        const result = this.dictionaryService.lookup({
+        const result = this.dictionaryService.lookup(
           word,
-          language: this.selectedLanguage || undefined,
-        });
+          this.selectedLanguage ? { context: "", lang: this.selectedLanguage } : undefined,
+        );
         await Promise.all([
           ...[...this.submitListeners].map((listener) => Promise.resolve(listener(result))),
           result.catch(() => undefined),

@@ -7,6 +7,6 @@ export const chromeManifest = {
     type: "module",
   },
   permissions: ["storage", "contextMenus", "notifications", "activeTab", "offscreen"],
-  options_page: "browser/options/options.html",
+  options_page: "platforms/browser/options/options.html",
   minimum_chrome_version: "110.0.0.0",
 };

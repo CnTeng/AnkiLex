@@ -8,7 +8,7 @@ export const firefoxManifest = {
   },
   permissions: ["storage", "contextMenus", "notifications", "activeTab"],
   options_ui: {
-    page: "browser/options/options.html",
+    page: "platforms/browser/options/options.html",
     open_in_tab: true,
   },
   browser_specific_settings: {
