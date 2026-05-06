@@ -2,8 +2,8 @@ import { resolve } from "node:path";
 import tailwindcss from "@tailwindcss/vite";
 import { defineConfig, mergeConfig, type UserConfig } from "vite";
 import { viteStaticCopy } from "vite-plugin-static-copy";
-import type { Target } from "./src/manifests";
-import { cssPlugin, iifePlugin, manifestPlugin } from "./src/plugins";
+import type { Target } from "./src/build/manifests";
+import { cssPlugin, iifePlugin, manifestPlugin } from "./src/build/plugins";
 
 const strategies: Record<"browser" | "zotero", (target: Target) => UserConfig> = {
   browser: (target) => ({
@@ -19,7 +19,7 @@ const strategies: Record<"browser" | "zotero", (target: Target) => UserConfig> =
         ],
         modules: {
           "iife:anki-card": {
-            entry: "lib/anki/templates/card.ts",
+            entry: "ui/dictionary/templates/card.ts",
             name: "AnkiCard",
             minify: true,
           },
@@ -57,7 +57,7 @@ const strategies: Record<"browser" | "zotero", (target: Target) => UserConfig> =
       iifePlugin({
         modules: {
           "iife:anki-card": {
-            entry: "lib/anki/templates/card.ts",
+            entry: "ui/dictionary/templates/card.ts",
             name: "AnkiCard",
             minify: true,
           },
@@ -107,6 +107,8 @@ export default defineConfig(({ mode }) => {
       alias: {
         "@assets": resolve(__dirname, "src/assets"),
         "@lib": resolve(__dirname, "src/lib"),
+        "@services": resolve(__dirname, "src/services"),
+        "@ui": resolve(__dirname, "src/ui"),
       },
     },
     plugins: [tailwindcss()],

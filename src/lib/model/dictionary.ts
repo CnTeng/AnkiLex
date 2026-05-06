@@ -13,6 +13,12 @@ export interface DictionaryProviderInfo {
   supportedLanguages: string[];
 }
 
+export interface DictionaryLanguageInfo {
+  code: string;
+  name: string;
+  providers: DictionaryProviderInfo[];
+}
+
 export interface DictionaryEntry {
   word: string;
   language?: string;

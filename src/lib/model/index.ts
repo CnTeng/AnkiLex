@@ -1,4 +1,5 @@
 export * from "./anki";
+export * from "./config";
 export * from "./context";
 export * from "./dictionary";
-export * from "./settings";
+export * from "./services";

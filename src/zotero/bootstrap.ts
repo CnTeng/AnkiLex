@@ -1,4 +1,5 @@
-import { initRPC } from "@lib/rpc";
+import { ANKI_DEFAULT_MODEL } from "@ui/dictionary/templates";
+import { createDirectPlatformServices } from "@services";
 import { registerPopup, unregisterPopup } from "./popup";
 import { mountPrefs, registerPrefs, unregisterPrefs } from "./prefs";
 
@@ -37,7 +38,7 @@ export async function startup(
 ) {
   await Zotero.initializationPromise;
 
-  initRPC("local");
+  createDirectPlatformServices({ getDefaultModel: () => ANKI_DEFAULT_MODEL });
 
   registerGlobals();
   registerPopup(params.id);
@@ -54,6 +55,7 @@ export async function onMainWindowLoad(params: {
   window: Window;
 }) {
   await Zotero.initializationPromise;
+  createDirectPlatformServices({ getDefaultModel: () => ANKI_DEFAULT_MODEL });
   registerGlobals();
 
   await registerPrefs(params.id).catch((error) => {

@@ -57,7 +57,7 @@ npm test
 
 The project follows a clean service-oriented architecture:
 
-- `src/lib/` - Business logic and services (Settings, Anki, Dictionary).
+- `src/lib/` - Business logic and services (Config, Anki, Dictionary).
 - `src/app/background/` - Extension service worker.
 - `src/app/popup/` - Popup UI logic.
 - `src/app/content/` - Content scripts and popup frame.

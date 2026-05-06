@@ -1,6 +1,6 @@
-@import "@assets/theme.css";
 @import "@assets/scrollbar.css";
 @import "tailwindcss" important;
+@import "@assets/flyonui.css";
 
 .anki-lex-popup {
   width: 400px;
@@ -10,8 +10,11 @@
   flex-direction: column;
 
   box-sizing: border-box;
-  color: var(--color-foreground);
-  background-color: var(--color-background);
+  color: var(--color-base-content);
+  background-color: var(--color-base-100);
+  border: 1px solid var(--color-base-300);
+  border-radius: 0.75rem;
+  box-shadow: 0 8px 24px rgb(0 0 0 / 12%);
 
   font-size: 14px;
   line-height: 1.5;

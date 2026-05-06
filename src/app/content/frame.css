@@ -1,6 +1,6 @@
-@import "@assets/theme.css";
 @import "@assets/scrollbar.css";
 @import "tailwindcss";
+@import "@assets/flyonui.css";
 
 html,
 body {

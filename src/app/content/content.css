@@ -1,31 +1,17 @@
 :host {
   display: block;
   pointer-events: none;
-
-  --background: #fafafb;
-  --foreground: #1d1d20;
-  --secondary: #ebebed;
-  --border: #deddda;
-  --shadow: 0 4px 12px rgba(0, 0, 0, 0.12), 0 2px 4px rgba(0, 0, 0, 0.04);
-  --popover-shadow: 0 12px 32px -4px rgba(0, 0, 0, 0.15), 0 8px 12px -4px rgba(0, 0, 0, 0.1);
-
-  @media (prefers-color-scheme: dark) {
-    --background: #222226;
-    --foreground: #ffffff;
-    --secondary: #2e2e32;
-    --border: rgb(255 255 255 / 15%);
-    --shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
-    --popover-shadow: 0 12px 32px -4px rgba(0, 0, 0, 0.5), 0 8px 12px -4px rgba(0, 0, 0, 0.3);
-  }
+  --shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  --popover-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
 }
 
 .anki-lex-popover {
   margin: 0;
   padding: 0;
   border: none;
-  border-radius: 12px;
+  border-radius: 8px;
   width: 400px;
-  height: 520px;
+  height: 460px;
   background: transparent;
   overflow: hidden;
   box-shadow: var(--popover-shadow);
@@ -44,25 +30,37 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 32px;
-  height: 32px;
-  border-radius: 8px;
-  background-color: var(--background);
-  color: var(--foreground);
+  width: 30px;
+  height: 30px;
+  border-radius: 6px;
+  background-color: #fff;
+  color: #111827;
   box-shadow: var(--shadow);
   cursor: pointer;
-  border: 1px solid var(--border);
+  border: 1px solid #e5e7eb;
   transition: background-color 0.15s ease;
   pointer-events: auto;
 
   &:hover {
-    background-color: var(--secondary);
+    background-color: #f9fafb;
   }
 
-  svg {
-    width: 18px;
-    height: 18px;
+  > svg {
+    width: 16px;
+    height: 16px;
     stroke: currentColor;
-    stroke-width: 2.5;
+    stroke-width: 2.25;
+  }
+}
+
+@media (prefers-color-scheme: dark) {
+  .anki-lex-floating-btn {
+    background-color: #111827;
+    color: #f9fafb;
+    border-color: #374151;
+  }
+
+  .anki-lex-floating-btn:hover {
+    background-color: #1f2937;
   }
 }

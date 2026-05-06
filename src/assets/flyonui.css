@@ -1,0 +1,6 @@
+@plugin "flyonui" {
+  themes:
+    light --default,
+    dark --prefersdark;
+  logs: false;
+}

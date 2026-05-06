@@ -3,7 +3,7 @@
   "appDesc": {
     "message": "A translation popup tool to show online dictionary content and add to Anki"
   },
-  "optTitle": { "message": "AnkiLex Settings" },
+  "optTitle": { "message": "AnkiLex Options" },
 
   "tabExtensionTitle": { "message": "Extension Options" },
   "tabServicesTitle": { "message": "Services Options" },

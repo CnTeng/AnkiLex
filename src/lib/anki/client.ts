@@ -124,7 +124,11 @@ export class AnkiClient {
     fieldName: string,
     index: number,
   ): Promise<void> {
-    await this.invoke<null>("modelFieldReposition", { modelName, fieldName, index });
+    await this.invoke<null>("modelFieldReposition", {
+      modelName,
+      fieldName,
+      index,
+    });
   }
 
   private async updateModelStyling(modelName: string, css: string): Promise<void> {

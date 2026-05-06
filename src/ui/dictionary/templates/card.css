@@ -1,0 +1,10 @@
+@import "tailwindcss";
+@import "@assets/flyonui.css";
+
+@layer base {
+  .card {
+    @apply antialiased;
+    font-size: 16px;
+    text-align: left;
+  }
+}

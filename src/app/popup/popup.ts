@@ -1,37 +1,37 @@
-import { rpc } from "@lib/rpc";
-import { DictionaryPanel } from "@lib/ui";
-import { SearchBar } from "@lib/ui/search-bar";
+import { createChromePlatformServices } from "@services";
+import { DictionaryPanel } from "@ui/dictionary";
+import { SearchBar } from "@ui/search-bar";
 import { cx } from "tailwind-variants";
 
 async function init() {
+  const services = createChromePlatformServices();
   const app = document.createElement("div");
   app.className =
     cx(
-      "bg-background text-foreground flex h-12 min-h-0 flex-col overflow-hidden transition-[height] duration-300 ease-out data-[state=expanded]:h-[480px]",
+      "bg-base-100 text-base-content border-base-300 flex h-16 min-h-0 flex-col border transition-[height] duration-200 ease-out data-[state=expanded]:h-[460px]",
     ) ?? "";
   app.dataset.state = "collapsed";
 
   document.body.append(app);
 
-  const stateView = DictionaryPanel({
-    className: cx("flex min-h-0 flex-1 flex-col"),
+  const stateView = new DictionaryPanel({
+    className: cx("flex min-h-0 flex-1 flex-col overflow-hidden"),
+    ankiService: services.anki,
   });
 
-  const searchBar = SearchBar({
-    onSearch: async (word, language) => {
-      app.dataset.state = "expanded";
+  const searchBar = new SearchBar({
+    dictionaryService: services.dictionary,
+    configService: services.config,
+  });
+  searchBar.onDidSubmitSearch(async (result) => {
+    app.dataset.state = "expanded";
 
-      stateView.load(rpc.dictionary.lookup({ word, language })).then(() => {
-        app.dataset.state = "expanded";
-      });
-    },
+    await stateView.load(result);
   });
 
-  rpc.dictionary.getEnabledLanguages().then((languages) => searchBar.setLanguages(languages ?? []));
+  app.append(searchBar.element, stateView.element);
 
-  app.append(searchBar.container, stateView.element);
-
-  searchBar.input.focus();
+  searchBar.focus();
 }
 
 if (document.readyState === "loading") {

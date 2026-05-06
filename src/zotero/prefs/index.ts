@@ -1,11 +1,20 @@
-import { SettingsView } from "@lib/ui";
+import { OptionsPage } from "@ui/options";
+import { createDirectPlatformServices } from "@services";
+import { ANKI_DEFAULT_MODEL } from "@ui/dictionary/templates";
 
 let registeredPaneId: string | null = null;
 
 export function mountPrefs(doc: Document) {
   const root = doc.getElementById("ankilex-prefpane-main");
   if (!root) return;
-  root.replaceChildren(SettingsView({ doc }));
+
+  const services = createDirectPlatformServices({ getDefaultModel: () => ANKI_DEFAULT_MODEL });
+
+  const view = doc.defaultView as Window & { __ankiLexPrefsPage__?: OptionsPage | null };
+  view.__ankiLexPrefsPage__?.dispose();
+  void OptionsPage.create({ doc, root, services }).then((page) => {
+    view.__ankiLexPrefsPage__ = page;
+  });
 }
 
 export async function registerPrefs(pluginId: string) {

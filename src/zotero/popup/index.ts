@@ -1,10 +1,12 @@
 import { extractContext } from "@lib/context";
-import { rpc } from "@lib/rpc";
-import { DictionaryPanel } from "@lib/ui";
+import { createDirectPlatformServices } from "@services";
+import { DictionaryPanel } from "@ui/dictionary";
 import { cx } from "tailwind-variants";
+import { ANKI_DEFAULT_MODEL } from "@ui/dictionary/templates";
 import popupStyle from "./popup.css?inline";
 
 const handler = (event: _ZoteroTypes.Reader.EventParams<"renderTextSelectionPopup">) => {
+  const services = createDirectPlatformServices({ getDefaultModel: () => ANKI_DEFAULT_MODEL });
   const { reader, doc, params, append } = event;
   const popup = doc.querySelector(".selection-popup") as HTMLDivElement;
   popup.style.maxWidth = "none";
@@ -12,7 +14,8 @@ const handler = (event: _ZoteroTypes.Reader.EventParams<"renderTextSelectionPopu
   const expression = params.annotation.text.trim();
 
   const readerWindow = reader?._iframeWindow?.[0];
-  const range = readerWindow?.getSelection?.()?.getRangeAt(0);
+  const selection = readerWindow?.getSelection?.();
+  const range = selection?.rangeCount ? selection.getRangeAt(0) : undefined;
   const context = extractContext(range);
 
   const container = doc.createElement("div");
@@ -22,15 +25,16 @@ const handler = (event: _ZoteroTypes.Reader.EventParams<"renderTextSelectionPopu
   style.textContent = popupStyle;
   container.append(style);
 
-  const stateView = DictionaryPanel({
+  const stateView = new DictionaryPanel({
     doc,
     className: cx("flex min-h-0 flex-1 flex-col"),
+    ankiService: services.anki,
   });
 
   container.append(stateView.element);
   append(container);
 
-  stateView.load(rpc.dictionary.lookup({ word: expression, context: context ?? undefined }));
+  stateView.load(services.dictionary.lookup({ word: expression, context: context ?? undefined }));
 };
 
 let registeredPluginId: string | null = null;

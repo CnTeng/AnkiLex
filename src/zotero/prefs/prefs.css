@@ -1,7 +1,11 @@
-@import "@assets/theme.css";
 @import "@assets/scrollbar.css";
 @import "tailwindcss";
+@import "@assets/flyonui.css";
 
-body {
-  @apply bg-background text-foreground font-sans antialiased;
+.ankilex-root {
+  @apply bg-base-200 text-base-content min-h-screen antialiased;
+}
+
+.ankilex-root * {
+  box-sizing: border-box;
 }

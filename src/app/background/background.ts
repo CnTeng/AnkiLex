@@ -1,4 +1,6 @@
-import { initRPC } from "@lib/rpc";
-import "@lib/rpc/handlers";
+import { initChromeServices } from "@services";
+import { ANKI_DEFAULT_MODEL } from "@ui/dictionary/templates";
 
-initRPC("remote");
+initChromeServices({
+  getDefaultModel: () => ANKI_DEFAULT_MODEL,
+});

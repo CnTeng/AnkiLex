@@ -1,8 +1,12 @@
-@import "@assets/theme.css";
 @import "@assets/scrollbar.css";
 @import "tailwindcss";
+@import "@assets/flyonui.css";
 
 html,
 body {
   @apply m-0 w-100 p-0;
+}
+
+body {
+  background: var(--color-base-200);
 }

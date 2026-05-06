@@ -1,4 +1,4 @@
-import { dictionary } from "@lib/dictionary";
+import { dictionary } from "@lib/dict";
 import type { DictionaryEntry } from "@lib/model";
 
 type ParseHtmlMessage = {
