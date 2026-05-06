@@ -297,19 +297,21 @@ export class AnkiOptions {
     this.refreshButton.classList.add("loading");
     this.showStatus("info", "Connecting to Anki...");
 
-    try {
-      const nextAnkiState = await this.loadAnkiState(this.getConfigValue());
-      this.applyAnkiState(nextAnkiState);
-      this.showStatus("success", "Anki connection successful!");
-    } catch (error) {
-      this.showStatus(
-        "warning",
-        `Failed to connect to Anki: ${error instanceof Error ? error.message : String(error)}`,
-      );
-    } finally {
-      this.refreshButton.disabled = false;
-      this.refreshButton.classList.remove("loading");
-    }
+    await this.loadAnkiState(this.getConfigValue())
+      .then((nextAnkiState) => {
+        this.applyAnkiState(nextAnkiState);
+        this.showStatus("success", "Anki connection successful!");
+      })
+      .catch((error) => {
+        this.showStatus(
+          "warning",
+          `Failed to connect to Anki: ${error instanceof Error ? error.message : String(error)}`,
+        );
+      })
+      .finally(() => {
+        this.refreshButton.disabled = false;
+        this.refreshButton.classList.remove("loading");
+      });
   }
 
   private async syncTemplate() {
@@ -317,26 +319,29 @@ export class AnkiOptions {
     this.setupButton.classList.add("loading");
     this.showStatus("info", "Processing Anki template...");
 
-    try {
-      const ankiConfig = this.getConfigValue();
-      const models = await this.ankiService.getModels();
-      if (models.includes(ANKI_DEFAULT_MODEL_NAME)) {
-        await this.ankiService.updateModel(ANKI_DEFAULT_MODEL);
-      } else {
-        await this.ankiService.createModel(ANKI_DEFAULT_MODEL);
-      }
-      const nextAnkiState = await this.loadAnkiState(ankiConfig);
-      this.applyAnkiState(nextAnkiState);
-      this.showStatus("success", "Anki template is up to date!");
-    } catch (error) {
-      this.showStatus(
-        "error",
-        `Processing failed: ${error instanceof Error ? error.message : String(error)}`,
-      );
-    } finally {
-      this.setupButton.disabled = false;
-      this.setupButton.classList.remove("loading");
-    }
+    const ankiConfig = this.getConfigValue();
+    await this.ankiService
+      .getModels()
+      .then((models) =>
+        models.includes(ANKI_DEFAULT_MODEL_NAME)
+          ? this.ankiService.updateModel(ANKI_DEFAULT_MODEL)
+          : this.ankiService.createModel(ANKI_DEFAULT_MODEL),
+      )
+      .then(() => this.loadAnkiState(ankiConfig))
+      .then((nextAnkiState) => {
+        this.applyAnkiState(nextAnkiState);
+        this.showStatus("success", "Anki template is up to date!");
+      })
+      .catch((error) => {
+        this.showStatus(
+          "error",
+          `Processing failed: ${error instanceof Error ? error.message : String(error)}`,
+        );
+      })
+      .finally(() => {
+        this.setupButton.disabled = false;
+        this.setupButton.classList.remove("loading");
+      });
   }
 
   private async loadAnkiState(ankiConfig: AnkiConfig): Promise<AnkiState> {

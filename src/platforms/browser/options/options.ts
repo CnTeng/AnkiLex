@@ -15,4 +15,6 @@ void OptionsPage.create({
   configService: services.config,
   dictionaryService: services.dictionary,
   ankiService: services.anki,
+}).then((page) => {
+  window.addEventListener("pagehide", () => page.dispose(), { once: true });
 });

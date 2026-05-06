@@ -2,15 +2,15 @@ import { resolve } from "node:path";
 import tailwindcss from "@tailwindcss/vite";
 import { defineConfig, mergeConfig, type UserConfig } from "vite";
 import { viteStaticCopy } from "vite-plugin-static-copy";
+import { cssPlugin } from "./build/css";
+import { iifePlugin } from "./build/iife";
+import { manifestPlugin } from "./build/manifest";
 import {
   chromeManifest,
   firefoxManifest,
   type Target,
   zoteroManifest,
 } from "./src/platforms/manifests";
-import { cssPlugin } from "./build/css";
-import { iifePlugin } from "./build/iife";
-import { manifestPlugin } from "./build/manifest";
 
 const manifestByTarget = {
   chrome: chromeManifest,

@@ -20,22 +20,31 @@ async function init() {
   });
 
   const searchBar = new SearchBar({
-    dictionaryService: services.dictionary,
     configService: services.config,
+    dictionaryService: services.dictionary,
   });
   searchBar.onDidSubmitSearch(async (result) => {
     app.dataset.state = "expanded";
-
     await stateView.load(result);
   });
 
   app.append(searchBar.element, stateView.element);
 
   searchBar.focus();
+
+  return () => {
+    searchBar.dispose();
+  };
 }
 
 if (document.readyState === "loading") {
-  document.addEventListener("DOMContentLoaded", init);
+  document.addEventListener("DOMContentLoaded", () => {
+    void init().then((dispose) => {
+      window.addEventListener("pagehide", dispose, { once: true });
+    });
+  });
 } else {
-  void init();
+  void init().then((dispose) => {
+    window.addEventListener("pagehide", dispose, { once: true });
+  });
 }

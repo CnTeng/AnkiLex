@@ -1,3 +1,4 @@
+import { Event } from "@common/event";
 import {
   CONFIG_STORAGE_KEY,
   type ConfigChangeEvent,
@@ -7,11 +8,10 @@ import {
 import { createConfigChangeEvent } from "@services/config/change-event";
 import { storage } from "./storage";
 
-const listeners = new Set<(event: ConfigChangeEvent) => void>();
+const didChange = new Event<ConfigChangeEvent>();
 
 function emitConfigChange(previousConfig: UserConfig, currentConfig: UserConfig) {
-  const event = createConfigChangeEvent(previousConfig, currentConfig);
-  for (const listener of listeners) listener(event);
+  didChange.emit(createConfigChangeEvent(previousConfig, currentConfig));
 }
 
 function cloneDefaultDictionaryConfig(): UserConfig["dictionary"] {
@@ -40,8 +40,7 @@ function normalizeConfig(
 
 export const config = {
   onDidChange(listener: (event: ConfigChangeEvent) => void) {
-    listeners.add(listener);
-    return () => listeners.delete(listener);
+    return didChange.on(listener);
   },
 
   async getLanguageCodes(): Promise<string[]> {
