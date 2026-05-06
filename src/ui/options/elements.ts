@@ -1,4 +1,4 @@
-import type { SelectOption } from "@lib/model";
+import type { SelectOption } from "@common/model";
 import { Icon } from "@ui/components";
 import { cn } from "tailwind-variants";
 

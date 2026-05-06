@@ -10,8 +10,8 @@ import type {
   IDictionaryService,
   PlatformServices,
   UserConfig,
-} from "@lib/model";
-import { CONFIG_STORAGE_KEY, DEFAULT_USER_CONFIG } from "@lib/model";
+} from "@common/model";
+import { CONFIG_STORAGE_KEY, DEFAULT_USER_CONFIG } from "@common/model";
 import { createDirectPlatformServices } from "./direct";
 
 function getValueAtPath(value: unknown, path: string) {

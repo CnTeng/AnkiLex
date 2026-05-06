@@ -1,6 +1,6 @@
-import { AnkiClient } from "@lib/anki";
-import { config } from "@lib/config";
-import { dictionary } from "@lib/dict";
+import { AnkiClient } from "@services/anki";
+import { config } from "@services/config";
+import { dictionary } from "@services/dict";
 import type {
   AnkiModel,
   ConfigChangeEvent,
@@ -12,8 +12,8 @@ import type {
   IDictionaryService,
   PlatformServices,
   UserConfig,
-} from "@lib/model";
-import { ANKI_DEFAULT_MODEL_NAME } from "@lib/model";
+} from "@common/model";
+import { ANKI_DEFAULT_MODEL_NAME } from "@common/model";
 import { eld } from "eld/medium";
 
 function detectCjkLanguage(text: string, languages: string[]): string | null {

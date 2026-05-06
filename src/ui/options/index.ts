@@ -5,8 +5,8 @@ import type {
   DictionaryLanguageInfo,
   PlatformServices,
   UserConfig,
-} from "@lib/model";
-import { normalizeAnkiFieldMap } from "@lib/model";
+} from "@common/model";
+import { normalizeAnkiFieldMap } from "@common/model";
 import { cn } from "tailwind-variants";
 import { AnkiOptions } from "./anki";
 import { DictionaryOptions } from "./dict";
@@ -259,4 +259,4 @@ export class OptionsPage {
   }
 }
 
-export type { DictionaryLanguageInfo } from "@lib/model";
+export type { DictionaryLanguageInfo } from "@common/model";

@@ -3,7 +3,7 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import AdmZip from "adm-zip";
 import { build } from "vite";
-import type { Target } from "../src/build/manifests/index.js";
+import type { Target } from "../src/platforms/manifests/index.js";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const resolve = (p: string) => path.resolve(__dirname, p);

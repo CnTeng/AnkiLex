@@ -6,7 +6,7 @@ import {
   removeDictionaryLanguage,
   removeDictionaryProvider,
   type SelectOption,
-} from "@lib/model";
+} from "@common/model";
 import { cn } from "tailwind-variants";
 import { createSectionIntro, setSelectOptions } from "./elements";
 

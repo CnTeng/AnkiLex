@@ -1,5 +1,5 @@
 import bundle from "iife:anki-card";
-import { ANKI_DEFAULT_MODEL_FIELDS, ANKI_DEFAULT_MODEL_NAME } from "@lib/model";
+import { ANKI_DEFAULT_MODEL_FIELDS, ANKI_DEFAULT_MODEL_NAME } from "@common/model";
 import backHbs from "./back.hbs?raw";
 import css from "./card.css?inline";
 import frontHbs from "./front.hbs?raw";

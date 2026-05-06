@@ -1,4 +1,4 @@
-import type { DictionaryEntry } from "@lib/model";
+import type { DictionaryEntry } from "@common/model";
 import { cn } from "tailwind-variants";
 import {
   createContext,

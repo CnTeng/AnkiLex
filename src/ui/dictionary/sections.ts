@@ -1,4 +1,4 @@
-import type { Definition, Example, Pronunciation } from "@lib/model";
+import type { Definition, Example, Pronunciation } from "@common/model";
 import { Icon, Markdown } from "@ui/components";
 import { Check, Play, Plus, Star, X } from "lucide";
 import { cn } from "tailwind-variants";

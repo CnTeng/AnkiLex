@@ -5,7 +5,7 @@ import type {
   PlatformServices,
   SelectOption,
   UserConfig,
-} from "@lib/model";
+} from "@common/model";
 
 export interface LoadedOptionsState {
   dictionaryLanguages: DictionaryLanguageInfo[];

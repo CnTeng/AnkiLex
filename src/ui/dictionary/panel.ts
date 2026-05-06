@@ -1,4 +1,4 @@
-import type { DictionaryEntry, IAnkiService } from "@lib/model";
+import type { DictionaryEntry, IAnkiService } from "@common/model";
 import { Editor } from "@ui/components";
 import { cn } from "tailwind-variants";
 import { DictionaryEntryView } from "./entry";

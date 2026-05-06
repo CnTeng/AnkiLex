@@ -1,5 +1,5 @@
-import type { AnkiConfig, AnkiState, IAnkiService, SelectOption } from "@lib/model";
-import { guessAnkiModelField, normalizeAnkiFieldMap } from "@lib/model";
+import type { AnkiConfig, AnkiState, IAnkiService, SelectOption } from "@common/model";
+import { guessAnkiModelField, normalizeAnkiFieldMap } from "@common/model";
 import { Icon } from "@ui/components";
 import { RefreshCw } from "lucide";
 import { cn } from "tailwind-variants";

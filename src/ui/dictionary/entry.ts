@@ -1,4 +1,4 @@
-import type { DictionaryEntry, IAnkiService } from "@lib/model";
+import type { DictionaryEntry, IAnkiService } from "@common/model";
 import { createDefinitions, createHeader, createMetadata, createPronunciations } from "./sections";
 
 export class DictionaryEntryView {
