@@ -1,6 +1,6 @@
 import { extractContext } from "@common/context";
 import { LocalPlatformServices } from "@services";
-import { DictionaryPanel } from "@views/dictionary";
+import { LookupPanel } from "@views/lookup-panel";
 import { cx } from "tailwind-variants";
 import popupStyle from "./popup.css?inline";
 
@@ -24,16 +24,20 @@ const handler = (event: _ZoteroTypes.Reader.EventParams<"renderTextSelectionPopu
   style.textContent = popupStyle;
   container.append(style);
 
-  const stateView = new DictionaryPanel({
-    doc,
+  const stateView = new LookupPanel({
+    container,
     className: cx("flex min-h-0 flex-1 flex-col"),
     ankiService: services.anki,
+    configService: services.config.dictionary,
+    dictionaryService: services.dictionary,
   });
 
-  container.append(stateView.element);
   append(container);
 
-  stateView.load(services.dictionary.lookup(expression, context ?? undefined));
+  stateView.load(services.dictionary.lookup(expression, context ?? undefined), {
+    word: expression,
+    context: context ?? undefined,
+  });
 };
 
 let registeredPluginId: string | null = null;

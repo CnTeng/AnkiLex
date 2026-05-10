@@ -1,22 +1,19 @@
-import type {
-  AnkiModel,
-  AnkiNote,
-  Definition,
-  DictionaryEntry,
-  Pronunciation,
-} from "@common/model";
+import type { AnkiNote, Definition, DictionaryEntry, Pronunciation } from "@common/types";
+import { ANKI_AUDIO_FILENAME_PREFIX, ANKI_MODEL_NAME, ANKI_TAG } from "./builtin";
+import type { AnkiRequest } from "./request";
 
-function formatDefinitions(definitions: Definition[]): string {
-  if (definitions.length === 0) return "";
+function createDefinitionField(definitions: Definition[]) {
   return definitions
-    .map((def) => (def.partOfSpeech ? `[${def.partOfSpeech}] ${def.text}` : def.text))
+    .map((definition) =>
+      definition.partOfSpeech ? `[${definition.partOfSpeech}] ${definition.text}` : definition.text,
+    )
     .join("\n");
 }
 
-function formatExamples(definitions: Definition[]): string {
+function createExamplesField(definitions: Definition[]) {
   return definitions
-    .flatMap((def) =>
-      (def.examples ?? [])
+    .flatMap((definition) =>
+      (definition.examples ?? [])
         .filter((example) => example.text)
         .map((example) =>
           example.translation ? `${example.text} :: ${example.translation}` : example.text,
@@ -25,7 +22,7 @@ function formatExamples(definitions: Definition[]): string {
     .join("\n");
 }
 
-function formatPronunciations(pronunciations: Pronunciation[]): string {
+function createPronunciationsField(pronunciations: Pronunciation[]) {
   return pronunciations
     .filter((pronunciation) => pronunciation.text)
     .map((pronunciation) =>
@@ -34,7 +31,7 @@ function formatPronunciations(pronunciations: Pronunciation[]): string {
     .join("\n");
 }
 
-function formatMetadata(metadata?: Record<string, unknown>): string {
+function createMetadataField(metadata?: Record<string, unknown>) {
   if (!metadata) return "";
   return Object.entries(metadata)
     .filter(([, value]) => value != null)
@@ -42,68 +39,47 @@ function formatMetadata(metadata?: Record<string, unknown>): string {
     .join("\n");
 }
 
-export function createNoteFromEntry(
-  deckName: string,
-  model: AnkiModel,
-  fieldMap: Record<string, string>,
-  result: DictionaryEntry,
-): AnkiNote {
-  const note: AnkiNote = {
+function createAudioItems(word: string, pronunciations: Pronunciation[]) {
+  const timestamp = Date.now();
+  return pronunciations.flatMap((pronunciation) => {
+    if (!pronunciation.audioUrl) return [];
+    return {
+      url: pronunciation.audioUrl,
+      filename: `${ANKI_AUDIO_FILENAME_PREFIX}_${word}${pronunciation.type ? `_${pronunciation.type}` : ""}_${timestamp}.mp3`,
+      fields: ["audio"],
+    };
+  });
+}
+
+function createAnkiNote(deckName: string, modelName: string, entry: DictionaryEntry): AnkiNote {
+  const audio = createAudioItems(entry.word, entry.pronunciations);
+
+  return {
     deckName,
-    modelName: model.modelName,
-    fields: {},
-    tags: ["ankilex"],
+    modelName,
+    fields: {
+      word: entry.word,
+      context: entry.context || "",
+      definition: createDefinitionField(entry.definitions),
+      examples: createExamplesField(entry.definitions),
+      pronunciations: createPronunciationsField(entry.pronunciations),
+      provider: entry.provider,
+      metadata: createMetadataField(entry.metadata),
+      data: JSON.stringify(entry),
+    },
+    tags: [ANKI_TAG],
+    ...(audio.length > 0 ? { audio } : {}),
   };
+}
 
-  for (const fieldName of model.inOrderFields) {
-    const mappedField = fieldMap[fieldName];
-    if (!mappedField) {
-      note.fields[fieldName] = "";
-      continue;
-    }
+async function createNote(request: AnkiRequest, note: AnkiNote): Promise<void> {
+  await request<number>("addNote", { note });
+}
 
-    switch (mappedField) {
-      case "word":
-        note.fields[fieldName] = result.word;
-        break;
-      case "context":
-        note.fields[fieldName] = result.context || "";
-        break;
-      case "definition":
-        note.fields[fieldName] = formatDefinitions(result.definitions);
-        break;
-      case "examples":
-        note.fields[fieldName] = formatExamples(result.definitions);
-        break;
-      case "audio": {
-        const audioItems = result.pronunciations.filter((pronunciation) => pronunciation.audioUrl);
-        if (audioItems.length === 0) break;
-
-        note.audio = audioItems.map((item) => {
-          const label = item.type ? `_${item.type}` : "";
-          const timestamp = Date.now();
-          return {
-            url: item.audioUrl,
-            filename: `ankilex_${result.word}${label}_${timestamp}.mp3`,
-            fields: [fieldName],
-          };
-        });
-        break;
-      }
-      case "pronunciations":
-        note.fields[fieldName] = formatPronunciations(result.pronunciations);
-        break;
-      case "provider":
-        note.fields[fieldName] = result.provider;
-        break;
-      case "metadata":
-        note.fields[fieldName] = formatMetadata(result.metadata);
-        break;
-      case "data":
-        note.fields[fieldName] = JSON.stringify(result);
-        break;
-    }
-  }
-
-  return note;
+export async function createNoteFromEntry(
+  request: AnkiRequest,
+  deckName: string,
+  entry: DictionaryEntry,
+): Promise<void> {
+  await createNote(request, createAnkiNote(deckName, ANKI_MODEL_NAME, entry));
 }

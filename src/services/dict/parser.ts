@@ -1,4 +1,4 @@
-import type { DictionaryEntry } from "@common/model";
+import type { DictionaryEntry } from "@common/types";
 import { getDictionaryProvider } from "./registry";
 
 const OFFSCREEN_PORT = "offscreen";

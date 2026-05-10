@@ -1,70 +1,101 @@
-import { Event } from "@common/event";
+import type {
+  AnkiConfig,
+  ConfigChangeEvent,
+  DictionaryConfig,
+  ProviderConfig,
+  UserConfig,
+} from "@common/types";
+import { normalizeAnkiConfig } from "./anki";
+import { CONFIG_STORAGE_KEY } from "./builtin";
 import {
-  CONFIG_STORAGE_KEY,
-  type ConfigChangeEvent,
-  DEFAULT_USER_CONFIG,
-  type UserConfig,
-} from "@common/model";
-import { createConfigChangeEvent } from "@services/config/change-event";
+  createProvider,
+  normalizeDictionaryConfig,
+  removeProvider,
+  reorderProvider,
+  updateProvider,
+} from "./dict";
+import { emitConfigChange, onDidChange as onConfigDidChange } from "./event";
 import { storage } from "./storage";
 
-const didChange = new Event<ConfigChangeEvent>();
+function normalizeUserConfig(cfg?: unknown): UserConfig {
+  const config = cfg && typeof cfg === "object" ? (cfg as Record<string, unknown>) : {};
 
-function emitConfigChange(previousConfig: UserConfig, currentConfig: UserConfig) {
-  didChange.emit(createConfigChangeEvent(previousConfig, currentConfig));
-}
-
-function cloneDefaultDictionaryConfig(): UserConfig["dictionary"] {
-  return Object.fromEntries(
-    Object.entries(DEFAULT_USER_CONFIG.dictionary).map(([languageCode, config]) => [
-      languageCode,
-      { ...config, providers: [...config.providers] },
-    ]),
-  );
-}
-
-function normalizeConfig(
-  cfg?: (Partial<UserConfig> & { languages?: UserConfig["dictionary"] }) | null,
-): UserConfig {
   return {
-    dictionary: cfg?.dictionary ?? cfg?.languages ?? cloneDefaultDictionaryConfig(),
-    anki: {
-      connectUrl: cfg?.anki?.connectUrl ?? DEFAULT_USER_CONFIG.anki.connectUrl,
-      noteType: cfg?.anki?.noteType ?? DEFAULT_USER_CONFIG.anki.noteType,
-      fieldMap: cfg?.anki?.fieldMap
-        ? { ...cfg.anki.fieldMap }
-        : { ...DEFAULT_USER_CONFIG.anki.fieldMap },
-    },
+    dictionary: normalizeDictionaryConfig(config.dictionary),
+    anki: normalizeAnkiConfig(config.anki),
   };
 }
 
-export const config = {
-  onDidChange(listener: (event: ConfigChangeEvent) => void) {
-    return didChange.on(listener);
-  },
+async function getUserConfig(): Promise<UserConfig> {
+  return normalizeUserConfig(await storage.get<UserConfig>(CONFIG_STORAGE_KEY));
+}
 
-  async getLanguageCodes(): Promise<string[]> {
-    const cfg = await this.get();
-    return Object.entries(cfg.dictionary)
-      .filter(([, cfg]) => cfg.providers.length > 0)
-      .map(([code]) => code);
-  },
-
-  async get(): Promise<UserConfig> {
-    const cfg = await storage.get<UserConfig>(CONFIG_STORAGE_KEY);
-    return normalizeConfig(cfg);
-  },
-
-  async set(cfg: UserConfig): Promise<void> {
-    const previousConfig = await this.get();
-    const currentConfig = normalizeConfig(cfg);
-    await storage.set(CONFIG_STORAGE_KEY, currentConfig);
-    emitConfigChange(previousConfig, currentConfig);
-  },
-
-  async reset(): Promise<void> {
-    const previousConfig = await this.get();
+async function resetUserConfig(): Promise<UserConfig> {
+  return updateUserConfig(async () => {
     await storage.remove(CONFIG_STORAGE_KEY);
-    emitConfigChange(previousConfig, await this.get());
+    return getUserConfig();
+  });
+}
+
+async function updateUserConfig(
+  update: (oldConfig: UserConfig) => Promise<UserConfig> | UserConfig,
+): Promise<UserConfig> {
+  const oldConfig = await getUserConfig();
+  const newConfig = await update(oldConfig);
+  if (!storage.hasChangeEvents) emitConfigChange(oldConfig, newConfig);
+  return newConfig;
+}
+
+async function updateConfigSection<K extends keyof UserConfig>(
+  key: K,
+  update: (config: UserConfig[K]) => UserConfig[K],
+): Promise<void> {
+  await updateUserConfig(async (oldConfig) => {
+    const newConfig = {
+      ...oldConfig,
+      [key]: update(oldConfig[key]),
+    };
+    await storage.set(CONFIG_STORAGE_KEY, newConfig);
+    return newConfig;
+  });
+}
+
+export const config = {
+  get: getUserConfig,
+  reset: resetUserConfig,
+  onDidChange: (listener: (event: ConfigChangeEvent) => void) =>
+    onConfigDidChange(normalizeUserConfig, listener),
+
+  anki: {
+    get: () => getUserConfig().then((config) => config.anki),
+    onDidChange: (listener: (ankiConfig: AnkiConfig) => void) =>
+      onConfigDidChange(normalizeUserConfig, (event) => {
+        if (event.changedKeys.includes("anki")) listener(event.newConfig.anki);
+      }),
+    update: (ankiConfig: AnkiConfig) => updateConfigSection("anki", () => ankiConfig),
+  },
+
+  dictionary: {
+    get: () => getUserConfig().then((config) => config.dictionary),
+    onDidChange: (listener: (dictionaryConfig: DictionaryConfig) => void) =>
+      onConfigDidChange(normalizeUserConfig, (event) => {
+        if (event.changedKeys.includes("dictionary")) listener(event.newConfig.dictionary);
+      }),
+    createProvider: (providerConfig: ProviderConfig) =>
+      updateConfigSection("dictionary", (dictionaryConfig) =>
+        createProvider(dictionaryConfig, providerConfig),
+      ),
+    updateProvider: (providerId: string, patch: Partial<ProviderConfig>) =>
+      updateConfigSection("dictionary", (dictionaryConfig) =>
+        updateProvider(dictionaryConfig, providerId, patch),
+      ),
+    removeProvider: (providerId: string) =>
+      updateConfigSection("dictionary", (dictionaryConfig) =>
+        removeProvider(dictionaryConfig, providerId),
+      ),
+    reorderProvider: (providerId: string, targetIndex: number) =>
+      updateConfigSection("dictionary", (dictionaryConfig) =>
+        reorderProvider(dictionaryConfig, providerId, targetIndex),
+      ),
   },
 };

@@ -1,255 +1,360 @@
-import {
-  addDictionaryProvider,
-  type DictionaryConfig,
-  type DictionaryLanguageInfo,
-  getDictionaryConfig,
-  removeDictionaryLanguage,
-  removeDictionaryProvider,
-  type SelectOption,
-} from "@common/model";
+import type { Event } from "@common/event";
+import type {
+  DictionaryConfig,
+  DictionaryProviderInfo,
+  IAnkiService,
+  IDictionaryConfigService,
+  IDictionaryService,
+  SelectOption,
+} from "@common/types";
+import { createButton, createSelect, SortableList } from "@views/components";
 import { cn } from "tailwind-variants";
-import { createSectionIntro, setSelectOptions } from "./elements";
+import { SectionIntro, SettingsGroup, SettingsRow } from "./elements";
 
 export interface DictionaryOptionsDependencies {
-  doc?: Document;
-  getDictionaryConfig: () => DictionaryConfig;
-  setDictionaryConfig: (dictionaryConfig: DictionaryConfig) => Promise<void>;
-  getDictionaryLanguages: () => DictionaryLanguageInfo[];
-  getDeckOptions: () => SelectOption[];
-}
-
-function toLanguageLabel(language: DictionaryLanguageInfo): string {
-  return `${language.name} (${language.code})`;
-}
-
-function findProviderLabel(language: DictionaryLanguageInfo, providerId: string): string {
-  return language.providers.find((provider) => provider.id === providerId)?.name ?? providerId;
-}
-
-function createField(doc: Document, label: string, control: HTMLElement): HTMLElement {
-  const field = doc.createElement("div");
-  field.className = cn("space-y-1") as string;
-  const labelEl = doc.createElement("p");
-  labelEl.className = cn("text-[11px] uppercase") as string;
-  labelEl.textContent = label;
-
-  field.append(labelEl, control);
-  return field;
+  container: HTMLElement;
+  ankiService: IAnkiService;
+  configService: IDictionaryConfigService;
+  didChangeDecks: Event<void>;
+  dictionaryService: IDictionaryService;
 }
 
 export class DictionaryOptions {
   readonly element: HTMLElement;
 
-  private readonly doc: Document;
-  private readonly getDictionaryConfigValue: () => DictionaryConfig;
-  private readonly setDictionaryConfigValue: (dictionaryConfig: DictionaryConfig) => Promise<void>;
-  private readonly getDictionaryLanguagesValue: () => DictionaryLanguageInfo[];
-  private readonly getDeckOptionsValue: () => SelectOption[];
-  private readonly configBody: HTMLDivElement;
-  private readonly languageSelect: HTMLSelectElement;
-  private readonly providerSelect: HTMLSelectElement;
-  private readonly deckSelect: HTMLSelectElement;
+  private readonly document: Document;
+  private readonly ankiService: IAnkiService;
+  private readonly configService: IDictionaryConfigService;
+  private readonly didChangeDecks: Event<void>;
+  private readonly dictionaryService: IDictionaryService;
+  private readonly languageDisplayNames = new Intl.DisplayNames(["en"], { type: "language" });
+  private readonly rulesBody: HTMLDivElement;
+  private readonly addProviderSelect: HTMLSelectElement;
+  private readonly addButton: HTMLButtonElement;
+  private config: DictionaryConfig = [];
+  private providers: DictionaryProviderInfo[];
+  private deckOptions: SelectOption[];
+  private readonly unsubscribeConfigChange: () => void;
+  private readonly unsubscribeDecksChange: () => void;
 
   constructor({
-    doc = document,
-    getDictionaryConfig,
-    setDictionaryConfig,
-    getDictionaryLanguages,
-    getDeckOptions,
+    container,
+    ankiService,
+    configService,
+    didChangeDecks,
+    dictionaryService,
   }: DictionaryOptionsDependencies) {
-    this.doc = doc;
-    this.getDictionaryConfigValue = getDictionaryConfig;
-    this.setDictionaryConfigValue = setDictionaryConfig;
-    this.getDictionaryLanguagesValue = getDictionaryLanguages;
-    this.getDeckOptionsValue = getDeckOptions;
+    this.document = container.ownerDocument;
+    this.ankiService = ankiService;
+    this.configService = configService;
+    this.didChangeDecks = didChangeDecks;
+    this.dictionaryService = dictionaryService;
+    this.providers = [];
+    this.deckOptions = [];
 
-    const section = this.doc.createElement("section");
-    section.className = "p-0";
+    this.element = this.document.createElement("section");
+    this.element.className = cn("space-y-4") as string;
 
-    const content = this.doc.createElement("div");
-    content.className = cn("space-y-3") as string;
-    const composer = this.doc.createElement("div");
-    composer.className = cn("grid items-end gap-3 md:grid-cols-2 xl:grid-cols-4") as string;
+    this.rulesBody = this.document.createElement("div");
+    this.rulesBody.className = cn("space-y-2") as string;
 
-    this.configBody = this.doc.createElement("div");
-    this.configBody.className = cn("max-h-72 divide-y overflow-y-auto border-t") as string;
-
-    this.languageSelect = this.doc.createElement("select");
-    this.languageSelect.className = "select w-full";
-    this.languageSelect.style.colorScheme = "light dark";
-
-    this.providerSelect = this.doc.createElement("select");
-    this.providerSelect.className = this.languageSelect.className;
-    this.providerSelect.style.colorScheme = "light dark";
-
-    this.deckSelect = this.doc.createElement("select");
-    this.deckSelect.className = this.languageSelect.className;
-    this.deckSelect.style.colorScheme = "light dark";
-
-    const addButton = this.doc.createElement("button");
-    addButton.type = "button";
-    addButton.className = "btn btn-outline w-full lg:min-w-28";
-    addButton.append(this.doc.createTextNode("Add"));
-    addButton.addEventListener("click", () => {
-      void this.addProvider();
+    this.addProviderSelect = this.createSelect();
+    this.addButton = createButton({
+      doc: this.document,
+      variant: "outline",
+      className: "w-full sm:w-auto",
     });
+    this.addButton.append(this.document.createTextNode("Add"));
 
-    this.languageSelect.addEventListener("change", () => this.render());
+    this.renderStructure();
+    this.registerListeners();
+    this.unsubscribeDecksChange = this.didChangeDecks.on(() => {
+      void this.refreshDeckOptions().catch((error) => {
+        this.showConfigError(error);
+      });
+    });
+    this.unsubscribeConfigChange = this.configService.onDidChange((config) => {
+      this.updateConfig(config);
+      this.render();
+    });
+    this.render();
+    void this.load().catch((error) => {
+      this.showConfigError(error);
+    });
+    container.append(this.element);
+  }
 
-    composer.append(
-      createField(this.doc, "Language", this.languageSelect),
-      createField(this.doc, "Provider", this.providerSelect),
-      createField(this.doc, "Deck", this.deckSelect),
-      createField(this.doc, " ", addButton),
-    );
+  dispose() {
+    this.unsubscribeDecksChange();
+    this.unsubscribeConfigChange();
+  }
 
-    content.append(composer, this.configBody);
-    section.append(
-      createSectionIntro(
-        this.doc,
-        "Dictionary",
-        "Choose which providers and decks are used for each language you want to look up.",
-      ),
-      content,
-    );
+  updateConfig(config: DictionaryConfig) {
+    this.config = config;
+  }
 
-    this.element = section;
+  async load() {
+    const [config, providers, decks] = await Promise.all([
+      this.configService.get(),
+      this.dictionaryService.getProviders(),
+      this.ankiService.getDecks().catch(() => []),
+    ]);
+    this.config = config;
+    this.providers = providers;
+    this.deckOptions = this.toSelectOptions(decks);
+    this.render();
+  }
+
+  async refreshDeckOptions() {
+    this.deckOptions = this.toSelectOptions(await this.ankiService.getDecks());
     this.render();
   }
 
   render() {
-    const dictionaryLanguages = this.getDictionaryLanguagesValue();
-    const dictionaryConfig = this.getDictionaryConfigValue();
-    const deckOptions = [
-      { value: "", label: "No deck" },
-      ...this.getDeckOptionsValue().filter((o) => o.value),
-    ];
+    const dictionaryConfig = this.config;
+    const providers = this.providers;
+    const enabledProviders = new Set(dictionaryConfig.map((config) => config.provider));
+    const availableProviders = providers.filter((provider) => !enabledProviders.has(provider.id));
+    const providersById = new Map(providers.map((provider) => [provider.id, provider]));
 
-    setSelectOptions(
-      this.doc,
-      this.languageSelect,
-      dictionaryLanguages.map((language) => ({
-        value: language.code,
-        label: toLanguageLabel(language),
-      })),
-      this.languageSelect.value || dictionaryLanguages[0]?.code || "",
+    this.renderAddProviderOptions(availableProviders);
+    this.renderRuleRows(dictionaryConfig, providersById);
+  }
+
+  private renderStructure() {
+    this.element.append(
+      new SectionIntro(
+        this.document,
+        "Dictionary",
+        "Add providers, sort their priority, and choose the deck used when that provider wins.",
+      ).element,
+      this.renderAddProviderRow(),
+      this.rulesBody,
     );
+  }
 
-    const languageCode = this.languageSelect.value || dictionaryLanguages[0]?.code || "";
-    const language = dictionaryLanguages.find((item) => item.code === languageCode);
-    const providerOptions =
-      language?.providers.map((provider) => ({ value: provider.id, label: provider.name })) ?? [];
+  private renderAddProviderRow() {
+    const controls = this.document.createElement("div");
+    controls.className = cn("flex min-w-0 flex-col gap-2 sm:flex-row sm:items-center") as string;
+    controls.append(this.addProviderSelect, this.addButton);
 
-    setSelectOptions(
-      this.doc,
-      this.providerSelect,
-      providerOptions.length > 0
-        ? providerOptions
-        : [{ value: "", label: "No providers available" }],
-      this.providerSelect.value || providerOptions[0]?.value || "",
+    return new SettingsGroup(this.document, [
+      new SettingsRow(this.document, "Provider", {
+        description: "Add a dictionary source to the lookup priority list.",
+        children: controls,
+      }).element,
+    ]).element;
+  }
+
+  private renderAddProviderOptions(availableProviders: DictionaryProviderInfo[]) {
+    this.addProviderSelect.replaceChildren(
+      ...(availableProviders.length > 0
+        ? availableProviders
+        : [{ id: "", name: "All providers already added", supportedLanguages: [] }]
+      ).map((provider) => {
+        const option = this.document.createElement("option");
+        option.value = provider.id;
+        option.textContent = provider.name;
+        return option;
+      }),
     );
+    this.addProviderSelect.disabled = availableProviders.length === 0;
+    this.addButton.disabled = availableProviders.length === 0;
+  }
 
-    setSelectOptions(
-      this.doc,
-      this.deckSelect,
-      deckOptions,
-      getDictionaryConfig(dictionaryConfig, languageCode).deck,
-    );
-
-    const items = dictionaryLanguages
-      .filter((languageItem) => {
-        const config = getDictionaryConfig(dictionaryConfig, languageItem.code);
-        return !!config.deck || config.providers.length > 0;
-      })
-      .map((languageItem) => this.createLanguageItem(languageItem, dictionaryConfig));
-
-    if (items.length === 0) {
-      const empty = this.doc.createElement("p");
-      empty.className = cn("px-3 py-2 text-xs") as string;
-      empty.textContent = "No language options yet.";
-      this.configBody.replaceChildren(empty);
+  private renderRuleRows(
+    dictionaryConfig: DictionaryConfig,
+    providersById: Map<string, DictionaryProviderInfo>,
+  ) {
+    if (dictionaryConfig.length === 0) {
+      const empty = this.document.createElement("p");
+      empty.className = cn(
+        "border-border text-muted-foreground rounded-md border p-4 text-sm",
+      ) as string;
+      empty.textContent = "No providers added.";
+      this.rulesBody.replaceChildren(empty);
       return;
     }
 
-    this.configBody.replaceChildren(...items);
+    const rows = this.document.createElement("div");
+    rows.className = cn("border-border overflow-hidden rounded-md border") as string;
+    rows.append(
+      this.createRulesHeader(),
+      new SortableList({
+        doc: this.document,
+        className: "divide-border divide-y",
+        items: dictionaryConfig,
+        getItemId: (config) => config.provider,
+        onReorder: (providerId, targetIndex) => {
+          void this.configService.reorderProvider(providerId, targetIndex).catch((error) => {
+            this.showConfigError(error);
+          });
+        },
+        renderItem: (config, { dragHandle }) => {
+          return this.createRuleRow(config, providersById.get(config.provider), dragHandle);
+        },
+      }).element,
+    );
+    this.rulesBody.replaceChildren(rows);
   }
 
-  private createLanguageItem(language: DictionaryLanguageInfo, dictionaryConfig: DictionaryConfig) {
-    const config = getDictionaryConfig(dictionaryConfig, language.code);
-    const item = this.doc.createElement("div");
-    item.className = cn(
-      "flex flex-col gap-3 px-3 py-3 lg:grid lg:grid-cols-12 lg:items-center lg:gap-3",
+  private createRulesHeader() {
+    const row = this.document.createElement("div");
+    row.className = cn(
+      "bg-muted/30 text-muted-foreground hidden px-4 py-2 text-xs font-medium md:grid md:grid-cols-[auto_minmax(0,1.1fr)_minmax(0,0.8fr)_minmax(0,1fr)_auto] md:gap-3",
     ) as string;
 
-    const languageName = this.doc.createElement("div");
-    languageName.className = cn("truncate text-sm lg:col-span-3") as string;
-    languageName.textContent = toLanguageLabel(language);
-
-    const deckText = this.doc.createElement("div");
-    deckText.className = cn("w-fit text-xs lg:col-span-2") as string;
-    deckText.textContent = config.deck || "(No deck)";
-
-    const providers = this.doc.createElement("div");
-    providers.className = cn("flex flex-wrap gap-1.5 lg:col-span-6") as string;
-    if (config.providers.length === 0) {
-      const empty = this.doc.createElement("p");
-      empty.className = cn("text-xs") as string;
-      empty.textContent = "No providers selected.";
-      providers.append(empty);
-    } else {
-      for (const providerId of config.providers) {
-        providers.append(this.createProviderChip(language, providerId, dictionaryConfig));
-      }
-    }
-
-    const removeBtn = this.doc.createElement("button");
-    removeBtn.type = "button";
-    removeBtn.title = "Remove language option";
-    removeBtn.className = "btn btn-ghost btn-circle btn-xs self-start lg:justify-self-end";
-    removeBtn.append(this.doc.createTextNode("×"));
-    removeBtn.addEventListener("click", () => {
-      void this.setDictionaryConfigValue(removeDictionaryLanguage(dictionaryConfig, language.code));
+    ["", "Provider", "Languages", "Deck", ""].forEach((text) => {
+      const cell = this.document.createElement("div");
+      cell.textContent = text;
+      row.append(cell);
     });
 
-    item.append(languageName, deckText, providers, removeBtn);
-    return item;
+    return row;
   }
 
-  private createProviderChip(
-    language: DictionaryLanguageInfo,
-    providerId: string,
-    dictionaryConfig: DictionaryConfig,
+  private createRuleRow(
+    config: DictionaryConfig[number],
+    provider: DictionaryProviderInfo | undefined,
+    dragHandle: HTMLButtonElement,
   ) {
-    const chip = this.doc.createElement("div");
-    chip.className = cn("badge badge-outline badge-sm gap-1") as string;
-    const text = this.doc.createElement("span");
-    text.className = cn("text-xs") as string;
-    text.textContent = findProviderLabel(language, providerId);
+    const row = this.document.createElement("div");
+    row.className = cn(
+      "bg-background grid gap-3 p-4 md:grid-cols-[auto_minmax(0,1.1fr)_minmax(0,0.8fr)_minmax(0,1fr)_auto] md:items-center",
+    ) as string;
 
-    const removeBtn = this.doc.createElement("button");
-    removeBtn.type = "button";
-    removeBtn.title = "Remove provider";
-    removeBtn.className = "btn btn-ghost btn-circle btn-xs";
-    removeBtn.append(this.doc.createTextNode("×"));
-    removeBtn.addEventListener("click", () => {
-      void this.setDictionaryConfigValue(
-        removeDictionaryProvider(dictionaryConfig, language.code, providerId),
-      );
+    const handleCell = this.document.createElement("div");
+    handleCell.className = cn("flex items-center justify-start md:justify-center") as string;
+    handleCell.append(dragHandle);
+
+    const providerId = config.provider;
+    const providerField = this.renderStaticField("Provider", provider?.name ?? providerId);
+    const languagesField = this.renderStaticField(
+      "Languages",
+      provider?.supportedLanguages.map((code) => this.getLanguageLabel(code)).join(", ") ||
+        "Unsupported",
+    );
+    const deckField = this.renderControlField(
+      "Deck",
+      this.createDeckSelect(providerId, config.deck),
+    );
+
+    const actions = this.document.createElement("div");
+    actions.className = cn("flex flex-wrap gap-2 md:justify-end") as string;
+
+    const removeButton = createButton({
+      doc: this.document,
+      title: `Remove ${provider?.name ?? providerId}`,
+      variant: "ghost",
+      className: "text-destructive w-full sm:w-auto",
+    });
+    removeButton.append(this.document.createTextNode("Remove"));
+    removeButton.addEventListener("click", () => {
+      void this.configService.removeProvider(providerId).catch((error) => {
+        this.showConfigError(error);
+      });
     });
 
-    chip.append(text, removeBtn);
-    return chip;
+    actions.append(removeButton);
+    row.append(handleCell, providerField, languagesField, deckField, actions);
+    return row;
   }
 
-  private async addProvider() {
-    const languageCode =
-      this.languageSelect.value || this.getDictionaryLanguagesValue()[0]?.code || "";
-    const provider = this.providerSelect.value;
-    const deck = this.deckSelect.value;
-    if (!languageCode || !provider) return;
+  private renderStaticField(label: string, value: string) {
+    const field = this.document.createElement("div");
+    field.className = cn("space-y-1") as string;
 
-    await this.setDictionaryConfigValue(
-      addDictionaryProvider(this.getDictionaryConfigValue(), languageCode, provider, deck),
+    const labelElement = this.document.createElement("p");
+    labelElement.className = cn(
+      "text-muted-foreground text-xs font-medium uppercase md:hidden",
+    ) as string;
+    labelElement.textContent = label;
+
+    const valueElement = this.document.createElement("div");
+    valueElement.className = cn("text-foreground min-h-9 px-1 py-2 text-sm font-medium") as string;
+    valueElement.textContent = value;
+
+    field.append(labelElement, valueElement);
+    return field;
+  }
+
+  private renderControlField(label: string, control: HTMLElement) {
+    const field = this.document.createElement("div");
+    field.className = cn("space-y-1") as string;
+
+    const labelElement = this.document.createElement("p");
+    labelElement.className = cn(
+      "text-muted-foreground text-xs font-medium uppercase md:hidden",
+    ) as string;
+    labelElement.textContent = label;
+
+    field.append(labelElement, control);
+    return field;
+  }
+
+  private createDeckSelect(providerId: string, selectedValue: string) {
+    const select = this.createSelect();
+    this.setSelectOptions(
+      select,
+      [{ value: "", label: "No deck" }, ...this.deckOptions.filter((option) => option.value)],
+      selectedValue,
     );
+    select.addEventListener("change", () => {
+      void this.configService.updateProvider(providerId, { deck: select.value }).catch((error) => {
+        this.showConfigError(error);
+      });
+    });
+    return select;
+  }
+
+  private registerListeners() {
+    this.addButton.addEventListener("click", () => {
+      void this.createProvider().catch((error) => {
+        this.showConfigError(error);
+      });
+    });
+  }
+
+  private createSelect() {
+    return createSelect({ doc: this.document });
+  }
+
+  private setSelectOptions(select: HTMLSelectElement, options: SelectOption[], value: string) {
+    select.replaceChildren(
+      ...options.map((option) => {
+        const element = this.document.createElement("option");
+        element.value = option.value;
+        element.textContent = option.label;
+        return element;
+      }),
+    );
+    select.value = options.some((option) => option.value === value)
+      ? value
+      : (options[0]?.value ?? "");
+  }
+
+  private async createProvider() {
+    const providerId = this.addProviderSelect.value;
+    if (!providerId) return;
+
+    const provider = this.providers.find((item) => item.id === providerId);
+    if (!provider) return;
+
+    await this.configService.createProvider({
+      provider: provider.id,
+      deck: "",
+    });
+  }
+
+  private getLanguageLabel(code: string) {
+    return this.languageDisplayNames.of(code) ?? code.toUpperCase();
+  }
+
+  private showConfigError(error: unknown) {
+    console.error("Failed to save dictionary settings:", error);
+  }
+
+  private toSelectOptions(values: string[]): SelectOption[] {
+    return values.map((value) => ({ value, label: value }));
   }
 }

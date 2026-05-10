@@ -1,11 +1,11 @@
+@import "@assets/theme.css";
 @import "@assets/scrollbar.css";
 @import "tailwindcss";
-@import "@assets/flyonui.css";
 
 body {
-  @apply bg-base-200 text-base-content m-0 min-h-screen antialiased;
+  @apply bg-background text-foreground m-0 min-h-screen antialiased;
 }
 
 body {
-  background-color: var(--color-base-200);
+  background-image: linear-gradient(rgb(255 255 255 / 0.015), rgb(255 255 255 / 0.015));
 }

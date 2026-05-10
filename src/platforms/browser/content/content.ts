@@ -1,6 +1,6 @@
-import { flip, inline, offset, shift } from "@floating-ui/dom";
 import { extractContext } from "@common/context";
-import type { Context } from "@common/model";
+import type { Context } from "@common/types";
+import { flip, inline, offset, shift } from "@floating-ui/dom";
 import { Icon, Popover } from "@views/components";
 import { Search } from "lucide";
 import contentStyles from "./content.css?inline";
@@ -13,8 +13,8 @@ iframe.src = chrome.runtime.getURL("platforms/browser/content/frame.html");
 iframe.className = "anki-lex-frame";
 iframe.loading = "lazy";
 
-const floating = Popover({
-  icon: Icon({ iconNode: Search }),
+const floating = new Popover({
+  icon: new Icon({ iconNode: Search }).element,
   placement: "right-start",
   middleware: [inline(), offset(8), shift({ padding: 8 }), flip()],
 });

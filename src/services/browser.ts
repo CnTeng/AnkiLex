@@ -1,16 +1,16 @@
 import type {
-  AnkiModel,
   ConfigChangeEvent,
   Context,
   DictionaryEntry,
-  DictionaryLanguageInfo,
+  DictionaryProviderInfo,
+  IAnkiConfigService,
   IAnkiService,
   IConfigService,
+  IDictionaryConfigService,
   IDictionaryService,
   UserConfig,
-} from "@common/model";
-import { CONFIG_STORAGE_KEY, DEFAULT_USER_CONFIG } from "@common/model";
-import { createConfigChangeEvent } from "@services/config/change-event";
+} from "@common/types";
+import { config } from "@services/config";
 import { LocalPlatformServices } from "@services/local";
 
 type ServiceDomain = "config" | "dictionary" | "anki";
@@ -51,56 +51,57 @@ class BrowserRuntimeClient {
 }
 
 class BrowserConfigService implements IConfigService {
+  readonly anki: IAnkiConfigService = {
+    get: () => this.client.invoke("config", "anki.get"),
+    onDidChange: (listener) =>
+      this.onDidChange((event) => {
+        if (event.changedKeys.includes("anki")) listener(event.newConfig.anki);
+      }),
+    update: async (ankiConfig) => {
+      await this.client.invoke("config", "anki.update", ankiConfig);
+    },
+  };
+
+  readonly dictionary: IDictionaryConfigService = {
+    get: () => this.client.invoke("config", "dictionary.get"),
+    onDidChange: (listener) =>
+      this.onDidChange((event) => {
+        if (event.changedKeys.includes("dictionary")) listener(event.newConfig.dictionary);
+      }),
+    createProvider: async (providerConfig) => {
+      await this.client.invoke("config", "dictionary.createProvider", providerConfig);
+    },
+    updateProvider: async (providerId, patch) => {
+      await this.client.invoke("config", "dictionary.updateProvider", providerId, patch);
+    },
+    removeProvider: async (providerId) => {
+      await this.client.invoke("config", "dictionary.removeProvider", providerId);
+    },
+    reorderProvider: async (providerId, targetIndex) => {
+      await this.client.invoke("config", "dictionary.reorderProvider", providerId, targetIndex);
+    },
+  };
+
   constructor(private readonly client: BrowserRuntimeClient) {}
 
   onDidChange(listener: (event: ConfigChangeEvent) => void) {
-    let previousConfig: UserConfig = DEFAULT_USER_CONFIG;
-    void this.get().then((config) => {
-      previousConfig = config;
-    });
-
-    const handleChange = (
-      changes: Record<string, chrome.storage.StorageChange>,
-      areaName: string,
-    ) => {
-      if (areaName !== "sync" || !(CONFIG_STORAGE_KEY in changes)) return;
-
-      void this.get().then((currentConfig) => {
-        listener(createConfigChangeEvent(previousConfig, currentConfig));
-        previousConfig = currentConfig;
-      });
-    };
-
-    chrome.storage.onChanged.addListener(handleChange);
-    return () => chrome.storage.onChanged.removeListener(handleChange);
+    return config.onDidChange(listener);
   }
 
   async get(): Promise<UserConfig> {
     return this.client.invoke("config", "get");
   }
 
-  async set(userConfig: UserConfig): Promise<void> {
-    await this.client.invoke("config", "set", userConfig);
-  }
-
-  async update(partial: Partial<UserConfig>): Promise<void> {
-    await this.client.invoke("config", "update", partial);
-  }
-
   async reset(): Promise<UserConfig> {
     return this.client.invoke("config", "reset");
-  }
-
-  async getLanguageCodes(): Promise<string[]> {
-    return this.client.invoke("config", "getLanguageCodes");
   }
 }
 
 class BrowserDictionaryService implements IDictionaryService {
   constructor(private readonly client: BrowserRuntimeClient) {}
 
-  async getLanguages(): Promise<DictionaryLanguageInfo[]> {
-    return this.client.invoke("dictionary", "getLanguages");
+  async getProviders(): Promise<DictionaryProviderInfo[]> {
+    return this.client.invoke("dictionary", "getProviders");
   }
 
   async lookup(word: string, context?: Context): Promise<DictionaryEntry | null> {
@@ -111,28 +112,16 @@ class BrowserDictionaryService implements IDictionaryService {
 class BrowserAnkiService implements IAnkiService {
   constructor(private readonly client: BrowserRuntimeClient) {}
 
-  async addNote(result: DictionaryEntry): Promise<unknown> {
-    return this.client.invoke("anki", "addNote", result);
+  async createNote(result: DictionaryEntry): Promise<void> {
+    await this.client.invoke("anki", "createNote", result);
   }
 
   async getDecks(): Promise<string[]> {
     return this.client.invoke("anki", "getDecks");
   }
 
-  async getModels(): Promise<string[]> {
-    return this.client.invoke("anki", "getModels");
-  }
-
-  async getModelFields(modelName: string): Promise<string[]> {
-    return this.client.invoke("anki", "getModelFields", modelName);
-  }
-
-  async createModel(model: AnkiModel): Promise<void> {
-    await this.client.invoke("anki", "createModel", model);
-  }
-
-  async updateModel(model: AnkiModel): Promise<void> {
-    await this.client.invoke("anki", "updateModel", model);
+  async syncTemplate(): Promise<void> {
+    await this.client.invoke("anki", "syncTemplate");
   }
 }
 
@@ -155,6 +144,22 @@ export class BrowserServiceHost {
     chrome.runtime.onMessage.addListener(this.handleMessage);
   }
 
+  private getHandler(service: Record<string, unknown>, method: string) {
+    return method.split(".").reduce(
+      (result, key) => {
+        const value =
+          result.target && typeof result.target === "object"
+            ? (result.target as Record<string, unknown>)[key]
+            : undefined;
+        return {
+          target: value,
+          parent: result.target,
+        };
+      },
+      { target: service as unknown, parent: undefined as unknown },
+    );
+  }
+
   private readonly handleMessage = (message: unknown, _sender: unknown, sendResponse: unknown) => {
     if (typeof sendResponse !== "function") return;
     if (!message || typeof message !== "object") return;
@@ -166,10 +171,10 @@ export class BrowserServiceHost {
     if (!Array.isArray(args)) return;
 
     const service = this.services[domain] as unknown as Record<string, unknown>;
-    const handler = service[method];
+    const { target: handler, parent } = this.getHandler(service, method);
     if (typeof handler !== "function") return;
 
-    Promise.resolve(handler.apply(service, args))
+    Promise.resolve(handler.apply(parent, args))
       .then((result) => {
         (sendResponse as (value: unknown) => void)(result);
       })

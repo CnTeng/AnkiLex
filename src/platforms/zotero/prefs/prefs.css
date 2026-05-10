@@ -1,9 +1,10 @@
+@import "@assets/theme.css";
 @import "@assets/scrollbar.css";
 @import "tailwindcss";
-@import "@assets/flyonui.css";
 
+body,
 .ankilex-root {
-  @apply bg-base-200 text-base-content min-h-screen antialiased;
+  @apply bg-background text-foreground min-h-screen antialiased;
 }
 
 .ankilex-root * {

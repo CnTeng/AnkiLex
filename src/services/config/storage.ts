@@ -1,10 +1,15 @@
 export type Value = string | number | boolean | object | Array<unknown> | null;
 
+export interface StorageChange {
+  oldValue: unknown;
+  newValue: unknown;
+}
+
 interface StorageAdapter {
   get<T = Value>(key: string): Promise<T | null>;
   set(key: string, value: Value): Promise<void>;
   remove(key: string): Promise<void>;
-  subscribe?: (key: string, listener: () => void) => () => void;
+  subscribe?: (key: string, listener: (change: StorageChange) => void) => () => void;
 }
 
 const zoteroStorage: StorageAdapter = {
@@ -48,13 +53,16 @@ const chromeStorage: StorageAdapter = {
     await chrome.storage.sync.remove(key);
   },
 
-  subscribe(key: string, listener: () => void) {
+  subscribe(key: string, listener: (change: StorageChange) => void) {
     const handleChange = (
       changes: Record<string, chrome.storage.StorageChange>,
-      areaName: string,
+      areaName: chrome.storage.AreaName,
     ) => {
       if (areaName !== "sync" || !(key in changes)) return;
-      listener();
+      listener({
+        oldValue: changes[key].oldValue,
+        newValue: changes[key].newValue,
+      });
     };
 
     chrome.storage.onChanged.addListener(handleChange);
@@ -66,6 +74,8 @@ const isZotero = typeof Zotero !== "undefined" && typeof Zotero.Prefs !== "undef
 const storageAdapter = isZotero ? zoteroStorage : chromeStorage;
 
 export const storage = {
+  hasChangeEvents: Boolean(storageAdapter.subscribe),
+
   async get<T = Value>(key: string): Promise<T | null> {
     return storageAdapter.get<T>(key);
   },
@@ -78,7 +88,7 @@ export const storage = {
     await storageAdapter.remove(key);
   },
 
-  subscribe(key: string, listener: () => void) {
+  subscribe(key: string, listener: (change: StorageChange) => void) {
     return storageAdapter.subscribe?.(key, listener) ?? (() => {});
   },
 };

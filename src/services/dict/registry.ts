@@ -1,4 +1,4 @@
-import type { IDictionaryProvider } from "@common/model";
+import type { IDictionaryProvider } from "@common/types";
 
 const providers: Map<string, IDictionaryProvider> = new Map();
 

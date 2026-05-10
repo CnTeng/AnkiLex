@@ -1,154 +1,167 @@
-import type { SelectOption } from "@common/model";
-import { Icon } from "@views/components";
+import type { SelectOption } from "@common/types";
 import { cn } from "tailwind-variants";
 
 export type StatusLevel = "success" | "error" | "info" | "warning";
 
-export interface OptionsStatusElement {
-  element: Element;
-  show: (message: string, level: StatusLevel) => void;
-}
+const alertVariantClasses: Record<StatusLevel, string> = {
+  success:
+    "border-[color:color-mix(in_srgb,var(--success)_45%,var(--border))] bg-[color:color-mix(in_srgb,var(--success)_12%,var(--background))] text-[var(--success)]",
+  error:
+    "border-[color:color-mix(in_srgb,var(--destructive)_45%,var(--border))] bg-[color:color-mix(in_srgb,var(--destructive)_12%,var(--background))] text-[var(--destructive)]",
+  info: "border-[color:color-mix(in_srgb,var(--info)_45%,var(--border))] bg-[color:color-mix(in_srgb,var(--info)_12%,var(--background))] text-[var(--info)]",
+  warning:
+    "border-[color:color-mix(in_srgb,var(--warning)_45%,var(--border))] bg-[color:color-mix(in_srgb,var(--warning)_12%,var(--background))] text-[var(--warning)]",
+};
 
-export function createSectionHeading(
-  doc: Document,
-  iconNode: Parameters<typeof Icon>[0]["iconNode"],
-  title: string,
-) {
-  const heading = doc.createElement("h2");
-  heading.className = cn(
-    "mb-6 flex items-center gap-3 border-b pb-2 text-lg font-semibold",
-  ) as string;
-  heading.append(
-    Icon({ doc, iconNode, customAttrs: { width: 20, height: 20 } }),
-    doc.createTextNode(title),
-  );
-  return heading;
-}
+type SettingsRowOptions = {
+  htmlFor?: string;
+  description?: string;
+  children: HTMLElement | HTMLElement[];
+};
 
-export function createSectionTitle(doc: Document, title: string) {
-  const heading = doc.createElement("h2");
-  heading.className = cn("mb-5 text-lg font-semibold") as string;
-  heading.textContent = title;
-  return heading;
-}
+export class SectionIntro {
+  readonly element: HTMLDivElement;
 
-export function createSectionIntro(doc: Document, title: string, description: string) {
-  const wrapper = doc.createElement("div");
-  wrapper.className = cn("mb-5 space-y-1") as string;
-  const heading = createSectionTitle(doc, title);
-  heading.classList.remove("mb-5");
-
-  const text = doc.createElement("p");
-  text.className = cn("text-sm") as string;
-  text.textContent = description;
-  wrapper.append(heading, text);
-  return wrapper;
-}
-
-export function createFormField(
-  doc: Document,
-  label: string,
-  opts?: {
-    htmlFor?: string;
-    help?: string;
-    children?: HTMLElement | HTMLElement[];
-    layout?: "stacked" | "inline";
-  },
-) {
-  const wrapper = doc.createElement("div");
-  wrapper.className = cn(
-    opts?.layout === "inline"
-      ? "mb-5 min-w-0 gap-2 md:grid md:grid-cols-[minmax(140px,220px)_minmax(0,1fr)] md:items-start md:gap-x-4"
-      : "mb-6",
-  ) as string;
-
-  const labelEl = doc.createElement("label");
-  labelEl.className = cn(
-    opts?.layout === "inline" ? "min-w-0 pt-2 text-sm wrap-break-word" : "mb-2 block text-sm",
-  ) as string;
-  labelEl.textContent = label;
-
-  if (opts?.htmlFor) labelEl.htmlFor = opts.htmlFor;
-  wrapper.append(labelEl);
-
-  const content = doc.createElement("div");
-  content.className = cn("w-full min-w-0") as string;
-
-  if (opts?.children) {
-    const children = Array.isArray(opts.children) ? opts.children : [opts.children];
-    content.append(...children);
+  constructor(
+    private readonly doc: Document,
+    private readonly title: string,
+    private readonly description: string,
+  ) {
+    this.element = this.doc.createElement("div");
+    this.render();
   }
 
-  if (opts?.help) {
-    const help = doc.createElement("p");
-    help.className = cn("mt-1 text-xs") as string;
-    help.textContent = opts.help;
-    content.append(help);
+  private render() {
+    const heading = this.doc.createElement("h2");
+    heading.className = cn("text-foreground text-xl font-semibold") as string;
+    heading.textContent = this.title;
+
+    const text = this.doc.createElement("p");
+    text.className = cn("text-muted-foreground text-sm") as string;
+    text.textContent = this.description;
+
+    this.element.className = cn("space-y-1") as string;
+    this.element.append(heading, text);
+  }
+}
+
+export class SettingsGroup {
+  readonly element: HTMLDivElement;
+
+  constructor(
+    private readonly doc: Document,
+    rows: HTMLElement[],
+  ) {
+    this.element = this.doc.createElement("div");
+    this.element.className = cn("border-border divide-border divide-y rounded-md border") as string;
+    this.element.append(...rows);
+  }
+}
+
+export class SettingsRow {
+  readonly element: HTMLDivElement;
+
+  constructor(
+    private readonly doc: Document,
+    private readonly label: string,
+    private readonly options: SettingsRowOptions,
+  ) {
+    this.element = this.doc.createElement("div");
+    this.render();
   }
 
-  wrapper.append(content);
+  private render() {
+    this.element.className = cn(
+      "grid gap-3 p-4 sm:grid-cols-[minmax(0,1fr)_minmax(220px,320px)] sm:items-center",
+    ) as string;
+    this.element.append(this.renderText(), this.renderContent());
+  }
 
-  return wrapper;
+  private renderText() {
+    const wrapper = this.doc.createElement("div");
+    wrapper.className = cn("min-w-0 space-y-1") as string;
+
+    const labelElement = this.doc.createElement("label");
+    labelElement.className = cn("text-foreground text-sm font-medium") as string;
+    labelElement.textContent = this.label;
+    if (this.options.htmlFor) labelElement.htmlFor = this.options.htmlFor;
+
+    wrapper.append(labelElement);
+
+    if (this.options.description) {
+      const description = this.doc.createElement("p");
+      description.className = cn("text-muted-foreground text-sm") as string;
+      description.textContent = this.options.description;
+      wrapper.append(description);
+    }
+
+    return wrapper;
+  }
+
+  private renderContent() {
+    const content = this.doc.createElement("div");
+    content.className = cn("min-w-0") as string;
+    content.append(
+      ...(Array.isArray(this.options.children) ? this.options.children : [this.options.children]),
+    );
+    return content;
+  }
 }
 
-export function setSelectOptions(
-  doc: Document,
-  selectEl: HTMLSelectElement,
-  options: SelectOption[],
-  value: string,
-) {
-  selectEl.replaceChildren(
-    ...options.map((option) => {
-      const opt = doc.createElement("option");
-      opt.value = option.value;
-      opt.textContent = option.label;
-      return opt;
-    }),
-  );
-  selectEl.value = options.some((option) => option.value === value)
-    ? value
-    : (options[0]?.value ?? "");
+export class SelectOptions {
+  constructor(
+    private readonly doc: Document,
+    private readonly selectElement: HTMLSelectElement,
+    private readonly options: SelectOption[],
+    private readonly value: string,
+  ) {}
+
+  render() {
+    this.selectElement.replaceChildren(
+      ...this.options.map((option) => {
+        const element = this.doc.createElement("option");
+        element.value = option.value;
+        element.textContent = option.label;
+        return element;
+      }),
+    );
+    this.selectElement.value = this.options.some((option) => option.value === this.value)
+      ? this.value
+      : (this.options[0]?.value ?? "");
+  }
 }
 
-export function createStatus(doc: Document): OptionsStatusElement {
-  const colors: Record<StatusLevel, string[]> = {
-    success: ["alert-success"],
-    error: ["alert-error"],
-    info: ["alert-info"],
-    warning: ["alert-warning"],
-  };
-  let hideTimer: ReturnType<typeof setTimeout> | null = null;
+export class OptionsStatus {
+  readonly element: HTMLDivElement;
 
-  const element = doc.createElement("div");
-  element.className = cn(
-    "alert hidden translate-y-2 text-sm opacity-0 transition-all sm:max-w-md",
-  ) as string;
+  private hideTimer: ReturnType<typeof setTimeout> | null = null;
 
-  return {
-    element,
-    show: (message, level) => {
-      element.textContent = message;
-      element.classList.remove(
-        ...Object.values(colors).flat(),
-        "hidden",
-        "opacity-0",
-        "translate-y-2",
-      );
-      element.classList.add(...colors[level], "opacity-100", "translate-y-0");
+  constructor(private readonly doc: Document) {
+    this.element = this.doc.createElement("div");
+    this.element.className = cn(
+      "text-muted-foreground hidden translate-y-2 text-sm font-medium opacity-0 transition-all sm:max-w-md",
+    ) as string;
+  }
 
-      if (hideTimer) clearTimeout(hideTimer);
-      hideTimer = setTimeout(() => {
-        element.classList.remove("opacity-100", "translate-y-0");
-        element.classList.add("opacity-0", "translate-y-2");
-        setTimeout(() => element.classList.add("hidden"), 150);
-      }, 3000);
-    },
-  };
-}
+  show(message: string, level: StatusLevel) {
+    this.element.textContent = message;
+    this.element.classList.remove(
+      ...Object.values(alertVariantClasses).flatMap((value) => value.split(" ")),
+      "hidden",
+      "opacity-0",
+      "translate-y-2",
+    );
+    this.element.classList.add(
+      ...alertVariantClasses[level].split(" "),
+      "opacity-100",
+      "translate-y-0",
+    );
 
-export function createStatusMessage(doc: Document, level: StatusLevel, message: string) {
-  const element = doc.createElement("div");
-  element.className = ["alert text-sm transition-all", `alert-${level}`].join(" ");
-  element.textContent = message;
-  return element;
+    if (this.hideTimer) clearTimeout(this.hideTimer);
+    this.hideTimer = setTimeout(() => {
+      this.element.classList.remove("opacity-100", "translate-y-0");
+      this.element.classList.add("opacity-0", "translate-y-2");
+      setTimeout(() => this.element.classList.add("hidden"), 150);
+    }, 3000);
+  }
 }

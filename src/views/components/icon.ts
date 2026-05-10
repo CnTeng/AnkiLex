@@ -14,40 +14,48 @@ const defaultAttributes: SVGProps = {
 
 type CreateSVGElementParams = [tag: string, attrs: SVGProps, children?: IconNode];
 
-const createSVGElement = (doc: Document, [tag, attrs, children]: CreateSVGElementParams) => {
-  const element = doc.createElementNS("http://www.w3.org/2000/svg", tag);
-
-  Object.keys(attrs).forEach((name) => {
-    element.setAttribute(name, String(attrs[name]));
-  });
-
-  if (children?.length) {
-    children.forEach((child) => {
-      const childElement = createSVGElement(doc, child);
-      element.append(childElement);
-    });
-  }
-
-  return element;
-};
-
-export const Icon = ({
-  doc = document,
-  iconNode,
-  className,
-  customAttrs,
-}: {
+export type IconOptions = {
   doc?: Document;
   iconNode: IconNode;
   className?: string;
   customAttrs?: SVGProps;
-}): SVGElement => {
-  const attrs = {
-    ...defaultAttributes,
-    ...customAttrs,
-  };
-
-  if (className) attrs.class = className;
-
-  return createSVGElement(doc, ["svg", attrs, iconNode]);
 };
+
+export class Icon {
+  readonly element: SVGElement;
+
+  private readonly doc: Document;
+
+  constructor({ doc = document, iconNode, className, customAttrs }: IconOptions) {
+    this.doc = doc;
+
+    const attrs: SVGProps = {
+      ...defaultAttributes,
+      ...customAttrs,
+    };
+
+    if (className) attrs.class = className;
+
+    this.element = this.createSVGElement(["svg", attrs, iconNode]);
+  }
+
+  private applyAttributes(element: Element, attrs: SVGProps) {
+    Object.keys(attrs).forEach((name) => {
+      element.setAttribute(name, String(attrs[name]));
+    });
+  }
+
+  private createSVGElement([tag, attrs, children]: CreateSVGElementParams) {
+    const element = this.doc.createElementNS("http://www.w3.org/2000/svg", tag);
+
+    this.applyAttributes(element, attrs);
+
+    if (children?.length) {
+      children.forEach((child) => {
+        element.append(this.createSVGElement(child));
+      });
+    }
+
+    return element;
+  }
+}

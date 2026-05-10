@@ -1,4 +1,4 @@
-import type { DictionaryEntry, IDictionaryProvider } from "@common/model";
+import type { DictionaryEntry, IDictionaryProvider } from "@common/types";
 import { parseWithDom, parseWithOffscreen } from "./parser";
 
 const REQUEST_TIMEOUT_MS = 10_000;

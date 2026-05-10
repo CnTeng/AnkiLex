@@ -1,4 +1,4 @@
-import type { Definition, DictionaryEntry, Example, Pronunciation } from "@common/model";
+import type { Definition, DictionaryEntry, Example, Pronunciation } from "@common/types";
 import { DictionaryProvider } from "../provider";
 import { registerDictionaryProvider } from "../registry";
 

@@ -1,50 +1,48 @@
-import type { DictionaryEntry, IAnkiService } from "@common/model";
-import { createDefinitions, createHeader, createMetadata, createPronunciations } from "./sections";
+import type { DictionaryEntry as DictionaryEntryData, IAnkiService } from "@common/types";
+import {
+  DictionaryDefinitionsSection,
+  DictionaryMetadataSection,
+  DictionaryPronunciationsSection,
+} from "./sections";
 
-export class DictionaryEntryView {
-  readonly element: HTMLDivElement;
+export interface DictionaryEntryOptions {
+  container: HTMLElement;
+  entry: DictionaryEntryData;
+  showAddButton?: boolean;
+  ankiService?: IAnkiService;
+}
 
-  private readonly doc: Document;
-  private readonly entry: DictionaryEntry;
+export class DictionaryEntry {
+  private readonly document: Document;
+  private readonly element: HTMLDivElement;
+  private readonly entry: DictionaryEntryData;
   private readonly showAddButton: boolean;
   private readonly ankiService?: IAnkiService;
 
-  constructor({
-    doc = document,
-    entry,
-    showAddButton = true,
-    ankiService,
-  }: {
-    doc?: Document;
-    entry: DictionaryEntry;
-    showAddButton?: boolean;
-    ankiService?: IAnkiService;
-  }) {
-    this.doc = doc;
+  constructor({ container, entry, showAddButton = true, ankiService }: DictionaryEntryOptions) {
+    this.document = container.ownerDocument;
     this.entry = entry;
     this.showAddButton = showAddButton;
     this.ankiService = ankiService;
-    this.element = this.doc.createElement("div");
+    this.element = this.document.createElement("div");
     this.render();
+    container.append(this.element);
   }
 
   private render() {
-    const { word, provider, metadata, pronunciations, definitions } = this.entry;
-    const fragment = this.doc.createDocumentFragment();
+    const { metadata, pronunciations, definitions } = this.entry;
+    const fragment = this.document.createDocumentFragment();
 
-    const components = [
-      createHeader(this.doc, word, provider),
-      createMetadata(this.doc, metadata),
-      createPronunciations(this.doc, pronunciations),
-      createDefinitions(this.doc, definitions, {
+    [
+      new DictionaryMetadataSection({ container: fragment, metadata }),
+      new DictionaryPronunciationsSection({ container: fragment, pronunciations }),
+      new DictionaryDefinitionsSection({
+        container: fragment,
+        definitions,
         showAddButton: this.showAddButton,
         onAddClick: async (index) => this.addDefinitionToAnki(index),
       }),
     ];
-
-    for (const component of components) {
-      if (component) fragment.append(component);
-    }
 
     this.element.replaceChildren(fragment);
   }
@@ -55,7 +53,7 @@ export class DictionaryEntryView {
     const definition = this.entry.definitions[index];
     if (!definition) return;
 
-    await this.ankiService.addNote({
+    await this.ankiService.createNote({
       ...this.entry,
       definitions: [definition],
     });

@@ -1,60 +1,75 @@
-import { Icon } from "@views/components";
+import { createButton, Icon, setButtonLoading } from "@views/components";
 import { RotateCcw } from "lucide";
 import { cn } from "tailwind-variants";
-import { createStatus, type OptionsStatusElement } from "./elements";
+import { OptionsStatus } from "./elements";
 
 export class OptionsFooter {
   readonly element: HTMLDivElement;
-  readonly status: OptionsStatusElement;
+  readonly status: OptionsStatus;
 
+  private readonly document: Document;
   private readonly resetButton: HTMLButtonElement;
   private resetAction: (() => Promise<void>) | null = null;
 
-  constructor(doc: Document) {
-    this.status = createStatus(doc);
+  constructor(container: HTMLElement | DocumentFragment) {
+    this.document = container.ownerDocument ?? document;
+    this.status = new OptionsStatus(this.document);
 
-    this.element = doc.createElement("div");
+    this.element = this.document.createElement("div");
     this.element.className = cn(
-      "flex flex-col gap-3 border-t pt-4 sm:flex-row sm:items-center sm:justify-between",
+      "border-border bg-muted/20 flex flex-col gap-3 border-t px-4 py-4 sm:flex-row sm:items-center sm:justify-between sm:px-6",
     ) as string;
 
-    const hint = doc.createElement("p");
-    hint.className = cn("text-xs") as string;
-    hint.textContent =
-      "Changes are saved automatically. Use reset only if you want to restore all defaults.";
-
-    this.resetButton = doc.createElement("button");
-    this.resetButton.type = "button";
-    this.resetButton.title = "Reset all options to default";
-    this.resetButton.className = "btn btn-ghost w-full sm:w-auto";
-    this.resetButton.append(
-      Icon({
-        doc,
-        iconNode: RotateCcw,
-        customAttrs: { width: 16, height: 16 },
-      }),
-      doc.createTextNode("Reset Defaults"),
-    );
-    this.resetButton.addEventListener("click", () => {
-      if (!this.resetAction) return;
-
-      this.resetButton.disabled = true;
-      this.resetButton.classList.add("loading");
-      void this.resetAction().finally(() => {
-        this.resetButton.disabled = false;
-        this.resetButton.classList.remove("loading");
-      });
-    });
-
-    const footerRight = doc.createElement("div");
-    footerRight.className = cn(
-      "flex w-full flex-col items-start gap-2 sm:w-auto sm:items-end",
-    ) as string;
-    footerRight.append(hint, this.status.element);
-    this.element.append(this.resetButton, footerRight);
+    this.resetButton = this.renderResetButton();
+    this.element.append(this.resetButton, this.renderMeta());
+    this.registerListeners();
+    container.append(this.element);
   }
 
   setResetAction(action: () => Promise<void>) {
     this.resetAction = action;
+  }
+
+  private renderResetButton() {
+    const button = createButton({
+      doc: this.document,
+      title: "Reset all options to default",
+      variant: "ghost",
+      className: "text-destructive w-full sm:w-auto",
+    });
+    button.append(
+      new Icon({
+        doc: this.document,
+        iconNode: RotateCcw,
+        customAttrs: { width: 16, height: 16 },
+      }).element,
+      this.document.createTextNode("Reset Defaults"),
+    );
+    return button;
+  }
+
+  private renderMeta() {
+    const hint = this.document.createElement("p");
+    hint.className = cn("text-muted-foreground text-xs") as string;
+    hint.textContent =
+      "Changes are saved automatically. Use reset only if you want to restore all defaults.";
+
+    const footerRight = this.document.createElement("div");
+    footerRight.className = cn(
+      "flex w-full flex-col items-start gap-2 sm:w-auto sm:items-end",
+    ) as string;
+    footerRight.append(hint, this.status.element);
+    return footerRight;
+  }
+
+  private registerListeners() {
+    this.resetButton.addEventListener("click", () => {
+      if (!this.resetAction) return;
+
+      setButtonLoading(this.resetButton, true);
+      void this.resetAction().finally(() => {
+        setButtonLoading(this.resetButton, false);
+      });
+    });
   }
 }

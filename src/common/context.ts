@@ -1,4 +1,4 @@
-import type { Context } from "@common/model";
+import type { Context } from "@common/types";
 import { eld } from "eld/medium";
 import { getSentenceBoundaries } from "sentencex-ts";
 

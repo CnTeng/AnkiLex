@@ -1,5 +1,5 @@
+import type { DictionaryEntry } from "@common/types";
 import { dictionary } from "@services/dict";
-import type { DictionaryEntry } from "@common/model";
 
 type ParseHtmlMessage = {
   html: string;

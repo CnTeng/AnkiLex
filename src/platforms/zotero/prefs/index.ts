@@ -1,5 +1,5 @@
-import { OptionsPage } from "@views/options";
 import { LocalPlatformServices } from "@services";
+import { OptionsPage } from "@views/options";
 
 let registeredPaneId: string | null = null;
 
@@ -11,14 +11,11 @@ export function mountPrefs(doc: Document) {
 
   const view = doc.defaultView as Window & { __ankiLexPrefsPage__?: OptionsPage | null };
   view.__ankiLexPrefsPage__?.dispose();
-  void OptionsPage.create({
-    doc,
-    root,
+  view.__ankiLexPrefsPage__ = new OptionsPage({
+    container: root,
     configService: services.config,
     dictionaryService: services.dictionary,
     ankiService: services.anki,
-  }).then((page) => {
-    view.__ankiLexPrefsPage__ = page;
   });
 }
 

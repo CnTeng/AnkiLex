@@ -1,16 +1,15 @@
 import type {
-  AnkiModel,
-  ConfigChangeEvent,
   Context,
+  DictionaryConfig,
   DictionaryEntry,
-  DictionaryLanguageInfo,
+  DictionaryProviderInfo,
   IAnkiService,
   IConfigService,
   IDictionaryService,
-  UserConfig,
-} from "@common/model";
-import { AnkiClient } from "@services/anki";
-import { config } from "@services/config";
+  ProviderConfig,
+} from "@common/types";
+import { type AnkiClient, createAnkiClient } from "@services/anki";
+import { config as configService } from "@services/config";
 import { dictionary } from "@services/dict";
 import { eld } from "eld/medium";
 
@@ -39,58 +38,104 @@ function detectLanguage(word: string, languages: string[], fallback?: string): s
   return fallback?.split("-")[0]?.trim() || null;
 }
 
-class LocalConfigService implements IConfigService {
-  onDidChange(listener: (event: ConfigChangeEvent) => void) {
-    return config.onDidChange(listener);
+function resolveSelectedLanguage(language: string | undefined, languages: string[]) {
+  const normalizedLanguage = language?.split("-")[0]?.trim();
+  if (!normalizedLanguage) return null;
+  return languages.includes(normalizedLanguage) ? normalizedLanguage : null;
+}
+
+function resolveConfiguredProvider(language: string, dictionaryConfig: DictionaryConfig) {
+  return dictionaryConfig.filter(
+    (config) =>
+      !!config.provider &&
+      dictionary.getProvider(config.provider)?.supportedLanguages.includes(language),
+  );
+}
+
+function resolveLookupLanguage(word: string, context: Context | undefined, languages: string[]) {
+  return (
+    resolveSelectedLanguage(context?.lang, languages) ??
+    detectLanguage(word, languages, context?.lang)
+  );
+}
+
+function resolveLookupProviders(
+  context: Context | undefined,
+  language: string | null,
+  dictionaryConfig: DictionaryConfig,
+) {
+  const selectedProvider = context?.provider?.trim();
+  if (selectedProvider) {
+    return [
+      {
+        provider: selectedProvider,
+        deck: "",
+      } satisfies ProviderConfig,
+    ];
   }
 
-  async get(): Promise<UserConfig> {
-    return config.get();
-  }
+  if (!language) return [];
+  return resolveConfiguredProvider(language, dictionaryConfig);
+}
 
-  async set(userConfig: UserConfig): Promise<void> {
-    await config.set(userConfig);
-  }
+function getProviderRule(
+  dictionaryConfig: DictionaryConfig,
+  providerId: string | undefined,
+  language: string | undefined,
+) {
+  if (!providerId) return null;
 
-  async update(partial: Partial<UserConfig>): Promise<void> {
-    const current = await config.get();
-    await config.set({
-      dictionary: partial.dictionary ?? current.dictionary,
-      anki: partial.anki ?? current.anki,
-    });
-  }
+  return (
+    dictionaryConfig.find(
+      (config) =>
+        config.provider === providerId &&
+        (!language ||
+          dictionary.getProvider(config.provider)?.supportedLanguages.includes(language)),
+    ) ??
+    dictionaryConfig.find((config) => config.provider === providerId) ??
+    null
+  );
+}
 
-  async reset(): Promise<UserConfig> {
-    await config.reset();
-    return config.get();
-  }
-
-  async getLanguageCodes(): Promise<string[]> {
-    return config.getLanguageCodes();
-  }
+function getEntryProviderId(entry: DictionaryEntry) {
+  const providerId = entry.metadata?.providerId;
+  return typeof providerId === "string" ? providerId : undefined;
 }
 
 class LocalDictionaryService implements IDictionaryService {
   constructor(private readonly configService: IConfigService) {}
 
-  async getLanguages(): Promise<DictionaryLanguageInfo[]> {
-    return dictionary.getLanguages();
+  async getProviders(): Promise<DictionaryProviderInfo[]> {
+    return dictionary.getProviders();
   }
 
   async lookup(word: string, context?: Context): Promise<DictionaryEntry | null> {
     const userConfig = await this.configService.get();
-    const languages = await this.configService.getLanguageCodes();
-    const resolvedLanguage = detectLanguage(word, languages, context?.lang);
-    if (!resolvedLanguage) return null;
-
-    const providerIds = userConfig.dictionary[resolvedLanguage]?.providers ?? [];
+    const languages = [
+      ...new Set(
+        userConfig.dictionary.flatMap(
+          (config) => dictionary.getProvider(config.provider)?.supportedLanguages ?? [],
+        ),
+      ),
+    ];
+    const language = resolveLookupLanguage(word, context, languages);
+    const lookupProviders = resolveLookupProviders(context, language, userConfig.dictionary);
+    const providerIds = lookupProviders.map((config) => config.provider).filter(Boolean);
     if (providerIds.length === 0) return null;
 
     const result = await dictionary.lookupWithFallback(word, providerIds);
     if (!result) return null;
 
-    result.language = resolvedLanguage;
+    const providerId =
+      providerIds.find((id) => dictionary.getProvider(id)?.name === result.provider) ??
+      providerIds[0];
+
+    if (language) result.language = language;
     if (context?.context) result.context = context.context;
+    result.metadata = {
+      ...result.metadata,
+      providerId,
+    };
     return result;
   }
 }
@@ -98,52 +143,34 @@ class LocalDictionaryService implements IDictionaryService {
 class LocalAnkiService implements IAnkiService {
   constructor(private readonly configService: IConfigService) {}
 
-  private async createClient() {
+  private async getAnki(): Promise<AnkiClient> {
     const userConfig = await this.configService.get();
-    return new AnkiClient(userConfig.anki.connectUrl);
+    return createAnkiClient(userConfig.anki.connectUrl);
   }
 
-  async addNote(result: DictionaryEntry): Promise<unknown> {
+  async createNote(result: DictionaryEntry): Promise<void> {
     const userConfig = await this.configService.get();
-    if (!result.language) return undefined;
-
-    const languageConfig = userConfig.dictionary[result.language];
-    if (!languageConfig) return undefined;
-
-    const client = new AnkiClient(userConfig.anki.connectUrl);
-    return client.addNoteFromEntry(
-      languageConfig.deck,
-      userConfig.anki.noteType,
-      userConfig.anki.fieldMap,
-      result,
+    const providerRule = getProviderRule(
+      userConfig.dictionary,
+      getEntryProviderId(result),
+      result.language,
     );
+    if (!providerRule?.deck) return;
+
+    await (await this.getAnki()).createNote(providerRule.deck, result);
   }
 
   async getDecks(): Promise<string[]> {
-    return this.createClient().then((client) => client.getDeckNames());
+    return this.getAnki().then((anki) => anki.getDecks());
   }
 
-  async getModels(): Promise<string[]> {
-    return this.createClient().then((client) => client.getModelNames());
-  }
-
-  async getModelFields(modelName: string): Promise<string[]> {
-    return this.createClient().then((client) => client.getModelFieldNames(modelName));
-  }
-
-  async createModel(model: AnkiModel): Promise<void> {
-    const client = await this.createClient();
-    await client.createModel(model);
-  }
-
-  async updateModel(model: AnkiModel): Promise<void> {
-    const client = await this.createClient();
-    await client.updateModel(model);
+  async syncTemplate(): Promise<void> {
+    await (await this.getAnki()).syncTemplate();
   }
 }
 
 export class LocalPlatformServices {
-  readonly config = new LocalConfigService();
+  readonly config: IConfigService = configService;
   readonly dictionary = new LocalDictionaryService(this.config);
   readonly anki: IAnkiService = new LocalAnkiService(this.config);
 }
