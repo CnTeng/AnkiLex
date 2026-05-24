@@ -25,12 +25,11 @@ const handler = (event: _ZoteroTypes.Reader.EventParams<"renderTextSelectionPopu
   container.append(style);
 
   const stateView = new LookupPanel({
-    doc,
+    container,
     className: cx("flex min-h-0 flex-1 flex-col"),
     ankiService: services.anki,
   });
 
-  container.append(stateView.element);
   append(container);
 
   stateView.load(services.dictionary.lookup(expression, context ?? undefined));

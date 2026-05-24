@@ -1,14 +1,3 @@
-export interface AnkiConnectRequest {
-  action: string;
-  version: number;
-  params: Record<string, unknown>;
-}
-
-export interface AnkiConnectResponse<T> {
-  result: T;
-  error: string | null;
-}
-
 export interface AnkiModelTemplate {
   Name: string;
   Front: string;
@@ -39,7 +28,7 @@ export interface AnkiNote {
 
 export const ANKI_DEFAULT_MODEL_NAME = "Anki-Lex Modern";
 
-export const ANKI_DEFAULT_MODEL_FIELDS: string[] = [
+export const ANKI_DEFAULT_MODEL_FIELDS = [
   "word",
   "pronunciations",
   "audio",
@@ -49,33 +38,4 @@ export const ANKI_DEFAULT_MODEL_FIELDS: string[] = [
   "provider",
   "metadata",
   "data",
-];
-
-export function guessAnkiModelField(fieldName: string) {
-  const lowered = fieldName.toLowerCase();
-  return ANKI_DEFAULT_MODEL_FIELDS.find((fieldId) => lowered.includes(fieldId));
-}
-
-const VALID_ANKI_MODEL_FIELDS = new Set(ANKI_DEFAULT_MODEL_FIELDS);
-
-export function normalizeAnkiFieldMap(
-  fieldNames: string[],
-  fieldMap: Record<string, string>,
-): Record<string, string> {
-  const validFields = new Set(fieldNames);
-  return Object.fromEntries(
-    fieldNames
-      .map((fieldName) => {
-        const mappedField = fieldMap[fieldName] || guessAnkiModelField(fieldName) || "";
-        if (
-          !mappedField ||
-          !validFields.has(fieldName) ||
-          !VALID_ANKI_MODEL_FIELDS.has(mappedField)
-        ) {
-          return null;
-        }
-        return [fieldName, mappedField] as const;
-      })
-      .filter((entry): entry is readonly [string, string] => entry !== null),
-  );
-}
+] as const;

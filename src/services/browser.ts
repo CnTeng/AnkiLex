@@ -123,10 +123,6 @@ class BrowserAnkiService implements IAnkiService {
     return this.client.invoke("anki", "getModels");
   }
 
-  async getModelFields(modelName: string): Promise<string[]> {
-    return this.client.invoke("anki", "getModelFields", modelName);
-  }
-
   async createModel(model: AnkiModel): Promise<void> {
     await this.client.invoke("anki", "createModel", model);
   }

@@ -6,17 +6,47 @@ import type {
   Pronunciation,
 } from "@common/model";
 
-function formatDefinitions(definitions: Definition[]): string {
-  if (definitions.length === 0) return "";
+type AudioPronunciation = Pronunciation & { audioUrl: string };
+type NoteModel = Pick<AnkiModel, "modelName" | "inOrderFields">;
+
+export function createNoteFromEntry(
+  deckName: string,
+  model: NoteModel,
+  entry: DictionaryEntry,
+): AnkiNote {
+  const audioItems = entry.pronunciations.filter(hasAudioUrl);
+
+  return {
+    deckName,
+    modelName: model.modelName,
+    fields: {
+      ...Object.fromEntries(model.inOrderFields.map((fieldName) => [fieldName, ""])),
+      word: entry.word,
+      context: entry.context || "",
+      definition: formatDefinitions(entry.definitions),
+      examples: formatExamples(entry.definitions),
+      pronunciations: formatPronunciations(entry.pronunciations),
+      provider: entry.provider,
+      metadata: formatMetadata(entry.metadata),
+      data: JSON.stringify(entry),
+    },
+    tags: ["ankilex"],
+    ...(audioItems.length > 0 ? { audio: createAudioItems(entry.word, audioItems) } : {}),
+  };
+}
+
+function formatDefinitions(definitions: Definition[]) {
   return definitions
-    .map((def) => (def.partOfSpeech ? `[${def.partOfSpeech}] ${def.text}` : def.text))
+    .map((definition) =>
+      definition.partOfSpeech ? `[${definition.partOfSpeech}] ${definition.text}` : definition.text,
+    )
     .join("\n");
 }
 
-function formatExamples(definitions: Definition[]): string {
+function formatExamples(definitions: Definition[]) {
   return definitions
-    .flatMap((def) =>
-      (def.examples ?? [])
+    .flatMap((definition) =>
+      (definition.examples ?? [])
         .filter((example) => example.text)
         .map((example) =>
           example.translation ? `${example.text} :: ${example.translation}` : example.text,
@@ -25,7 +55,7 @@ function formatExamples(definitions: Definition[]): string {
     .join("\n");
 }
 
-function formatPronunciations(pronunciations: Pronunciation[]): string {
+function formatPronunciations(pronunciations: Pronunciation[]) {
   return pronunciations
     .filter((pronunciation) => pronunciation.text)
     .map((pronunciation) =>
@@ -34,7 +64,7 @@ function formatPronunciations(pronunciations: Pronunciation[]): string {
     .join("\n");
 }
 
-function formatMetadata(metadata?: Record<string, unknown>): string {
+function formatMetadata(metadata?: Record<string, unknown>) {
   if (!metadata) return "";
   return Object.entries(metadata)
     .filter(([, value]) => value != null)
@@ -42,68 +72,15 @@ function formatMetadata(metadata?: Record<string, unknown>): string {
     .join("\n");
 }
 
-export function createNoteFromEntry(
-  deckName: string,
-  model: AnkiModel,
-  fieldMap: Record<string, string>,
-  result: DictionaryEntry,
-): AnkiNote {
-  const note: AnkiNote = {
-    deckName,
-    modelName: model.modelName,
-    fields: {},
-    tags: ["ankilex"],
-  };
+function hasAudioUrl(pronunciation: Pronunciation): pronunciation is AudioPronunciation {
+  return Boolean(pronunciation.audioUrl);
+}
 
-  for (const fieldName of model.inOrderFields) {
-    const mappedField = fieldMap[fieldName];
-    if (!mappedField) {
-      note.fields[fieldName] = "";
-      continue;
-    }
-
-    switch (mappedField) {
-      case "word":
-        note.fields[fieldName] = result.word;
-        break;
-      case "context":
-        note.fields[fieldName] = result.context || "";
-        break;
-      case "definition":
-        note.fields[fieldName] = formatDefinitions(result.definitions);
-        break;
-      case "examples":
-        note.fields[fieldName] = formatExamples(result.definitions);
-        break;
-      case "audio": {
-        const audioItems = result.pronunciations.filter((pronunciation) => pronunciation.audioUrl);
-        if (audioItems.length === 0) break;
-
-        note.audio = audioItems.map((item) => {
-          const label = item.type ? `_${item.type}` : "";
-          const timestamp = Date.now();
-          return {
-            url: item.audioUrl,
-            filename: `ankilex_${result.word}${label}_${timestamp}.mp3`,
-            fields: [fieldName],
-          };
-        });
-        break;
-      }
-      case "pronunciations":
-        note.fields[fieldName] = formatPronunciations(result.pronunciations);
-        break;
-      case "provider":
-        note.fields[fieldName] = result.provider;
-        break;
-      case "metadata":
-        note.fields[fieldName] = formatMetadata(result.metadata);
-        break;
-      case "data":
-        note.fields[fieldName] = JSON.stringify(result);
-        break;
-    }
-  }
-
-  return note;
+function createAudioItems(word: string, pronunciations: AudioPronunciation[]) {
+  const timestamp = Date.now();
+  return pronunciations.map((pronunciation) => ({
+    url: pronunciation.audioUrl,
+    filename: `ankilex_${word}${pronunciation.type ? `_${pronunciation.type}` : ""}_${timestamp}.mp3`,
+    fields: ["audio"],
+  }));
 }

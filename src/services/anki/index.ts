@@ -1,2 +1,3 @@
-export * from "./client";
-export * from "./note";
+export * from "./api";
+export { invoke, request } from "./connect";
+export type { AnkiConnectEnv } from "./connect";

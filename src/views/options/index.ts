@@ -8,24 +8,24 @@ import type {
   IDictionaryService,
   UserConfig,
 } from "@common/model";
-import { normalizeAnkiFieldMap } from "@common/model";
+import { ANKI_DEFAULT_MODEL_NAME } from "@common/model";
 import { cn } from "tailwind-variants";
+import { ANKI_DEFAULT_MODEL } from "@views/dictionary/templates";
 import { AnkiOptions } from "./anki";
 import { DictionaryOptions } from "./dict";
 import { OptionsFooter } from "./footer";
-import { loadOptionsState, resetOptionsState } from "./state";
+import { loadAnkiState, loadOptionsState, resetOptionsState } from "./state";
 
 export class OptionsPage {
-  readonly element: HTMLDivElement;
-
-  private readonly doc: Document;
-  private readonly root: HTMLElement;
+  private readonly container: HTMLElement;
+  private readonly document: Document;
+  private readonly element: HTMLDivElement;
   private readonly configService: IConfigService;
   private readonly dictionaryService: IDictionaryService;
   private readonly ankiService: IAnkiService;
-  private readonly footer: OptionsFooter;
-  private readonly dictionaryOptions: DictionaryOptions;
-  private readonly ankiOptions: AnkiOptions;
+  private footer!: OptionsFooter;
+  private dictionaryOptions!: DictionaryOptions;
+  private ankiOptions!: AnkiOptions;
   private readonly unsubscribeConfigChange: () => void;
 
   private userConfig: UserConfig;
@@ -36,8 +36,7 @@ export class OptionsPage {
   private reloadChain = Promise.resolve();
 
   private constructor({
-    doc = document,
-    root,
+    container,
     configService,
     dictionaryService,
     ankiService,
@@ -45,8 +44,7 @@ export class OptionsPage {
     dictionaryLanguages,
     ankiState,
   }: {
-    doc?: Document;
-    root: HTMLElement;
+    container: HTMLElement;
     configService: IConfigService;
     dictionaryService: IDictionaryService;
     ankiService: IAnkiService;
@@ -54,8 +52,8 @@ export class OptionsPage {
     dictionaryLanguages: DictionaryLanguageInfo[];
     ankiState: AnkiState;
   }) {
-    this.doc = doc;
-    this.root = root;
+    this.container = container;
+    this.document = container.ownerDocument;
     this.configService = configService;
     this.dictionaryService = dictionaryService;
     this.ankiService = ankiService;
@@ -64,33 +62,11 @@ export class OptionsPage {
     this.ankiState = ankiState;
     this.savedUserConfig = userConfig;
 
-    this.element = this.doc.createElement("div");
-    this.element.className = "bg-base-100 text-base-content";
-
-    this.footer = new OptionsFooter(this.doc);
-    this.footer.setResetAction(() => this.reset());
-
-    this.dictionaryOptions = new DictionaryOptions({
-      doc: this.doc,
-      getDictionaryConfig: () => this.userConfig.dictionary,
-      setDictionaryConfig: (dictionaryConfig) => this.setDictionaryConfig(dictionaryConfig),
-      getDictionaryLanguages: () => this.dictionaryLanguages,
-      getDeckOptions: () => this.ankiState.deckOptions,
-    });
-
-    this.ankiOptions = new AnkiOptions({
-      doc: this.doc,
-      ankiService: this.ankiService,
-      getConfig: () => this.userConfig.anki,
-      setConfig: (ankiConfig) => this.setAnkiConfig(ankiConfig),
-      setAnkiState: (nextAnkiState, nextAnkiConfig) =>
-        this.setAnkiState(nextAnkiState, nextAnkiConfig),
-      getAnkiState: () => this.ankiState,
-      showStatus: (level, message) => this.footer.status.show(message, level),
-    });
+    this.element = this.document.createElement("div");
+    this.element.className = "bg-background text-foreground";
 
     this.renderStructure();
-    this.root.replaceChildren(this.element);
+    this.container.replaceChildren(this.element);
 
     this.unsubscribeConfigChange = this.configService.onDidChange((event) => {
       void this.reloadFromConfig(event);
@@ -99,19 +75,18 @@ export class OptionsPage {
   }
 
   static async create({
-    doc = document,
-    root,
+    container,
     configService,
     dictionaryService,
     ankiService,
   }: {
-    doc?: Document;
-    root: HTMLElement;
+    container: HTMLElement;
     configService: IConfigService;
     dictionaryService: IDictionaryService;
     ankiService: IAnkiService;
   }) {
-    root.replaceChildren(OptionsPage.createStateMessage(doc, "Loading options..."));
+    const document = container.ownerDocument;
+    container.replaceChildren(OptionsPage.createStateMessage(document, "Loading options..."));
 
     const userConfig = await configService.get();
     const { dictionaryLanguages, ankiState } = await loadOptionsState(
@@ -120,8 +95,7 @@ export class OptionsPage {
       userConfig,
     );
     return new OptionsPage({
-      doc,
-      root,
+      container,
       configService,
       dictionaryService,
       ankiService,
@@ -141,24 +115,44 @@ export class OptionsPage {
   }
 
   private renderStructure() {
-    const sections = this.doc.createElement("div");
-    sections.className = cn("space-y-6 p-4") as string;
-    sections.append(
-      this.renderPageIntro(),
-      this.dictionaryOptions.element,
-      this.ankiOptions.element,
-    );
-    this.element.append(sections, this.footer.element);
+    const sections = this.document.createElement("div");
+    sections.className = cn("space-y-8 p-8") as string;
+    sections.append(this.renderPageIntro());
+
+    this.dictionaryOptions = new DictionaryOptions({
+      container: sections,
+      getDictionaryConfig: () => this.userConfig.dictionary,
+      setDictionaryConfig: (dictionaryConfig) => this.setDictionaryConfig(dictionaryConfig),
+      getDictionaryLanguages: () => this.dictionaryLanguages,
+      getDeckOptions: () => this.ankiState.deckOptions,
+    });
+
+    this.ankiOptions = new AnkiOptions({
+      container: sections,
+      getConfig: () => this.userConfig.anki,
+      setConfig: (ankiConfig) => this.setAnkiConfig(ankiConfig),
+      setAnkiState: (nextAnkiState, nextAnkiConfig) =>
+        this.setAnkiState(nextAnkiState, nextAnkiConfig),
+      getAnkiState: () => this.ankiState,
+      showStatus: (level, message) => this.footer.status.show(message, level),
+      loadAnkiState: (ankiConfig) => loadAnkiState(this.ankiService, ankiConfig),
+      syncTemplate: () => this.syncAnkiTemplate(),
+    });
+
+    this.element.append(sections);
+    this.footer = new OptionsFooter(this.element);
+    this.footer.setResetAction(() => this.reset());
   }
 
   private renderPageIntro() {
-    const header = this.doc.createElement("section");
+    const header = this.document.createElement("section");
+    header.className = cn("space-y-1") as string;
 
-    const title = this.doc.createElement("h1");
+    const title = this.document.createElement("h1");
     title.className = cn("text-xl font-semibold") as string;
     title.textContent = "Options";
 
-    const text = this.doc.createElement("p");
+    const text = this.document.createElement("p");
     text.className = cn("mt-1 text-sm") as string;
     text.textContent =
       "Tune dictionary sources, connect Anki, and keep note generation aligned with your workflow.";
@@ -208,13 +202,24 @@ export class OptionsPage {
     this.ankiState = nextAnkiState;
     this.userConfig = {
       ...this.userConfig,
-      anki: this.mergeAnkiConfig(nextAnkiConfig ?? this.userConfig.anki, nextAnkiState),
+      anki: nextAnkiConfig ?? { ...this.userConfig.anki, noteType: nextAnkiState.noteType },
     };
     this.render();
   }
 
+  private async syncAnkiTemplate() {
+    const ankiConfig = this.userConfig.anki;
+    const models = await this.ankiService.getModels();
+    await (models.includes(ANKI_DEFAULT_MODEL_NAME)
+      ? this.ankiService.updateModel(ANKI_DEFAULT_MODEL)
+      : this.ankiService.createModel(ANKI_DEFAULT_MODEL));
+    return loadAnkiState(this.ankiService, ankiConfig);
+  }
+
   private async reset() {
-    if (!this.doc.defaultView?.confirm("Are you sure you want to reset all options to defaults?")) {
+    if (
+      !this.document.defaultView?.confirm("Are you sure you want to reset all options to defaults?")
+    ) {
       return;
     }
 
@@ -265,9 +270,9 @@ export class OptionsPage {
   }
 
   private showLoadError(error: unknown) {
-    this.root.replaceChildren(
+    this.container.replaceChildren(
       OptionsPage.createStateMessage(
-        this.doc,
+        this.document,
         error instanceof Error ? error.message : String(error),
       ),
     );
@@ -275,14 +280,6 @@ export class OptionsPage {
 
   private sameUserConfig(a: UserConfig, b: UserConfig) {
     return JSON.stringify(a) === JSON.stringify(b);
-  }
-
-  private mergeAnkiConfig(ankiConfig: AnkiConfig, ankiState: AnkiState): AnkiConfig {
-    return {
-      ...ankiConfig,
-      noteType: ankiState.noteType,
-      fieldMap: normalizeAnkiFieldMap(ankiState.fieldNames, ankiConfig.fieldMap),
-    };
   }
 
   private static createStateMessage(doc: Document, message: string) {

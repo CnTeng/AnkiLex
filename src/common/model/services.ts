@@ -27,7 +27,6 @@ export interface IAnkiService {
   addNote(result: DictionaryEntry): Promise<unknown>;
   getDecks(): Promise<string[]>;
   getModels(): Promise<string[]>;
-  getModelFields(modelName: string): Promise<string[]>;
   createModel(model: AnkiModel): Promise<void>;
   updateModel(model: AnkiModel): Promise<void>;
 }

@@ -29,11 +29,6 @@ class OptionsStateLoader {
     this.ankiService = ankiService;
   }
 
-  loadFieldNames(noteType: string) {
-    if (!noteType) return Promise.resolve([]);
-    return this.ankiService.getModelFields(noteType);
-  }
-
   async loadAnkiState(ankiConfig: AnkiConfig): Promise<AnkiState> {
     const [decks, models] = await Promise.all([
       this.ankiService.getDecks().catch(() => []),
@@ -49,7 +44,6 @@ class OptionsStateLoader {
       deckOptions: this.toSelectOptions(decks),
       noteType,
       noteTypeOptions,
-      fieldNames: await this.loadFieldNames(noteType).catch(() => []),
     };
   }
 
@@ -77,10 +71,6 @@ class OptionsStateLoader {
     if (options.some((option) => option.value === noteType)) return noteType;
     return options[0]?.value ?? noteType;
   }
-}
-
-export async function loadFieldNames(ankiService: IAnkiService, noteType: string) {
-  return new OptionsStateLoader({ ankiService }).loadFieldNames(noteType);
 }
 
 export async function loadAnkiState(

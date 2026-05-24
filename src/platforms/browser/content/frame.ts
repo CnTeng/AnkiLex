@@ -7,15 +7,17 @@ function init() {
   const services = new BrowserPlatformServices();
   const app = document.createElement("div");
   app.className =
-    cx("bg-base-100 text-base-content flex h-full min-h-0 flex-col overflow-hidden") ?? "";
+    cx("bg-background text-foreground flex h-full min-h-0 flex-col overflow-hidden") ?? "";
 
   document.body.append(app);
 
   const stateView = new LookupPanel({
+    container: app,
     className: cx("flex h-0 flex-1 flex-col"),
     ankiService: services.anki,
+    configService: services.config,
+    dictionaryService: services.dictionary,
   });
-  app.append(stateView.element);
 
   window.addEventListener("message", (event) => {
     if (event.data?.action === "lookup") {
@@ -25,7 +27,7 @@ function init() {
       };
       if (!word) return;
 
-      stateView.load(services.dictionary.lookup(word, context));
+      stateView.load(services.dictionary.lookup(word, context), { word, context });
     }
   });
 }

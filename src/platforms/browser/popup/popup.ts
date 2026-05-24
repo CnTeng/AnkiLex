@@ -8,27 +8,29 @@ async function init() {
   const app = document.createElement("div");
   app.className =
     cx(
-      "bg-base-100 text-base-content border-base-300 flex h-16 min-h-0 flex-col border transition-[height] duration-200 ease-out data-[state=expanded]:h-[460px]",
+      "bg-background/96 text-foreground border-border/60 flex h-12 min-h-0 flex-col overflow-hidden border shadow-[0_10px_30px_rgb(0_0_0_/_0.10)] backdrop-blur-sm transition-[height] duration-300 ease-out data-[state=expanded]:h-[480px]",
     ) ?? "";
   app.dataset.state = "collapsed";
 
   document.body.append(app);
 
-  const stateView = new LookupPanel({
-    className: cx("flex min-h-0 flex-1 flex-col overflow-hidden"),
-    ankiService: services.anki,
+  const searchBar = new SearchBar({
+    container: app,
+    dictionaryService: services.dictionary,
   });
 
-  const searchBar = new SearchBar({
+  const stateView = new LookupPanel({
+    container: app,
+    className: cx("flex min-h-0 flex-1 flex-col overflow-hidden"),
+    ankiService: services.anki,
     configService: services.config,
     dictionaryService: services.dictionary,
   });
-  searchBar.onDidSubmitSearch(async (result) => {
-    app.dataset.state = "expanded";
-    await stateView.load(result);
-  });
 
-  app.append(searchBar.element, stateView.element);
+  searchBar.onDidSubmitSearch(async ({ word, result }) => {
+    app.dataset.state = "expanded";
+    await stateView.load(result, { word });
+  });
 
   searchBar.focus();
 

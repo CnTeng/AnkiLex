@@ -22,7 +22,8 @@ export function initAnkiFront() {
     ? (Array.from(rawAudio.querySelectorAll(".soundLink")) as HTMLAnchorElement[])
     : [];
 
-  root.replaceChildren(new AnkiCardFront({ doc: document, entry, soundLinks }).element);
+  root.replaceChildren();
+  new AnkiCardFront({ container: root, entry, soundLinks });
 }
 
 export function initAnkiBack() {
@@ -30,5 +31,6 @@ export function initAnkiBack() {
   const root = document.getElementById("ankilex-back-root");
   if (!entry || !root) return;
 
-  root.replaceChildren(new AnkiCardBack({ doc: document, entry }).element);
+  root.replaceChildren();
+  new AnkiCardBack({ container: root, entry });
 }

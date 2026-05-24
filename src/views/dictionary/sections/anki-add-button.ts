@@ -1,16 +1,22 @@
-import { Icon } from "@views/components";
+import { buttonStyles, Icon } from "@views/components";
 import { Check, Plus, X } from "lucide";
 
 type DefinitionButtonState = "idle" | "loading" | "success" | "error";
 
 const ADD_BUTTON_STATE_CLASSES: Record<Exclude<DefinitionButtonState, "idle">, string[]> = {
   loading: ["opacity-70", "cursor-wait"],
-  success: ["btn-success"],
-  error: ["btn-error"],
+  success: [
+    "bg-[color-mix(in_srgb,var(--success)_18%,var(--background))]",
+    "text-[var(--success)]",
+  ],
+  error: [
+    "bg-[color-mix(in_srgb,var(--destructive)_18%,var(--background))]",
+    "text-[var(--destructive)]",
+  ],
 };
 
 export interface AnkiAddButtonOptions {
-  doc: Document;
+  container: HTMLElement | DocumentFragment;
   index: number;
   onAddClick?: (index?: number) => void | Promise<void>;
 }
@@ -18,23 +24,24 @@ export interface AnkiAddButtonOptions {
 export class AnkiAddButton {
   readonly element: HTMLButtonElement;
 
-  private readonly doc: Document;
+  private readonly document: Document;
   private readonly index: number;
   private readonly onAddClick?: (index?: number) => void | Promise<void>;
 
-  constructor({ doc, index, onAddClick }: AnkiAddButtonOptions) {
-    this.doc = doc;
+  constructor({ container, index, onAddClick }: AnkiAddButtonOptions) {
+    this.document = container.ownerDocument ?? document;
     this.index = index;
     this.onAddClick = onAddClick;
 
-    this.element = this.doc.createElement("button");
+    this.element = this.document.createElement("button");
     this.element.type = "button";
     this.element.title = "Add to Anki";
-    this.element.className = "btn btn-ghost btn-circle btn-sm text-base-content/60 shadow-none";
+    this.element.className = `${buttonStyles({ variant: "ghost", size: "iconSm" })} text-foreground/60`;
     this.element.setAttribute("data-def-index", this.index.toString());
 
     this.setState("idle");
     this.registerListeners();
+    container.append(this.element);
   }
 
   private registerListeners() {
@@ -65,7 +72,7 @@ export class AnkiAddButton {
     this.element.disabled = state === "loading";
 
     if (state === "loading") {
-      const spinner = this.doc.createElement("span");
+      const spinner = this.document.createElement("span");
       spinner.className =
         "h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent";
       this.element.classList.add(...ADD_BUTTON_STATE_CLASSES.loading);
@@ -75,16 +82,16 @@ export class AnkiAddButton {
 
     if (state === "success") {
       this.element.classList.add(...ADD_BUTTON_STATE_CLASSES.success);
-      this.setContent(new Icon({ doc: this.doc, iconNode: Check }).element);
+      this.setContent(new Icon({ doc: this.document, iconNode: Check }).element);
       return;
     }
 
     if (state === "error") {
       this.element.classList.add(...ADD_BUTTON_STATE_CLASSES.error);
-      this.setContent(new Icon({ doc: this.doc, iconNode: X }).element);
+      this.setContent(new Icon({ doc: this.document, iconNode: X }).element);
       return;
     }
 
-    this.setContent(new Icon({ doc: this.doc, iconNode: Plus }).element);
+    this.setContent(new Icon({ doc: this.document, iconNode: Plus }).element);
   }
 }

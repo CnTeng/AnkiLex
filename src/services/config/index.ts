@@ -18,22 +18,36 @@ function cloneDefaultDictionaryConfig(): UserConfig["dictionary"] {
   return Object.fromEntries(
     Object.entries(DEFAULT_USER_CONFIG.dictionary).map(([languageCode, config]) => [
       languageCode,
-      { ...config, providers: [...config.providers] },
+      { ...config },
     ]),
   );
+}
+
+function normalizeLanguageConfig(
+  config?: { provider?: string; deck?: string; providers?: string[] } | null,
+) {
+  return {
+    provider: config?.provider ?? config?.providers?.[0] ?? "",
+    deck: config?.deck ?? "",
+  };
 }
 
 function normalizeConfig(
   cfg?: (Partial<UserConfig> & { languages?: UserConfig["dictionary"] }) | null,
 ): UserConfig {
+  const dictionary = cfg?.dictionary ?? cfg?.languages;
   return {
-    dictionary: cfg?.dictionary ?? cfg?.languages ?? cloneDefaultDictionaryConfig(),
+    dictionary: dictionary
+      ? Object.fromEntries(
+          Object.entries(dictionary).map(([languageCode, config]) => [
+            languageCode,
+            normalizeLanguageConfig(config),
+          ]),
+        )
+      : cloneDefaultDictionaryConfig(),
     anki: {
       connectUrl: cfg?.anki?.connectUrl ?? DEFAULT_USER_CONFIG.anki.connectUrl,
       noteType: cfg?.anki?.noteType ?? DEFAULT_USER_CONFIG.anki.noteType,
-      fieldMap: cfg?.anki?.fieldMap
-        ? { ...cfg.anki.fieldMap }
-        : { ...DEFAULT_USER_CONFIG.anki.fieldMap },
     },
   };
 }
@@ -46,7 +60,7 @@ export const config = {
   async getLanguageCodes(): Promise<string[]> {
     const cfg = await this.get();
     return Object.entries(cfg.dictionary)
-      .filter(([, cfg]) => cfg.providers.length > 0)
+      .filter(([, config]) => !!config.provider)
       .map(([code]) => code);
   },
 

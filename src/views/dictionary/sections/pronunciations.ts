@@ -1,10 +1,10 @@
 import type { Pronunciation } from "@common/model";
-import { Icon } from "@views/components";
+import { buttonStyles, Icon } from "@views/components";
 import { Play } from "lucide";
 import { cn } from "tailwind-variants";
 
 export interface DictionaryPronunciationsSectionOptions {
-  doc: Document;
+  container: HTMLElement | DocumentFragment;
   pronunciations: Pronunciation[];
   soundLinks?: HTMLAnchorElement[];
 }
@@ -13,40 +13,41 @@ export class DictionaryPronunciationsSection {
   readonly element: HTMLDivElement;
   readonly isEmpty: boolean;
 
-  private readonly doc: Document;
+  private readonly document: Document;
   private readonly pronunciations: Pronunciation[];
   private readonly soundLinks?: HTMLAnchorElement[];
 
-  constructor({ doc, pronunciations, soundLinks }: DictionaryPronunciationsSectionOptions) {
-    this.doc = doc;
+  constructor({ container, pronunciations, soundLinks }: DictionaryPronunciationsSectionOptions) {
+    this.document = container.ownerDocument ?? document;
     this.pronunciations = pronunciations;
     this.soundLinks = soundLinks;
 
-    this.element = this.doc.createElement("div");
-    this.element.className = cn("mb-2 flex flex-wrap gap-3") as string;
+    this.element = this.document.createElement("div");
+    this.element.className = cn("mb-2.5 flex flex-wrap gap-3.5") as string;
     this.isEmpty = !this.pronunciations || this.pronunciations.length === 0;
 
     if (this.isEmpty) return;
     this.render();
+    container.append(this.element);
   }
 
   private render() {
     this.pronunciations.forEach(({ type, text, audioUrl }, index) => {
-      const item = this.doc.createElement("div");
-      item.className = cn("flex items-center gap-2") as string;
+      const item = this.document.createElement("div");
+      item.className = cn("flex items-center gap-1.5") as string;
 
       if (type) {
-        const typeElement = this.doc.createElement("span");
+        const typeElement = this.document.createElement("span");
         typeElement.className = cn(
-          "text-base-content/55 text-xs font-semibold uppercase opacity-70",
+          "text-muted-foreground text-xs font-semibold uppercase opacity-70",
         ) as string;
         typeElement.textContent = type;
         item.append(typeElement);
       }
 
       if (text) {
-        const textElement = this.doc.createElement("span");
-        textElement.className = cn("text-base-content font-mono text-sm") as string;
+        const textElement = this.document.createElement("span");
+        textElement.className = cn("text-foreground font-mono text-[0.92rem]") as string;
         textElement.textContent = text;
         item.append(textElement);
       }
@@ -57,17 +58,17 @@ export class DictionaryPronunciationsSection {
 
       if (link) {
         const anchor = link.cloneNode(true) as HTMLAnchorElement;
-        anchor.replaceChildren(new Icon({ doc: this.doc, iconNode: Play }).element);
-        anchor.className = "btn btn-ghost btn-xs btn-circle";
+        anchor.replaceChildren(new Icon({ doc: this.document, iconNode: Play }).element);
+        anchor.className = buttonStyles({ variant: "ghost", size: "iconXs" });
         item.append(anchor);
       } else if (audioUrl) {
-        const audio = this.doc.createElement("audio");
+        const audio = this.document.createElement("audio");
         audio.src = audioUrl;
 
-        const audioButton = this.doc.createElement("button");
+        const audioButton = this.document.createElement("button");
         audioButton.type = "button";
-        audioButton.className = "btn btn-ghost btn-circle btn-xs text-base-content/60 shadow-none";
-        audioButton.append(new Icon({ doc: this.doc, iconNode: Play }).element);
+        audioButton.className = `${buttonStyles({ variant: "ghost", size: "iconXs" })} text-foreground/60`;
+        audioButton.append(new Icon({ doc: this.document, iconNode: Play }).element);
         audioButton.addEventListener("click", (event) => {
           event.stopPropagation();
           audio.currentTime = 0;

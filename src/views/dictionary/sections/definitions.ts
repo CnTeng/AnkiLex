@@ -3,7 +3,7 @@ import { cn } from "tailwind-variants";
 import { AnkiAddButton } from "./anki-add-button";
 
 export interface DictionaryDefinitionsSectionOptions {
-  doc: Document;
+  container: HTMLElement | DocumentFragment;
   definitions: Definition[];
   showAddButton?: boolean;
   onAddClick?: (index?: number) => void | Promise<void>;
@@ -14,31 +14,32 @@ export class DictionaryDefinitionsSection {
   readonly element: HTMLDivElement;
   readonly isEmpty: boolean;
 
-  private readonly doc: Document;
+  private readonly document: Document;
   private readonly definitions: Definition[];
   private readonly showAddButton: boolean;
   private readonly onAddClick?: (index?: number) => void | Promise<void>;
   private readonly toggleTranslation: boolean;
 
   constructor({
-    doc,
+    container,
     definitions,
     showAddButton = false,
     onAddClick,
     toggleTranslation = false,
   }: DictionaryDefinitionsSectionOptions) {
-    this.doc = doc;
+    this.document = container.ownerDocument ?? document;
     this.definitions = definitions;
     this.showAddButton = showAddButton;
     this.onAddClick = onAddClick;
     this.toggleTranslation = toggleTranslation;
 
-    this.element = this.doc.createElement("div");
+    this.element = this.document.createElement("div");
     this.element.className = cn("divide-border flex flex-col divide-y") as string;
     this.isEmpty = !this.definitions || this.definitions.length === 0;
 
     if (this.isEmpty) return;
     this.render();
+    container.append(this.element);
   }
 
   private render() {
@@ -48,8 +49,8 @@ export class DictionaryDefinitionsSection {
   }
 
   private createDefinition(definition: Definition, index: number): HTMLDivElement {
-    const container = this.doc.createElement("div");
-    const baseClass = "flex flex-1 flex-col gap-1 py-4 first:pt-2 last:pb-2";
+    const container = this.document.createElement("div");
+    const baseClass = "flex flex-1 flex-col gap-1 py-3.5 first:pt-1.5 last:pb-1.5";
 
     if (this.toggleTranslation) {
       container.dataset.state = "closed";
@@ -64,8 +65,8 @@ export class DictionaryDefinitionsSection {
       container.className = baseClass;
     }
 
-    const headerRow = this.doc.createElement("div");
-    headerRow.className = cn("flex flex-1 items-center justify-between gap-1") as string;
+    const headerRow = this.document.createElement("div");
+    headerRow.className = cn("flex flex-1 items-start justify-between gap-2") as string;
     headerRow.append(this.createDefinitionContent(definition));
 
     if (this.showAddButton) {
@@ -81,18 +82,20 @@ export class DictionaryDefinitionsSection {
   }
 
   private createDefinitionContent(definition: Definition): HTMLDivElement {
-    const container = this.doc.createElement("div");
+    const container = this.document.createElement("div");
     container.className = cn("leading-relaxed") as string;
 
     if (definition.partOfSpeech) {
-      const posElement = this.doc.createElement("span");
-      posElement.className = cn("text-base-content/55 mr-2 text-xs font-medium italic") as string;
+      const posElement = this.document.createElement("span");
+      posElement.className = cn(
+        "text-muted-foreground mr-2 font-serif text-xs font-medium italic",
+      ) as string;
       posElement.textContent = definition.partOfSpeech;
       container.append(posElement);
     }
 
-    const textElement = this.doc.createElement("span");
-    textElement.className = cn("text-base-content text-sm leading-relaxed") as string;
+    const textElement = this.document.createElement("span");
+    textElement.className = cn("text-foreground text-[0.95rem] leading-relaxed") as string;
     textElement.textContent = definition.text;
     container.append(textElement);
 
@@ -102,8 +105,8 @@ export class DictionaryDefinitionsSection {
   private createExamples(examples?: Example[]): HTMLUListElement | null {
     if (!examples || examples.length === 0) return null;
 
-    const list = this.doc.createElement("ul");
-    list.className = cn("mt-2 list-disc flex-col space-y-2 pl-3") as string;
+    const list = this.document.createElement("ul");
+    list.className = cn("mt-1.5 list-disc flex-col space-y-1.5 pl-4") as string;
     examples.forEach((example) => {
       list.append(this.createExampleItem(example));
     });
@@ -112,18 +115,18 @@ export class DictionaryDefinitionsSection {
   }
 
   private createExampleItem(example: Example): HTMLLIElement {
-    const item = this.doc.createElement("li");
-    item.className = cn("text-base-content/70 text-sm") as string;
+    const item = this.document.createElement("li");
+    item.className = cn("text-muted-foreground text-sm leading-relaxed") as string;
 
-    const textElement = this.doc.createElement("span");
+    const textElement = this.document.createElement("span");
     textElement.textContent = example.text;
     item.append(textElement);
 
     if (example.translation) {
-      const translationElement = this.doc.createElement("span");
+      const translationElement = this.document.createElement("span");
       translationElement.className = cn(
         "ml-1",
-        "group-data-[state=closed]:bg-base-300",
+        "group-data-[state=closed]:bg-secondary",
         "group-data-[state=closed]:text-transparent!",
         "group-data-[state=closed]:select-none",
         "group-data-[state=closed]:rounded",
@@ -138,10 +141,7 @@ export class DictionaryDefinitionsSection {
   }
 
   private createAnkiAddButton(index: number): HTMLButtonElement {
-    return new AnkiAddButton({
-      doc: this.doc,
-      index,
-      onAddClick: this.onAddClick,
-    }).element;
+    const container = this.document.createDocumentFragment();
+    return new AnkiAddButton({ container, index, onAddClick: this.onAddClick }).element;
   }
 }

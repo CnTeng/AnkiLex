@@ -3,9 +3,13 @@ import { Star } from "lucide";
 import { cn } from "tailwind-variants";
 
 const FREQUENCY_STAR_COUNT = 5;
+const metadataBadgeClass = cn(
+  "inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[11px] font-medium",
+  "bg-secondary text-secondary-foreground border-[color:color-mix(in_srgb,var(--border)_70%,transparent)]",
+) as string;
 
 export interface DictionaryMetadataSectionOptions {
-  doc: Document;
+  container: HTMLElement | DocumentFragment;
   metadata?: Record<string, unknown>;
 }
 
@@ -13,15 +17,15 @@ export class DictionaryMetadataSection {
   readonly element: HTMLDivElement;
   readonly isEmpty: boolean;
 
-  private readonly doc: Document;
+  private readonly document: Document;
   private readonly metadata?: Record<string, unknown>;
 
-  constructor({ doc, metadata }: DictionaryMetadataSectionOptions) {
-    this.doc = doc;
+  constructor({ container, metadata }: DictionaryMetadataSectionOptions) {
+    this.document = container.ownerDocument ?? document;
     this.metadata = metadata;
 
-    this.element = this.doc.createElement("div");
-    this.element.className = cn("mb-2 flex items-center gap-2") as string;
+    this.element = this.document.createElement("div");
+    this.element.className = cn("mb-2.5 flex items-center gap-3") as string;
 
     const tags = (this.metadata?.tags as string[]) || [];
     const frequency = (this.metadata?.frequency as number) || 0;
@@ -29,6 +33,7 @@ export class DictionaryMetadataSection {
 
     if (this.isEmpty) return;
     this.render(tags, frequency);
+    container.append(this.element);
   }
 
   private render(tags: string[], frequency: number) {
@@ -42,18 +47,18 @@ export class DictionaryMetadataSection {
   private createFrequency(frequency: number): HTMLDivElement | null {
     if (frequency <= 0) return null;
 
-    const container = this.doc.createElement("div");
+    const container = this.document.createElement("div");
     container.className = cn("flex items-center gap-0.5") as string;
 
     for (let i = 0; i < FREQUENCY_STAR_COUNT; i++) {
       container.append(
         new Icon({
-          doc: this.doc,
+          doc: this.document,
           iconNode: Star,
           customAttrs: {
             class: cn(
               "h-4 w-4",
-              i < frequency ? "text-warning fill-current" : "text-base-content/35",
+              i < frequency ? "text-warning fill-current" : "text-muted-foreground",
             ),
           },
         }).element,
@@ -66,12 +71,12 @@ export class DictionaryMetadataSection {
   private createTags(tags: string[]): HTMLDivElement | null {
     if (tags.length === 0) return null;
 
-    const container = this.doc.createElement("div");
-    container.className = cn("flex flex-wrap gap-1.5") as string;
+    const container = this.document.createElement("div");
+    container.className = cn("flex flex-wrap gap-1") as string;
 
     tags.forEach((tag) => {
-      const badge = this.doc.createElement("span");
-      badge.className = "badge badge-outline badge-sm border-base-300 text-[11px]";
+      const badge = this.document.createElement("span");
+      badge.className = metadataBadgeClass;
       badge.textContent = tag;
       container.append(badge);
     });

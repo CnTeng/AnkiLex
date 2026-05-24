@@ -12,8 +12,7 @@ export function mountPrefs(doc: Document) {
   const view = doc.defaultView as Window & { __ankiLexPrefsPage__?: OptionsPage | null };
   view.__ankiLexPrefsPage__?.dispose();
   void OptionsPage.create({
-    doc,
-    root,
+    container: root,
     configService: services.config,
     dictionaryService: services.dictionary,
     ankiService: services.anki,

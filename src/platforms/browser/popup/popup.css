@@ -1,6 +1,6 @@
+@import "@assets/theme.css";
 @import "@assets/scrollbar.css";
 @import "tailwindcss";
-@import "@assets/flyonui.css";
 
 html,
 body {
@@ -8,5 +8,16 @@ body {
 }
 
 body {
-  background: var(--color-base-200);
+  background: var(--background);
+  color: var(--foreground);
+}
+
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  background:
+    linear-gradient(rgb(255 255 255 / 0.03), rgb(255 255 255 / 0.03)),
+    radial-gradient(circle at top, rgb(53 132 228 / 0.08), transparent 55%);
 }

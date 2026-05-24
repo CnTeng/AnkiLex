@@ -15,8 +15,8 @@ type LineDiff = {
 
 const TOKEN_STYLES: Record<TokenType, string> = {
   text: "",
-  marker: cn("text-base-content/50") as string,
-  code: cn("bg-base-200 text-base-content rounded-sm px-1") as string,
+  marker: cn("text-foreground/50") as string,
+  code: cn("bg-muted text-foreground rounded-sm px-1") as string,
   bold: cn("underline decoration-2 underline-offset-2") as string,
   italic: cn("underline decoration-dotted underline-offset-2") as string,
   strike: cn("line-through") as string,
@@ -47,7 +47,7 @@ export class Editor {
 
     this.placeholderEl = this.ownerDocument.createElement("div");
     this.placeholderEl.className = cn(
-      "tab-2 text-base-content/45 pointer-events-none absolute inset-0 p-3 font-mono text-sm leading-6",
+      "tab-2 text-foreground/45 pointer-events-none absolute inset-0 p-3 font-mono text-sm leading-6",
     ) as string;
 
     this.textarea = this.ownerDocument.createElement("textarea");

@@ -9,7 +9,7 @@ const MARKDOWN_TAGS = {
 } as const;
 
 export interface DictionaryContextSectionOptions {
-  doc: Document;
+  container: HTMLElement | DocumentFragment;
   context?: string;
 }
 
@@ -17,31 +17,32 @@ export class DictionaryContextSection {
   readonly element: HTMLDivElement;
   readonly isEmpty: boolean;
 
-  private readonly doc: Document;
+  private readonly document: Document;
   private readonly context?: string;
 
-  constructor({ doc, context }: DictionaryContextSectionOptions) {
-    this.doc = doc;
+  constructor({ container, context }: DictionaryContextSectionOptions) {
+    this.document = container.ownerDocument ?? document;
     this.context = context;
 
-    this.element = this.doc.createElement("div");
-    this.element.className = cn("mt-4 text-left") as string;
+    this.element = this.document.createElement("div");
+    this.element.className = cn("mt-3.5 text-left") as string;
     this.isEmpty = !this.context || this.context.trim() === "";
 
     if (this.isEmpty) return;
     this.render();
+    container.append(this.element);
   }
 
   private render() {
-    const label = this.doc.createElement("div");
+    const label = this.document.createElement("div");
     label.className = cn(
-      "text-base-content/55 mb-2 ml-1 text-[0.7rem] font-bold tracking-widest uppercase",
+      "text-muted-foreground mb-1.5 ml-1 text-[0.68rem] font-bold tracking-[0.14em] uppercase",
     ) as string;
     label.textContent = "Context";
 
-    const contentElement = this.doc.createElement("div");
+    const contentElement = this.document.createElement("div");
     contentElement.className = cn(
-      "border-base-300/70 border-l pl-3 text-[0.9rem] leading-relaxed italic",
+      "bg-secondary/35 text-foreground border-border/35 rounded-xl border px-4 py-3 text-[0.9rem] leading-relaxed italic shadow-sm",
     ) as string;
     contentElement.append(this.renderMarkdown(this.context!.trim()));
 
@@ -49,10 +50,10 @@ export class DictionaryContextSection {
   }
 
   private renderMarkdown(text: string) {
-    const fragment = this.doc.createDocumentFragment();
+    const fragment = this.document.createDocumentFragment();
 
     text.split("\n").forEach((line, lineIndex) => {
-      if (lineIndex > 0) fragment.append(this.doc.createElement("br"));
+      if (lineIndex > 0) fragment.append(this.document.createElement("br"));
       tokenize(line).forEach((token) => {
         this.appendMarkdownToken(fragment, token);
       });
@@ -68,14 +69,14 @@ export class DictionaryContextSection {
     if (token.type === "marker") return;
 
     if (token.type === "text") {
-      fragment.append(this.doc.createTextNode(token.value));
+      fragment.append(this.document.createTextNode(token.value));
       return;
     }
 
-    const element = this.doc.createElement(MARKDOWN_TAGS[token.type] ?? "span");
+    const element = this.document.createElement(MARKDOWN_TAGS[token.type] ?? "span");
     if (token.type === "code") {
       element.className = cn(
-        "bg-base-200 text-base-content rounded-sm px-1 font-mono text-[0.85em]",
+        "bg-muted text-foreground rounded-sm px-1 font-mono text-[0.85em]",
       ) as string;
     }
     element.textContent = token.value;

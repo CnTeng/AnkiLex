@@ -4,6 +4,18 @@ import { cn } from "tailwind-variants";
 
 export type StatusLevel = "success" | "error" | "info" | "warning";
 
+const alertBaseClass = cn("rounded-[14px] border px-3 py-2 text-sm transition-all") as string;
+
+const alertVariantClasses: Record<StatusLevel, string> = {
+  success:
+    "border-[color:color-mix(in_srgb,var(--success)_45%,var(--border))] bg-[color:color-mix(in_srgb,var(--success)_12%,var(--background))] text-[var(--success)]",
+  error:
+    "border-[color:color-mix(in_srgb,var(--destructive)_45%,var(--border))] bg-[color:color-mix(in_srgb,var(--destructive)_12%,var(--background))] text-[var(--destructive)]",
+  info: "border-[color:color-mix(in_srgb,var(--info)_45%,var(--border))] bg-[color:color-mix(in_srgb,var(--info)_12%,var(--background))] text-[var(--info)]",
+  warning:
+    "border-[color:color-mix(in_srgb,var(--warning)_45%,var(--border))] bg-[color:color-mix(in_srgb,var(--warning)_12%,var(--background))] text-[var(--warning)]",
+};
+
 type FormFieldOptions = {
   htmlFor?: string;
   help?: string;
@@ -25,7 +37,7 @@ export class SectionHeading {
 
   private render() {
     this.element.className = cn(
-      "mb-6 flex items-center gap-3 border-b pb-2 text-lg font-semibold",
+      "border-primary/10 text-info mb-6 flex items-center gap-3 border-b-2 pb-2 text-lg font-semibold",
     ) as string;
     this.element.append(
       new Icon({ doc: this.doc, iconNode: this.iconNode, customAttrs: { width: 20, height: 20 } })
@@ -47,7 +59,7 @@ export class SectionTitle {
   }
 
   private render() {
-    this.element.className = cn("mb-5 text-lg font-semibold") as string;
+    this.element.className = cn("text-foreground text-xl font-semibold") as string;
     this.element.textContent = this.title;
   }
 }
@@ -69,7 +81,7 @@ export class SectionIntro {
     heading.classList.remove("mb-5");
 
     const text = this.doc.createElement("p");
-    text.className = cn("text-sm") as string;
+    text.className = cn("text-muted-foreground text-sm") as string;
     text.textContent = this.description;
 
     this.element.className = cn("mb-5 space-y-1") as string;
@@ -92,7 +104,7 @@ export class FormField {
   private render() {
     this.element.className = cn(
       this.options.layout === "inline"
-        ? "mb-5 min-w-0 gap-2 md:grid md:grid-cols-[minmax(140px,220px)_minmax(0,1fr)] md:items-start md:gap-x-4"
+        ? "mb-6 min-w-0 gap-2 md:grid md:grid-cols-[minmax(120px,220px)_minmax(0,1fr)] md:items-start md:gap-x-4"
         : "mb-6",
     ) as string;
 
@@ -103,8 +115,8 @@ export class FormField {
     const labelElement = this.doc.createElement("label");
     labelElement.className = cn(
       this.options.layout === "inline"
-        ? "min-w-0 pt-2 text-sm wrap-break-word"
-        : "mb-2 block text-sm",
+        ? "text-foreground min-w-0 pt-2 text-sm font-medium wrap-break-word"
+        : "text-foreground mb-2 block text-sm font-medium",
     ) as string;
     labelElement.textContent = this.label;
     if (this.options.htmlFor) labelElement.htmlFor = this.options.htmlFor;
@@ -124,7 +136,7 @@ export class FormField {
 
     if (this.options.help) {
       const help = this.doc.createElement("p");
-      help.className = cn("mt-1 text-xs") as string;
+      help.className = cn("text-muted-foreground mt-1.5 text-xs") as string;
       help.textContent = this.options.help;
       content.append(help);
     }
@@ -159,30 +171,28 @@ export class SelectOptions {
 export class OptionsStatus {
   readonly element: HTMLDivElement;
 
-  private readonly colors: Record<StatusLevel, string[]> = {
-    success: ["alert-success"],
-    error: ["alert-error"],
-    info: ["alert-info"],
-    warning: ["alert-warning"],
-  };
   private hideTimer: ReturnType<typeof setTimeout> | null = null;
 
   constructor(private readonly doc: Document) {
     this.element = this.doc.createElement("div");
     this.element.className = cn(
-      "alert hidden translate-y-2 text-sm opacity-0 transition-all sm:max-w-md",
+      "text-muted-foreground hidden translate-y-2 text-sm font-medium opacity-0 transition-all sm:max-w-md",
     ) as string;
   }
 
   show(message: string, level: StatusLevel) {
     this.element.textContent = message;
     this.element.classList.remove(
-      ...Object.values(this.colors).flat(),
+      ...Object.values(alertVariantClasses).flatMap((value) => value.split(" ")),
       "hidden",
       "opacity-0",
       "translate-y-2",
     );
-    this.element.classList.add(...this.colors[level], "opacity-100", "translate-y-0");
+    this.element.classList.add(
+      ...alertVariantClasses[level].split(" "),
+      "opacity-100",
+      "translate-y-0",
+    );
 
     if (this.hideTimer) clearTimeout(this.hideTimer);
     this.hideTimer = setTimeout(() => {
@@ -206,7 +216,7 @@ export class StatusMessage {
   }
 
   private render() {
-    this.element.className = ["alert text-sm transition-all", `alert-${this.level}`].join(" ");
+    this.element.className = cn(alertBaseClass, alertVariantClasses[this.level]) as string;
     this.element.textContent = this.message;
   }
 }
