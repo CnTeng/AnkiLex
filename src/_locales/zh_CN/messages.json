@@ -1,7 +1,7 @@
 {
-  "appName": { "message": "在线词典助手" },
+  "appName": { "message": "一本词典" },
   "appDesc": { "message": "显示在线词典内容的弹窗助手(支持Anki制卡)" },
-  "optTitle": { "message": "在线词典助手" },
+  "optTitle": { "message": "一本词典" },
 
   "tabExtensionTitle": { "message": "插件选项" },
   "tabServicesTitle": { "message": "输出选项" },

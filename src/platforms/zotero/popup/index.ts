@@ -18,7 +18,7 @@ const handler = (event: _ZoteroTypes.Reader.EventParams<"renderTextSelectionPopu
   const context = extractContext(range);
 
   const container = doc.createElement("div");
-  container.className = "anki-lex-popup label-popup";
+  container.className = "onedict-popup label-popup";
 
   const style = doc.createElement("style");
   style.textContent = popupStyle;

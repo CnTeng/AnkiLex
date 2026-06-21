@@ -2,7 +2,7 @@
 @import "@assets/scrollbar.css";
 @import "tailwindcss" important;
 
-.anki-lex-popup {
+.onedict-popup {
   width: 400px;
   max-height: 400px;
   overflow: hidden;
@@ -17,7 +17,7 @@
   line-height: 1.5;
 }
 
-.anki-lex-popup.label-popup {
+.onedict-popup.label-popup {
   position: static;
   inset: auto;
   left: auto;

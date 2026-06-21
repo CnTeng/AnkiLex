@@ -3,10 +3,10 @@
 @import "tailwindcss";
 
 body,
-.ankilex-root {
+.onedict-root {
   @apply bg-background text-foreground min-h-screen antialiased;
 }
 
-.ankilex-root * {
+.onedict-root * {
   box-sizing: border-box;
 }

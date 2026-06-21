@@ -10,7 +10,7 @@ let currentContext: Context | undefined;
 
 const iframe = document.createElement("iframe");
 iframe.src = chrome.runtime.getURL("platforms/browser/content/frame.html");
-iframe.className = "anki-lex-frame";
+iframe.className = "onedict-frame";
 iframe.loading = "lazy";
 
 const floating = new Popover({
@@ -27,10 +27,10 @@ shadow.append(styleElement, floating.button, floating.popover);
 
 document.documentElement.append(container);
 
-floating.button.className = "anki-lex-floating-btn";
-floating.button.title = `Search in Anki Lex`;
+floating.button.className = "onedict-floating-btn";
+floating.button.title = "Search in One dictionary";
 
-floating.popover.className = "anki-lex-popover";
+floating.popover.className = "onedict-popover";
 floating.popover.append(iframe);
 floating.popover.addEventListener("toggle", () => {
   if (floating.popover.matches(":popover-open")) {

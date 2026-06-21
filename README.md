@@ -1,4 +1,4 @@
-# AnkiLex - Anki Dictionary Helper
+# One dictionary
 
 A browser extension for looking up words in online dictionaries and adding them to Anki.
 

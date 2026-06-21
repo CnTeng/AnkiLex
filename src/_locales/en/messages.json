@@ -1,9 +1,9 @@
 {
-  "appName": { "message": "AnkiLex - Anki Dictionary Helper" },
+  "appName": { "message": "One dictionary" },
   "appDesc": {
     "message": "A translation popup tool to show online dictionary content and add to Anki"
   },
-  "optTitle": { "message": "AnkiLex Options" },
+  "optTitle": { "message": "One dictionary Options" },
 
   "tabExtensionTitle": { "message": "Extension Options" },
   "tabServicesTitle": { "message": "Services Options" },

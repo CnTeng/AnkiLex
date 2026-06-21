@@ -5,7 +5,7 @@ export const zoteroManifest = {
   version,
   description,
   author,
-  homepage_url: "https://github.com/cnteng/ankilex",
+  homepage_url: "https://github.com/cnteng/onedict",
   icons: {
     "48": "assets/icons/icon48.png",
     "128": "assets/icons/icon128.png",
@@ -13,10 +13,10 @@ export const zoteroManifest = {
   manifest_version: 2,
   applications: {
     zotero: {
-      id: "ankilex-zotero@ankilex.com",
+      id: "onedict-zotero@onedict.com",
       strict_min_version: "7.0",
       strict_max_version: "9.0.*",
-      update_url: "https://raw.githubusercontent.com/cnteng/ankilex/main/update.json",
+      update_url: "https://raw.githubusercontent.com/cnteng/onedict/main/update.json",
     },
   },
 };

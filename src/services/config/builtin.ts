@@ -1,6 +1,6 @@
 import type { AnkiConfig, DictionaryConfig, UserConfig } from "@common/types";
 
-export const CONFIG_STORAGE_KEY = "extensions.ankilex.config";
+export const CONFIG_STORAGE_KEY = "extensions.onedict.config";
 export const CONFIG_KEYS = ["dictionary", "anki"] as const satisfies Array<keyof UserConfig>;
 
 export const DEFAULT_DICT_CONFIG = [

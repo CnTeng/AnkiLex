@@ -25,7 +25,7 @@ const strategies: Record<"browser" | "zotero", (target: Target) => UserConfig> =
         entries: [
           {
             entry: "platforms/browser/content/content.ts",
-            name: "AnkiLexContent",
+            name: "OneDictContent",
             fileName: "browser/content/content.js",
             minify: false,
           },
