@@ -6,20 +6,20 @@ Object.defineProperty(globalThis, "document", {
   get: () => Zotero.getMainWindow().document,
 });
 
-type ZoteroWithAnkiLex = typeof Zotero & {
-  AnkiLex?: {
+type ZoteroWithOneDict = typeof Zotero & {
+  OneDict?: {
     mountPrefs: (doc: Document) => void;
   };
 };
 
-const zoteroWithAnkiLex = Zotero as ZoteroWithAnkiLex;
+const zoteroWithOneDict = Zotero as ZoteroWithOneDict;
 
 function registerGlobals(): void {
-  zoteroWithAnkiLex.AnkiLex = { mountPrefs };
+  zoteroWithOneDict.OneDict = { mountPrefs };
 }
 
 function unregisterGlobals(): void {
-  delete zoteroWithAnkiLex.AnkiLex;
+  delete zoteroWithOneDict.OneDict;
 }
 
 export function install() {}
@@ -40,7 +40,7 @@ export async function startup(
   registerPopup(params.id);
   await registerPrefs(params.id).catch((error) => {
     Zotero.logError(error);
-    Zotero.log(`Failed to register AnkiLex preferences pane: ${String(error)}`);
+    Zotero.log(`Failed to register OneDict preferences pane: ${String(error)}`);
   });
 }
 
@@ -55,7 +55,7 @@ export async function onMainWindowLoad(params: {
 
   await registerPrefs(params.id).catch((error) => {
     Zotero.logError(error);
-    Zotero.log(`Failed to register AnkiLex preferences pane on window load: ${String(error)}`);
+    Zotero.log(`Failed to register OneDict preferences pane on window load: ${String(error)}`);
   });
 }
 

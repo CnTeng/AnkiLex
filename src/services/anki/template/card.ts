@@ -14,7 +14,7 @@ function getData(): DictionaryEntry | null {
 
 export function initAnkiFront() {
   const entry = getData();
-  const root = document.getElementById("ankilex-front-root");
+  const root = document.getElementById("onedict-front-root");
   if (!entry || !root) return;
 
   const rawAudio = document.getElementById("raw-audio");
@@ -28,7 +28,7 @@ export function initAnkiFront() {
 
 export function initAnkiBack() {
   const entry = getData();
-  const root = document.getElementById("ankilex-back-root");
+  const root = document.getElementById("onedict-back-root");
   if (!entry || !root) return;
 
   root.replaceChildren();

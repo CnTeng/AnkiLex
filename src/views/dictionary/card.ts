@@ -90,7 +90,7 @@ export class AnkiCardBack {
 
   private render() {
     const cardContainer = this.document.createElement("div");
-    cardContainer.id = "ankilex-definitions";
+    cardContainer.id = "onedict-definitions";
     this.element.append(cardContainer);
 
     const definitionsSection = new DictionaryDefinitionsSection({

@@ -41,18 +41,18 @@ export class Editor {
 
     this.highlight = this.ownerDocument.createElement("div");
     this.highlight.className = cn(
-      "tab-2 pointer-events-none absolute inset-0 overflow-auto p-3 font-mono text-sm leading-6",
+      "pointer-events-none absolute inset-0 overflow-auto p-3 font-mono text-sm leading-6 tab-2",
     ) as string;
     this.highlight.setAttribute("aria-hidden", "true");
 
     this.placeholderEl = this.ownerDocument.createElement("div");
     this.placeholderEl.className = cn(
-      "tab-2 text-foreground/45 pointer-events-none absolute inset-0 p-3 font-mono text-sm leading-6",
+      "text-foreground/45 pointer-events-none absolute inset-0 p-3 font-mono text-sm leading-6 tab-2",
     ) as string;
 
     this.textarea = this.ownerDocument.createElement("textarea");
     this.textarea.className = cn(
-      "tab-2 absolute inset-0 h-full w-full resize-none border-0 bg-transparent p-3 font-mono text-sm leading-6 text-transparent outline-none",
+      "absolute inset-0 h-full w-full resize-none border-0 bg-transparent p-3 font-mono text-sm leading-6 tab-2 text-transparent outline-none",
     ) as string;
     this.textarea.spellcheck = false;
     this.textarea.autocomplete = "off";
