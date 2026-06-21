@@ -9,19 +9,20 @@ export const browserManifest = {
   author,
   icons: {
     "16": "assets/icons/icon16.png",
+    "32": "assets/icons/icon32.png",
     "48": "assets/icons/icon48.png",
+    "96": "assets/icons/icon96.png",
     "128": "assets/icons/icon128.png",
   },
   manifest_version: 3,
   default_locale: "en",
   action: {
-    default_popup: "platforms/browser/popup/popup.html",
     default_icon: {
       "16": "assets/icons/icon16.png",
-      "19": "assets/icons/icon19.png",
-      "38": "assets/icons/icon38.png",
-      "48": "assets/icons/icon48.png",
+      "24": "assets/icons/icon24.png",
+      "32": "assets/icons/icon32.png",
     },
+    default_popup: "platforms/browser/popup/popup.html",
   },
   host_permissions: [
     "http://127.0.0.1:8765/*",
