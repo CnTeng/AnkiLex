@@ -137,6 +137,10 @@ function mapText(root: Node, range: Range): Mapping | null {
 
   for (let n = it.nextNode(); n; n = it.nextNode()) {
     const v = n.nodeValue ?? "";
+    if (/\S$/.test(text) && /^\S/.test(v)) {
+      text += " ";
+      pos++;
+    }
 
     if (n === range.startContainer) s = pos + range.startOffset;
     if (n === range.endContainer) e = pos + range.endOffset;
