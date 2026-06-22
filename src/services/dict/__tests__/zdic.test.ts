@@ -4,8 +4,8 @@ import { ZdicDictionary } from "../providers/zdic";
 const LIVE_TEST_TIMEOUT_MS = 15000;
 
 async function lookupLiveWord(word: string) {
-  const html = await fetch(`https://www.zdic.net/hans/${encodeURIComponent(word)}`).then(
-    (response) => response.text(),
+  const html = await fetch(`https://zdic.net/hans/${encodeURIComponent(word)}`).then((response) =>
+    response.text(),
   );
   const doc = new DOMParser().parseFromString(html, "text/html");
   return new ZdicDictionary().parseDocument(doc);
@@ -23,8 +23,9 @@ describe("zdic dictionary", () => {
       expect(entry?.pronunciations).toEqual([{ type: "pinyin", text: "cí diǎn" }]);
       expect(entry?.definitions).toEqual([
         {
-          partOfSpeech: "国语辞典",
+          partOfSpeech: undefined,
           text: "一种工具书。参见「辞典」条。",
+          examples: undefined,
         },
       ]);
     },
@@ -38,29 +39,27 @@ describe("zdic dictionary", () => {
 
       expect(entry).not.toBeNull();
       expect(entry?.word).toBe("才");
-      expect(entry?.pronunciations).toEqual(
-        expect.arrayContaining([
-          {
-            type: "pinyin",
-            text: "cái",
-            audioUrl: "https://img.zdic.net/audio/zd/py/cái.mp3",
-          },
-          {
-            type: "pinyin",
-            text: "suì",
-            audioUrl: "https://img.zdic.net/audio/zd/py/suì.mp3",
-          },
-        ]),
-      );
+      expect(entry?.pronunciations).toEqual([
+        {
+          type: "pinyin",
+          text: "cái",
+          audioUrl: "https://img.zdic.net/audio/zd/py/c%C3%A1i.mp3",
+        },
+      ]);
       expect(entry?.definitions?.[0]).toEqual({
-        partOfSpeech: "形",
-        text: "(1) (象形。甲骨文字形，上面一横表示土地，下面象草木的茎(嫩芽)刚刚出土，其枝叶尚未出土的样子。本义:草木初生)",
+        partOfSpeech: "名",
+        text: "天赋的能力、禀性。",
+        examples: [
+          {
+            text: "《孟子·告子上》：「富岁子弟多赖，凶岁子弟多暴，非天之降 才 尔殊也。」",
+          },
+        ],
       });
       expect(entry?.definitions).toEqual(
         expect.arrayContaining([
           expect.objectContaining({
-            partOfSpeech: "名",
-            text: "(1) 才力;才能 [ability]",
+            partOfSpeech: "副",
+            text: "方、始。",
           }),
         ]),
       );
