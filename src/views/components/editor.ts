@@ -52,7 +52,7 @@ export class Editor {
 
     this.textarea = this.ownerDocument.createElement("textarea");
     this.textarea.className = cn(
-      "absolute inset-0 h-full w-full resize-none border-0 bg-transparent p-3 font-mono text-sm leading-6 tab-2 text-transparent outline-none",
+      "caret-foreground absolute inset-0 h-full w-full resize-none border-0 bg-transparent p-3 font-mono text-sm leading-6 tab-2 text-transparent outline-none",
     ) as string;
     this.textarea.spellcheck = false;
     this.textarea.autocomplete = "off";
