@@ -275,6 +275,7 @@ export class LookupPanel {
 
   private syncRequestWithEntry(entry: DictionaryEntry) {
     if (!this.currentRequest) return;
+    this.currentRequest.word = entry.word;
     this.currentRequest.selectedLanguage = entry.language ?? this.currentRequest.selectedLanguage;
     this.currentRequest.selectedProvider =
       (typeof entry.metadata?.providerId === "string" ? entry.metadata.providerId : null) ??
