@@ -5,7 +5,3 @@
 body {
   @apply bg-background text-foreground m-0 min-h-screen antialiased;
 }
-
-body {
-  background-image: linear-gradient(rgb(255 255 255 / 0.015), rgb(255 255 255 / 0.015));
-}

@@ -216,7 +216,7 @@ export class DictionaryOptions {
   private createRuleRow(
     config: DictionaryConfig[number],
     provider: DictionaryProviderInfo | undefined,
-    dragHandle: HTMLButtonElement,
+    dragHandle: HTMLElement,
   ) {
     const row = this.document.createElement("div");
     row.className = cn(

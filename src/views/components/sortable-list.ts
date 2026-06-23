@@ -1,6 +1,6 @@
 import { GripVertical } from "lucide";
 import { cn } from "tailwind-variants";
-import { createButton } from "./button";
+import { buttonStyles } from "./button";
 import { Icon } from "./icon";
 
 const BEFORE_DROP_CLASSES = [
@@ -29,7 +29,7 @@ type SortableListOptions<T> = {
   items: T[];
   getItemId: (item: T) => string;
   onReorder: (itemId: string, targetIndex: number) => void;
-  renderItem: (item: T, options: { dragHandle: HTMLButtonElement }) => HTMLElement;
+  renderItem: (item: T, options: { dragHandle: HTMLElement }) => HTMLElement;
 };
 
 export class SortableList<T> {
@@ -41,6 +41,7 @@ export class SortableList<T> {
   private readonly getItemId: (item: T) => string;
   private readonly onReorder: (itemId: string, targetIndex: number) => void;
   private readonly renderItemContent: SortableListOptions<T>["renderItem"];
+  private armedDragItemId: string | null = null;
   private draggingItemId: string | null = null;
   private currentDropMarker: HTMLElement | null = null;
 
@@ -73,19 +74,21 @@ export class SortableList<T> {
     const row = this.doc.createElement("div");
     row.dataset.itemId = itemId;
     row.dataset.dragging = "false";
+    row.draggable = false;
     row.className = cn(
       "relative rounded-lg transition-[transform,box-shadow,opacity] data-[dragging=true]:scale-[0.99] data-[dragging=true]:opacity-60",
     ) as string;
 
-    const dragHandle = createButton({
-      doc: this.doc,
-      title: "Drag to reorder",
+    const dragHandle = this.doc.createElement("span");
+    dragHandle.title = "Drag to reorder";
+    dragHandle.className = buttonStyles({
       variant: "ghost",
       size: "iconSm",
       className:
         "text-muted-foreground hover:text-foreground cursor-grab active:cursor-grabbing touch-none",
     });
-    dragHandle.draggable = true;
+    dragHandle.tabIndex = 0;
+    dragHandle.setAttribute("role", "button");
     dragHandle.setAttribute("aria-label", "Drag to reorder");
     dragHandle.append(
       new Icon({
@@ -95,15 +98,47 @@ export class SortableList<T> {
       }).element,
     );
 
-    dragHandle.addEventListener("dragstart", (event) => {
-      this.draggingItemId = itemId;
-      row.dataset.dragging = "true";
-      event.dataTransfer?.setData("text/plain", itemId);
-      if (event.dataTransfer) event.dataTransfer.effectAllowed = "move";
+    const armDrag = () => {
+      this.armedDragItemId = itemId;
+      row.draggable = true;
+    };
+
+    dragHandle.addEventListener("pointerdown", armDrag);
+    dragHandle.addEventListener("mousedown", armDrag);
+    dragHandle.addEventListener("blur", () => {
+      if (this.draggingItemId) return;
+      this.armedDragItemId = null;
+      row.draggable = false;
+    });
+    dragHandle.addEventListener("keydown", (event) => {
+      if (event.key !== "ArrowUp" && event.key !== "ArrowDown") return;
+      event.preventDefault();
+      const sourceIndex = this.items.findIndex((entry) => this.getItemId(entry) === itemId);
+      if (sourceIndex < 0) return;
+      const targetIndex = event.key === "ArrowUp" ? sourceIndex - 1 : sourceIndex + 2;
+      this.onReorder(itemId, targetIndex);
     });
 
-    dragHandle.addEventListener("dragend", () => {
+    row.addEventListener("dragstart", (event) => {
+      if (this.armedDragItemId !== itemId) {
+        event.preventDefault();
+        return;
+      }
+
+      this.draggingItemId = itemId;
+      event.dataTransfer?.setData("text/plain", itemId);
+      if (event.dataTransfer) {
+        const rect = row.getBoundingClientRect();
+        event.dataTransfer.effectAllowed = "move";
+        event.dataTransfer.setDragImage(row, event.clientX - rect.left, event.clientY - rect.top);
+      }
+      row.dataset.dragging = "true";
+    });
+
+    row.addEventListener("dragend", () => {
+      this.armedDragItemId = null;
       this.draggingItemId = null;
+      row.draggable = false;
       row.dataset.dragging = "false";
       this.clearDropMarker();
       this.clearDraggingState();

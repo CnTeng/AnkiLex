@@ -2,9 +2,8 @@
 @import "@assets/scrollbar.css";
 @import "tailwindcss";
 
-body,
 .onedict-root {
-  @apply bg-background text-foreground min-h-screen antialiased;
+  @apply text-foreground antialiased;
 }
 
 .onedict-root * {

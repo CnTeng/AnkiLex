@@ -37,7 +37,7 @@ export class OptionsPage {
     this.ankiService = ankiService;
 
     this.element = this.document.createElement("div");
-    this.element.className = "bg-background text-foreground min-h-screen px-4 py-8 sm:py-10";
+    this.element.className = "text-foreground";
 
     this.container.replaceChildren(
       OptionsPage.createStateMessage(this.document, "Loading options..."),
@@ -61,7 +61,7 @@ export class OptionsPage {
   private renderStructure() {
     const frame = this.document.createElement("div");
     frame.className = cn(
-      "border-border bg-background mx-auto w-full max-w-3xl overflow-hidden rounded-lg border shadow-xs",
+      "border-border bg-background w-full overflow-hidden rounded-lg border shadow-xs",
     ) as string;
 
     const sections = this.document.createElement("div");
