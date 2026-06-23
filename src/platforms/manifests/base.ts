@@ -1,6 +1,8 @@
 import pkg from "../../../package.json";
 
-export const { name, version, description, author } = pkg;
+export const { version, description, author } = pkg;
+
+export const name = "One Dictionary";
 
 export const browserManifest = {
   name,
