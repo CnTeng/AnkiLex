@@ -1,42 +1,26 @@
-import type { AnkiNote, Definition, DictionaryEntry, Pronunciation } from "@common/types";
-import { ANKI_AUDIO_FILENAME_PREFIX, ANKI_MODEL_NAME, ANKI_TAG } from "./builtin";
+import type { AnkiNote, Definition, DictionaryEntry, Example, Pronunciation } from "@common/types";
+import {
+  ANKI_AUDIO_FILENAME_PREFIX,
+  ANKI_MODEL_NAME,
+  ANKI_TAG,
+  ANKI_TEMPLATE_VERSION,
+} from "./builtin";
 import type { AnkiRequest } from "./request";
 
-function createDefinitionField(definitions: Definition[]) {
-  return definitions
-    .map((definition) =>
-      definition.partOfSpeech ? `[${definition.partOfSpeech}] ${definition.text}` : definition.text,
-    )
-    .join("\n");
+function serializeField(value: string | undefined, json: false): string;
+function serializeField(value: unknown | undefined, json?: true): string;
+function serializeField(value: unknown | undefined, json = true): string {
+  if (value === undefined) return "";
+  return json ? JSON.stringify(value, null, 2) : String(value);
 }
 
-function createExamplesField(definitions: Definition[]) {
-  return definitions
-    .flatMap((definition) =>
-      (definition.examples ?? [])
-        .filter((example) => example.text)
-        .map((example) =>
-          example.translation ? `${example.text} :: ${example.translation}` : example.text,
-        ),
-    )
-    .join("\n");
-}
-
-function createPronunciationsField(pronunciations: Pronunciation[]) {
-  return pronunciations
-    .filter((pronunciation) => pronunciation.text)
-    .map((pronunciation) =>
-      pronunciation.type ? `${pronunciation.type}: ${pronunciation.text}` : pronunciation.text,
-    )
-    .join("\n");
-}
-
-function createMetadataField(metadata?: Record<string, unknown>) {
-  if (!metadata) return "";
-  return Object.entries(metadata)
-    .filter(([, value]) => value != null)
-    .map(([key, value]) => `${key}: ${Array.isArray(value) ? value.join(", ") : String(value)}`)
-    .join("\n");
+function createDefinitionFields(definition?: Definition): {
+  definition: Omit<Definition, "examples"> | undefined;
+  examples: Example[] | undefined;
+} {
+  if (!definition) return { definition: undefined, examples: undefined };
+  const { examples, ...value } = definition;
+  return { definition: value, examples };
 }
 
 function createAudioItems(word: string, pronunciations: Pronunciation[]) {
@@ -53,19 +37,19 @@ function createAudioItems(word: string, pronunciations: Pronunciation[]) {
 
 function createAnkiNote(deckName: string, modelName: string, entry: DictionaryEntry): AnkiNote {
   const audio = createAudioItems(entry.word, entry.pronunciations);
+  const { definition, examples } = createDefinitionFields(entry.definitions[0]);
 
   return {
     deckName,
     modelName,
     fields: {
-      word: entry.word,
-      context: entry.context || "",
-      definition: createDefinitionField(entry.definitions),
-      examples: createExamplesField(entry.definitions),
-      pronunciations: createPronunciationsField(entry.pronunciations),
-      provider: entry.provider,
-      metadata: createMetadataField(entry.metadata),
-      data: JSON.stringify(entry),
+      word: serializeField(entry.word, false),
+      definition: serializeField(definition),
+      examples: serializeField(examples),
+      pronunciations: serializeField(entry.pronunciations),
+      metadata: serializeField(entry.metadata),
+      context: serializeField(entry.context, false),
+      version: serializeField(ANKI_TEMPLATE_VERSION),
     },
     tags: [ANKI_TAG],
     ...(audio.length > 0 ? { audio } : {}),

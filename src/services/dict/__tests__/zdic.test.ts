@@ -19,7 +19,7 @@ describe("zdic dictionary", () => {
 
       expect(entry).not.toBeNull();
       expect(entry?.word).toBe("词典");
-      expect(entry?.provider).toBe("Zdic Chinese Dictionary");
+      expect(entry?.metadata.providerName).toBe("Zdic Chinese Dictionary");
       expect(entry?.pronunciations).toEqual([{ type: "pinyin", text: "cí diǎn" }]);
       expect(entry?.definitions).toEqual([
         {

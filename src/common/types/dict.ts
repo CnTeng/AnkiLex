@@ -15,11 +15,9 @@ export interface DictionaryProviderInfo {
 
 export interface DictionaryEntry {
   word: string;
-  language?: string;
-  provider: string;
   definitions: Definition[];
   pronunciations: Pronunciation[];
-  metadata?: Record<string, unknown>;
+  metadata: Metadata;
   context?: string;
 }
 
@@ -38,4 +36,12 @@ export interface Pronunciation {
   text?: string;
   audioUrl?: string;
   type?: string; // 'uk', 'us', 'jp', etc.
+}
+
+export interface Metadata extends Record<string, unknown> {
+  providerId: string;
+  providerName: string;
+  language?: string;
+  tags?: string[];
+  frequency?: number;
 }

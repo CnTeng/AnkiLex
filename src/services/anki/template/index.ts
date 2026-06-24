@@ -7,7 +7,7 @@ const front = frontHbs.replace("{{! FRONT_SCRIPT }}", bundle);
 const back = backHbs.replace("{{! BACK_SCRIPT }}", bundle);
 
 export const ANKI_MODEL_TEMPLATE = {
-  Name: "Card 1",
+  Name: "OneDict",
   Front: front,
   Back: back,
 };

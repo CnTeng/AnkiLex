@@ -15,7 +15,7 @@ describe("jisho dictionary", () => {
 
       expect(entry).not.toBeNull();
       expect(entry?.word).toBe("食べる");
-      expect(entry?.provider).toBe("Jisho Japanese Dictionary");
+      expect(entry?.metadata.providerName).toBe("Jisho Japanese Dictionary");
       expect(entry?.pronunciations).toEqual(
         expect.arrayContaining([
           expect.objectContaining({

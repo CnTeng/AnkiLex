@@ -97,11 +97,6 @@ function getProviderRule(
   );
 }
 
-function getEntryProviderId(entry: DictionaryEntry) {
-  const providerId = entry.metadata?.providerId;
-  return typeof providerId === "string" ? providerId : undefined;
-}
-
 class LocalDictionaryService implements IDictionaryService {
   constructor(private readonly configService: IConfigService) {}
 
@@ -126,16 +121,8 @@ class LocalDictionaryService implements IDictionaryService {
     const result = await dictionary.lookupWithFallback(word, providerIds);
     if (!result) return null;
 
-    const providerId =
-      providerIds.find((id) => dictionary.getProvider(id)?.name === result.provider) ??
-      providerIds[0];
-
-    if (language) result.language = language;
+    if (language) result.metadata.language = language;
     if (context?.context) result.context = context.context;
-    result.metadata = {
-      ...result.metadata,
-      providerId,
-    };
     return result;
   }
 }
@@ -152,8 +139,8 @@ class LocalAnkiService implements IAnkiService {
     const userConfig = await this.configService.get();
     const providerRule = getProviderRule(
       userConfig.dictionary,
-      getEntryProviderId(result),
-      result.language,
+      result.metadata.providerId,
+      result.metadata.language,
     );
     if (!providerRule?.deck) return;
 

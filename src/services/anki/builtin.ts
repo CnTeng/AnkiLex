@@ -4,17 +4,16 @@ export const ANKI_MODEL_NAME = "OneDict";
 
 export const ANKI_MODEL_FIELDS = [
   "word",
-  "pronunciations",
-  "audio",
   "definition",
   "examples",
-  "context",
-  "provider",
+  "pronunciations",
+  "audio",
   "metadata",
-  "data",
+  "context",
+  "version",
 ] as const;
 
-export const ANKI_TEMPLATE_VERSION = 1;
+export const ANKI_TEMPLATE_VERSION = 3;
 
 export const ANKI_TEMPLATE_MARKER = `onedict-template:${ANKI_TEMPLATE_VERSION}`;
 

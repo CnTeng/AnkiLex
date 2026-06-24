@@ -36,7 +36,7 @@ export class AnkiCardFront {
     const header = new DictionaryHeaderSection({
       container: this.element,
       word: this.entry.word,
-      provider: this.entry.provider,
+      provider: this.entry.metadata.providerName,
     }).element;
     header.className = cn("mb-4 flex items-baseline justify-center gap-3") as string;
 

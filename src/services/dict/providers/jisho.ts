@@ -81,10 +81,13 @@ export class JishoDictionary extends DictionaryProvider {
 
     return {
       word,
-      provider: this.name,
       definitions: this.parseDefinitions(item),
       pronunciations: this.parsePronunciations(item),
-      metadata: this.parseMetadata(item),
+      metadata: {
+        ...this.parseMetadata(item),
+        providerId: this.id,
+        providerName: this.name,
+      },
     };
   }
 

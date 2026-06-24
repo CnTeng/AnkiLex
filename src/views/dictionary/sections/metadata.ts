@@ -1,3 +1,4 @@
+import type { Metadata } from "@common/types";
 import { Icon } from "@views/components";
 import { Star } from "lucide";
 import { cn } from "tailwind-variants";
@@ -5,12 +6,12 @@ import { cn } from "tailwind-variants";
 const FREQUENCY_STAR_COUNT = 5;
 const metadataBadgeClass = cn(
   "inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[11px] font-medium",
-  "bg-secondary text-secondary-foreground border-[color:color-mix(in_srgb,var(--border)_70%,transparent)]",
+  "bg-secondary text-secondary-foreground border-[color-mix(in_srgb,var(--border)_70%,transparent)]",
 ) as string;
 
 export interface DictionaryMetadataSectionOptions {
   container: HTMLElement | DocumentFragment;
-  metadata?: Record<string, unknown>;
+  metadata: Metadata;
 }
 
 export class DictionaryMetadataSection {
@@ -18,7 +19,7 @@ export class DictionaryMetadataSection {
   readonly isEmpty: boolean;
 
   private readonly document: Document;
-  private readonly metadata?: Record<string, unknown>;
+  private readonly metadata: Metadata;
 
   constructor({ container, metadata }: DictionaryMetadataSectionOptions) {
     this.document = container.ownerDocument ?? document;
@@ -27,8 +28,8 @@ export class DictionaryMetadataSection {
     this.element = this.document.createElement("div");
     this.element.className = cn("mb-2.5 flex items-center gap-3") as string;
 
-    const tags = (this.metadata?.tags as string[]) || [];
-    const frequency = (this.metadata?.frequency as number) || 0;
+    const tags = this.metadata.tags ?? [];
+    const frequency = this.metadata.frequency ?? 0;
     this.isEmpty = tags.length === 0 && frequency === 0;
 
     if (this.isEmpty) return;

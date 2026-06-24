@@ -51,10 +51,13 @@ export class YoudaoDictionary extends DictionaryProvider {
 
     return {
       word: this.parseWord(container),
-      provider: this.name,
       definitions: this.parseCollinsDefinitions(container) ?? this.parsePhraseDefinitions(doc),
       pronunciations: this.parsePronunciations(doc),
-      metadata: this.parseMetadata(container),
+      metadata: {
+        ...this.parseMetadata(container),
+        providerId: this.id,
+        providerName: this.name,
+      },
     };
   }
 

@@ -32,9 +32,12 @@ export class ZdicDictionary extends DictionaryProvider {
 
     return {
       word: this.parseWord(container),
-      provider: this.name,
       definitions: this.parseDefinitions(container),
       pronunciations: this.parsePronunciations(container),
+      metadata: {
+        providerId: this.id,
+        providerName: this.name,
+      },
     };
   }
 
