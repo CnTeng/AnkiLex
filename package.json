@@ -28,7 +28,7 @@
     "adm-zip": "^0.5.17",
     "jsdom": "^29.1.1",
     "npm-run-all2": "^9.0.2",
-    "prettier": "^3.8.5",
+    "prettier": "^3.9.3",
     "prettier-plugin-tailwindcss": "^0.8.0",
     "tailwindcss": "^4.3.1",
     "tsx": "^4.22.4",
